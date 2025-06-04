@@ -193,7 +193,7 @@ async _performInit() {
     async initializeComponents() {
         Utils.log('info', 'Initializing components');
 
-        // Инициализируем базовые компоненты
+        // Базовые компоненты
         if (window.Toast) {
             window.Toast.init();
         }
@@ -208,6 +208,11 @@ async _performInit() {
 
         if (window.Navigation) {
             window.Navigation.init();
+        }
+
+        // Новые компоненты
+        if (window.PaymentBanner) {
+            window.PaymentBanner.init();
         }
 
         if (window.Loading) {
