@@ -36,6 +36,10 @@ window.Loading = {
      * @param {number} timeout - Автоматическое скрытие через timeout мс
      */
     show(text = 'Загрузка...', timeout = null) {
+        if (!this.overlay) {
+            this.createOverlay(); // Принудительно создаем если не существует
+        }
+
         if (this.isVisible) {
             this.updateText(text);
             return;
@@ -77,9 +81,16 @@ window.Loading = {
      * Обновить текст загрузки
      */
     updateText(text) {
+        if (!this.overlay) {
+            console.warn('Loading overlay not initialized');
+            return;
+        }
+
         const textElement = this.overlay.querySelector('.loading-text');
         if (textElement) {
             textElement.textContent = text;
+        } else {
+            console.warn('Loading text element not found');
         }
     },
 

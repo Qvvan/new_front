@@ -80,10 +80,8 @@ async _performInit() {
         ];
 
         // Показываем загрузку с шагами
-        if (window.Loading && window.Loading.overlay) {
+        if (window.Loading) {
             window.Loading.showSteps(loadingSteps, 0);
-        } else {
-            console.warn('Loading component not ready, skipping initial loading display');
         }
     },
 
