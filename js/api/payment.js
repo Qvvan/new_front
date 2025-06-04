@@ -73,32 +73,32 @@ window.PaymentAPI = {
             Utils.log('error', 'Failed to get pending payments:', error);
             return [];
         }
+    },
+
+    /**
+     * Создание платежа с автоматическим мониторингом
+     */
+    async createPaymentWithMonitoring(data) {
+        try {
+            const response = await this.createPayment(data);
+            const payment = response.payment || response;
+
+            if (payment.id && payment.status === 'pending') {
+                // Сохраняем в pending платежи
+                if (window.Storage) {
+                    await window.Storage.addPendingPayment(payment);
+                }
+
+                // Добавляем в мониторинг
+                if (window.PaymentMonitor) {
+                    window.PaymentMonitor.addPayment(payment.id);
+                }
+            }
+
+            return response;
+        } catch (error) {
+            Utils.log('error', 'Failed to create payment with monitoring:', error);
+            throw error;
+        }
     }
 };
-
-/**
- * Создание платежа с автоматическим мониторингом
- */
-async createPaymentWithMonitoring(data) {
-    try {
-        const response = await this.createPayment(data);
-        const payment = response.payment || response;
-
-        if (payment.id && payment.status === 'pending') {
-            // Сохраняем в pending платежи
-            if (window.Storage) {
-                await window.Storage.addPendingPayment(payment);
-            }
-
-            // Добавляем в мониторинг
-            if (window.PaymentMonitor) {
-                window.PaymentMonitor.addPayment(payment.id);
-            }
-        }
-
-        return response;
-    } catch (error) {
-        Utils.log('error', 'Failed to create payment with monitoring:', error);
-        throw error;
-    }
-}
