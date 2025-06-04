@@ -98,12 +98,21 @@ window.SubscriptionScreen = {
             this.handleAction(action, subscriptionId);
         });
 
-        // Обработчик для автопродления
+        // Обработчик для автопродления (полный формат)
         document.addEventListener('click', (e) => {
             const autoRenewal = e.target.closest('.auto-renewal');
             if (!autoRenewal || !autoRenewal.closest('#subscriptionScreen')) return;
 
             const subscriptionId = autoRenewal.dataset.subscriptionId;
+            this.handleAutoRenewalToggle(subscriptionId);
+        });
+
+        // Обработчик для автопродления (компактный формат)
+        document.addEventListener('click', (e) => {
+            const compactAutoRenewal = e.target.closest('.subscription-compact-auto-renewal');
+            if (!compactAutoRenewal || !compactAutoRenewal.closest('#subscriptionScreen')) return;
+
+            const subscriptionId = compactAutoRenewal.dataset.subscriptionId;
             this.handleAutoRenewalToggle(subscriptionId);
         });
     },
@@ -455,6 +464,15 @@ window.SubscriptionScreen = {
                         </div>
                     </div>
                     <div class="subscription-compact-actions">
+                        ${!isTrial && !isExpired ? `
+                            <div class="subscription-compact-auto-renewal"
+                                 data-subscription-id="${subscription.id}"
+                                 title="Автопродление">
+                                <div class="toggle-switch-compact ${subscription.auto_renewal ? 'active' : ''}">
+                                    <div class="toggle-slider-compact"></div>
+                                </div>
+                            </div>
+                        ` : ''}
                         <button class="btn btn-sm btn-primary" data-action="renew" data-subscription-id="${subscription.id}">
                             <i class="fas fa-credit-card"></i>
                         </button>
@@ -555,6 +573,7 @@ window.SubscriptionScreen = {
      * Обновление UI автопродления
      */
     updateAutoRenewalUI(subscriptionId, autoRenewal) {
+        // Обновляем полный формат
         const toggle = document.querySelector(`[data-subscription-id="${subscriptionId}"] .toggle-switch`);
         const statusText = document.querySelector(`[data-subscription-id="${subscriptionId}"] .auto-renewal-status`);
 
@@ -570,6 +589,12 @@ window.SubscriptionScreen = {
                     ? `Продление ${renewalDate}`
                     : `Завершится ${renewalDate}`;
             }
+        }
+
+        // Обновляем компактный формат
+        const compactToggle = document.querySelector(`[data-subscription-id="${subscriptionId}"] .toggle-switch-compact`);
+        if (compactToggle) {
+            compactToggle.classList.toggle('active', autoRenewal);
         }
     },
 

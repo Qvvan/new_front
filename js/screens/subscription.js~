@@ -98,12 +98,21 @@ window.SubscriptionScreen = {
             this.handleAction(action, subscriptionId);
         });
 
-        // Обработчик для автопродления
+        // Обработчик для автопродления (полный формат)
         document.addEventListener('click', (e) => {
             const autoRenewal = e.target.closest('.auto-renewal');
             if (!autoRenewal || !autoRenewal.closest('#subscriptionScreen')) return;
 
             const subscriptionId = autoRenewal.dataset.subscriptionId;
+            this.handleAutoRenewalToggle(subscriptionId);
+        });
+
+        // Обработчик для автопродления (компактный формат)
+        document.addEventListener('click', (e) => {
+            const compactAutoRenewal = e.target.closest('.subscription-compact-auto-renewal');
+            if (!compactAutoRenewal || !compactAutoRenewal.closest('#subscriptionScreen')) return;
+
+            const subscriptionId = compactAutoRenewal.dataset.subscriptionId;
             this.handleAutoRenewalToggle(subscriptionId);
         });
     },
@@ -430,18 +439,15 @@ window.SubscriptionScreen = {
             const daysLeft = Utils.daysBetween(subscription.end_date);
             const isExpired = daysLeft <= 0;
             const isTrial = this.isTrialSubscription(subscription);
-            const subscriptionType = this.getSubscriptionType(subscription);
 
-            const statusText = {
-                'trial': 'Пробная',
-                'expired': 'Истекла',
-                'active': 'Активна'
-            }[subscriptionType];
+            // Только 2 статуса
+            const statusClass = isExpired ? 'expired' : 'active';
+            const statusText = isExpired ? 'Истекла' : 'Активна';
 
             const serviceName = this.getServiceName(subscription);
 
             content += `
-                <div class="subscription-compact ${subscriptionType}" data-subscription-id="${subscription.id}">
+                <div class="subscription-compact ${statusClass}" data-subscription-id="${subscription.id}">
                     <div class="subscription-compact-info">
                         <div class="subscription-compact-icon">
                             <i class="fas ${isTrial ? 'fa-gift' : 'fa-shield-alt'}"></i>
@@ -458,11 +464,18 @@ window.SubscriptionScreen = {
                         </div>
                     </div>
                     <div class="subscription-compact-actions">
-                        ${!isTrial ? `
-                            <button class="btn btn-sm btn-primary" data-action="renew" data-subscription-id="${subscription.id}">
-                                <i class="fas fa-credit-card"></i>
-                            </button>
+                        ${!isTrial && !isExpired ? `
+                            <div class="subscription-compact-auto-renewal"
+                                 data-subscription-id="${subscription.id}"
+                                 title="Автопродление">
+                                <div class="toggle-switch-compact ${subscription.auto_renewal ? 'active' : ''}">
+                                    <div class="toggle-slider-compact"></div>
+                                </div>
+                            </div>
                         ` : ''}
+                        <button class="btn btn-sm btn-primary" data-action="renew" data-subscription-id="${subscription.id}">
+                            <i class="fas fa-credit-card"></i>
+                        </button>
                     </div>
                 </div>
             `;
@@ -470,7 +483,6 @@ window.SubscriptionScreen = {
 
         content += '</div>';
 
-        // Добавляем общие кнопки действий
         content += `
             <div class="subscription-actions">
                 <button class="btn btn-primary" data-action="buy">
