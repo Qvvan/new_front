@@ -1,0 +1,449 @@
+// Service Selector Component for Dragon VPN Mini App
+
+window.ServiceSelector = {
+    isVisible: false,
+    services: [],
+    selectedService: null,
+    mode: null, // 'buy' или 'renew'
+    subscriptionId: null,
+
+    /**
+     * Показать селектор услуг
+     * @param {string} mode - Режим ('buy' или 'renew')
+     * @param {string} subscriptionId - ID подписки для продления
+     */
+    async show(mode = 'buy', subscriptionId = null) {
+        this.mode = mode;
+        this.subscriptionId = subscriptionId;
+
+        Utils.log('info', `Showing service selector in ${mode} mode`, { subscriptionId });
+
+        try {
+            await this.loadServices();
+            this.render();
+            this.isVisible = true;
+
+            // Добавляем к body
+            document.body.appendChild(this.getModalElement());
+
+            // Показываем с анимацией
+            setTimeout(() => {
+                this.getModalElement().classList.add('active');
+            }, 10);
+
+            // Вибрация
+            if (window.TelegramApp) {
+                window.TelegramApp.haptic.light();
+            }
+
+        } catch (error) {
+            Utils.log('error', 'Failed to show service selector:', error);
+            if (window.Toast) {
+                window.Toast.show('Ошибка загрузки услуг', 'error');
+            }
+        }
+    },
+
+    /**
+     * Скрыть селектор услуг
+     */
+    hide() {
+        if (!this.isVisible) return;
+
+        const modal = this.getModalElement();
+        if (modal) {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.remove();
+                this.cleanup();
+            }, 300);
+        }
+
+        this.isVisible = false;
+    },
+
+    /**
+     * Загрузка списка услуг
+     */
+    async loadServices() {
+        try {
+            if (window.Loading) {
+                window.Loading.show('Загрузка услуг...');
+            }
+
+            if (window.ServiceAPI) {
+                const response = await window.ServiceAPI.getServices();
+                this.services = response.services || [];
+            } else {
+                // Fallback данные для разработки
+                this.services = [
+                    {
+                        id: '1',
+                        name: 'Базовый',
+                        duration: '1 месяц',
+                        price: 299,
+                        currency: 'RUB',
+                        features: ['Безлимитный трафик', '10 стран', 'Базовая скорость'],
+                        popular: false
+                    },
+                    {
+                        id: '2',
+                        name: 'Премиум',
+                        duration: '3 месяца',
+                        price: 799,
+                        currency: 'RUB',
+                        features: ['Безлимитный трафик', '50+ стран', 'Максимальная скорость', 'Поддержка 24/7'],
+                        popular: true,
+                        discount: 15
+                    },
+                    {
+                        id: '3',
+                        name: 'Премиум+',
+                        duration: '6 месяцев',
+                        price: 1399,
+                        currency: 'RUB',
+                        features: ['Безлимитный трафик', '70+ стран', 'Максимальная скорость', 'Поддержка 24/7', 'Дедикативные IP'],
+                        popular: false,
+                        discount: 30
+                    },
+                    {
+                        id: '4',
+                        name: 'Годовой',
+                        duration: '12 месяцев',
+                        price: 2399,
+                        currency: 'RUB',
+                        features: ['Безлимитный трафик', '70+ стран', 'Максимальная скорость', 'Поддержка 24/7', 'Дедикативные IP', 'Приоритет подключения'],
+                        popular: false,
+                        discount: 50
+                    }
+                ];
+            }
+
+            Utils.log('info', 'Services loaded:', this.services);
+
+        } catch (error) {
+            Utils.log('error', 'Failed to load services:', error);
+            throw error;
+        } finally {
+            if (window.Loading) {
+                window.Loading.hide();
+            }
+        }
+    },
+
+    /**
+     * Рендеринг селектора
+     */
+    render() {
+        const modal = this.getModalElement();
+
+        const titleText = this.mode === 'renew' ? 'Продление подписки' : 'Новая подписка';
+        const subtitleText = this.mode === 'renew'
+            ? 'Выберите тариф для продления текущей подписки'
+            : 'Выберите подходящий тариф для начала работы';
+
+        modal.innerHTML = `
+            <div class="modal">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <i class="fas fa-shopping-cart"></i>
+                        ${titleText}
+                    </div>
+                    <button class="modal-close" id="serviceSelectorClose">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="service-selector-header">
+                        <h3 class="service-selector-title">${titleText}</h3>
+                        <p class="service-selector-subtitle">${subtitleText}</p>
+                    </div>
+                    <div class="services-grid">
+                        ${this.renderServices()}
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="serviceSelectorCancel">
+                        Отмена
+                    </button>
+                    <button class="btn btn-primary" id="serviceSelectorContinue" disabled>
+                        <i class="fas fa-arrow-right"></i>
+                        Продолжить
+                    </button>
+                </div>
+            </div>
+        `;
+
+        this.setupEventListeners();
+    },
+
+    /**
+     * Рендеринг списка услуг
+     */
+    renderServices() {
+        return this.services.map(service => {
+            const monthlyPrice = this.calculateMonthlyPrice(service);
+            const originalPrice = service.original_price || service.price;
+            const hasDiscount = service.discount && service.discount > 0;
+
+            return `
+                <div class="service-card" data-service-id="${service.id}">
+                    ${service.popular ? '<div class="service-badge">Популярный</div>' : ''}
+                    ${hasDiscount ? `<div class="service-discount">-${service.discount}%</div>` : ''}
+
+                    <div class="service-header">
+                        <div class="service-info">
+                            <h4 class="service-name">${service.name}</h4>
+                            <p class="service-duration">${service.duration}</p>
+                        </div>
+                        <div class="service-pricing">
+                            <div class="service-price">${Utils.formatPrice(service.price, service.currency)}</div>
+                            ${hasDiscount ? `<div class="service-original-price">${Utils.formatPrice(originalPrice, service.currency)}</div>` : ''}
+                            <div class="service-monthly">${Utils.formatPrice(monthlyPrice, service.currency)}/мес</div>
+                        </div>
+                    </div>
+
+                    <ul class="service-features">
+                        ${service.features.map(feature => `<li>${feature}</li>`).join('')}
+                    </ul>
+
+                    ${hasDiscount ? `
+                        <div class="service-savings">
+                            Экономия: ${Utils.formatPrice(originalPrice - service.price, service.currency)}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+    },
+
+    /**
+     * Вычисление месячной цены
+     */
+    calculateMonthlyPrice(service) {
+        const durationMap = {
+            '1 месяц': 1,
+            '3 месяца': 3,
+            '6 месяцев': 6,
+            '12 месяцев': 12
+        };
+
+        const months = durationMap[service.duration] || 1;
+        return Math.round(service.price / months);
+    },
+
+    /**
+     * Настройка обработчиков событий
+     */
+    setupEventListeners() {
+        const modal = this.getModalElement();
+
+        // Закрытие модального окна
+        modal.querySelector('#serviceSelectorClose').addEventListener('click', () => {
+            this.hide();
+        });
+
+        modal.querySelector('#serviceSelectorCancel').addEventListener('click', () => {
+            this.hide();
+        });
+
+        // Выбор услуги
+        modal.addEventListener('click', (e) => {
+            const serviceCard = e.target.closest('.service-card');
+            if (!serviceCard) return;
+
+            const serviceId = serviceCard.dataset.serviceId;
+            this.selectService(serviceId);
+
+            // Вибрация
+            if (window.TelegramApp) {
+                window.TelegramApp.haptic.selection();
+            }
+        });
+
+        // Продолжить
+        modal.querySelector('#serviceSelectorContinue').addEventListener('click', () => {
+            this.handleContinue();
+        });
+
+        // Закрытие по клику вне модального окна
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.hide();
+            }
+        });
+
+        // Закрытие по Escape
+        document.addEventListener('keydown', this.handleEscapeKey.bind(this));
+    },
+
+    /**
+     * Выбор услуги
+     */
+    selectService(serviceId) {
+        const service = this.services.find(s => s.id === serviceId);
+        if (!service) return;
+
+        // Убираем выделение с предыдущей услуги
+        const previousSelected = this.getModalElement().querySelector('.service-card.selected');
+        if (previousSelected) {
+            previousSelected.classList.remove('selected');
+        }
+
+        // Выделяем новую услугу
+        const serviceCard = this.getModalElement().querySelector(`[data-service-id="${serviceId}"]`);
+        if (serviceCard) {
+            serviceCard.classList.add('selected');
+        }
+
+        this.selectedService = service;
+
+        // Активируем кнопку продолжения
+        const continueBtn = this.getModalElement().querySelector('#serviceSelectorContinue');
+        continueBtn.disabled = false;
+
+        Utils.log('info', 'Service selected:', service);
+    },
+
+    /**
+     * Обработка продолжения
+     */
+    async handleContinue() {
+        if (!this.selectedService) return;
+
+        try {
+            Utils.log('info', 'Processing service selection:', {
+                service: this.selectedService,
+                mode: this.mode,
+                subscriptionId: this.subscriptionId
+            });
+
+            // Создаем платеж
+            await this.createPayment();
+
+        } catch (error) {
+            Utils.log('error', 'Failed to process service selection:', error);
+            if (window.Toast) {
+                window.Toast.show('Ошибка создания платежа', 'error');
+            }
+        }
+    },
+
+    /**
+     * Создание платежа
+     */
+    async createPayment() {
+        try {
+            if (window.Loading) {
+                window.Loading.show('Создание платежа...');
+            }
+
+            const paymentData = {
+                service_id: this.selectedService.id,
+                mode: this.mode,
+                subscription_id: this.subscriptionId,
+                amount: this.selectedService.price,
+                currency: this.selectedService.currency || 'RUB'
+            };
+
+            let payment;
+            if (window.PaymentAPI) {
+                payment = await window.PaymentAPI.createPayment(paymentData);
+            } else {
+                // Симуляция для разработки
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                payment = {
+                    id: Utils.generateId(),
+                    status: 'pending',
+                    amount: paymentData.amount,
+                    currency: paymentData.currency,
+                    expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 час
+                    payment_url: 'https://example.com/pay'
+                };
+            }
+
+            // Скрываем селектор
+            this.hide();
+
+            // Показываем плашку оплаты
+            if (window.PaymentBanner) {
+                window.PaymentBanner.show(payment);
+            }
+
+            // Открываем страницу оплаты
+            if (payment.payment_url) {
+                window.TelegramApp.openLink(payment.payment_url);
+            }
+
+            Utils.log('info', 'Payment created:', payment);
+
+        } catch (error) {
+            Utils.log('error', 'Failed to create payment:', error);
+            throw error;
+        } finally {
+            if (window.Loading) {
+                window.Loading.hide();
+            }
+        }
+    },
+
+    /**
+     * Обработка клавиши Escape
+     */
+    handleEscapeKey(e) {
+        if (e.key === 'Escape' && this.isVisible) {
+            this.hide();
+        }
+    },
+
+    /**
+     * Получение элемента модального окна
+     */
+    getModalElement() {
+        let modal = document.getElementById('serviceSelector');
+        if (!modal) {
+            modal = Utils.createElement('div', {
+                id: 'serviceSelector',
+                className: 'modal-overlay'
+            });
+        }
+        return modal;
+    },
+
+    /**
+     * Очистка данных
+     */
+    cleanup() {
+        this.selectedService = null;
+        this.mode = null;
+        this.subscriptionId = null;
+        this.services = [];
+
+        // Убираем обработчик Escape
+        document.removeEventListener('keydown', this.handleEscapeKey.bind(this));
+    },
+
+    /**
+     * Получение выбранной услуги
+     */
+    getSelectedService() {
+        return this.selectedService;
+    },
+
+    /**
+     * Проверка видимости
+     */
+    isShown() {
+        return this.isVisible;
+    },
+
+    /**
+     * Обновление списка услуг
+     */
+    async refresh() {
+        if (this.isVisible) {
+            await this.loadServices();
+            this.render();
+        }
+    }
+};
