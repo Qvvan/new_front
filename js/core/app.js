@@ -312,10 +312,11 @@ async _performInit() {
         });
 
         if (navigation) {
-            navigation.style.transform = 'translateY(100%)';
+            // ПРАВИЛЬНО: сохраняем и горизонтальное, и вертикальное смещение
+            navigation.style.transform = 'translateX(-50%) translateY(100%)';
             setTimeout(() => {
                 navigation.style.transition = 'transform 0.3s ease';
-                navigation.style.transform = 'translateY(0)';
+                navigation.style.transform = 'translateX(-50%) translateY(0)';
             }, 200);
         }
     },
