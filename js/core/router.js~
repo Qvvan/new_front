@@ -109,8 +109,7 @@ window.Router = {
      * Выполнение перехода между экранами
      */
     async performTransition(screenName, params) {
-        const modalScreens = ['instructions', 'support'];
-        const isModal = modalScreens.includes(screenName);
+        const isModal = this.modalScreens.includes(screenName);
 
         if (isModal) {
             await this.showModal(screenName, params);

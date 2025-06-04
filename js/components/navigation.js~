@@ -123,7 +123,7 @@ window.Navigation = {
      * Проверка валидности экрана
      */
     isValidScreen(screen) {
-        const validScreens = ['subscription', 'keys', 'referrals', 'payments', 'instructions', 'support'];
+        const validScreens = ['subscription', 'keys', 'referrals', 'payments'];
         return validScreens.includes(screen);
     },
 

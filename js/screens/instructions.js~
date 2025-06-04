@@ -326,6 +326,24 @@ window.InstructionsScreen = {
         deviceCards.forEach(card => {
             card.removeEventListener('click', this.handleDeviceSelect);
         });
+    }        if (!this.modal) return;
+
+        // Удаляем все обработчики
+        const closeBtn = this.modal.querySelector('#instructionsClose');
+        const nextBtn = this.modal.querySelector('#instructionsNext');
+        const prevBtn = this.modal.querySelector('#instructionsPrev');
+        const skipBtn = this.modal.querySelector('#instructionsSkip');
+
+        if (closeBtn) closeBtn.removeEventListener('click', this.handleClose);
+        if (nextBtn) nextBtn.removeEventListener('click', this.handleNext);
+        if (prevBtn) prevBtn.removeEventListener('click', this.handlePrev);
+        if (skipBtn) skipBtn.removeEventListener('click', this.handleClose);
+
+        // Очищаем device cards
+        const deviceCards = this.modal.querySelectorAll('.device-card');
+        deviceCards.forEach(card => {
+            card.removeEventListener('click', this.handleDeviceSelect);
+        });
     },
 
     selectDevice(deviceType) {
