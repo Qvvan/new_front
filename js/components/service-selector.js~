@@ -20,15 +20,18 @@ window.ServiceSelector = {
 
         try {
             await this.loadServices();
+
+            // ⚠️ СНАЧАЛА добавляем в DOM
+            const modal = this.getModalElement();
+            document.body.appendChild(modal);
+
+            // ⚠️ ПОТОМ рендерим и настраиваем события
             this.render();
             this.isVisible = true;
 
-            // Добавляем к body
-            document.body.appendChild(this.getModalElement());
-
             // Показываем с анимацией
             setTimeout(() => {
-                this.getModalElement().classList.add('active');
+                modal.classList.add('active');
             }, 10);
 
             // Вибрация
@@ -71,53 +74,25 @@ window.ServiceSelector = {
                 window.Loading.show('Загрузка услуг...');
             }
 
+            // Загружаем услуги
             if (window.ServiceAPI) {
                 const response = await window.ServiceAPI.getServices();
                 this.services = response.services || [];
-            } else {
-                // Fallback данные для разработки
-                this.services = [
-                    {
-                        id: '1',
-                        name: 'Базовый',
-                        duration: '1 месяц',
-                        price: 299,
-                        currency: 'RUB',
-                        features: ['Безлимитный трафик', '10 стран', 'Базовая скорость'],
-                        popular: false
-                    },
-                    {
-                        id: '2',
-                        name: 'Премиум',
-                        duration: '3 месяца',
-                        price: 799,
-                        currency: 'RUB',
-                        features: ['Безлимитный трафик', '50+ стран', 'Максимальная скорость', 'Поддержка 24/7'],
-                        popular: true,
-                        discount: 15
-                    },
-                    {
-                        id: '3',
-                        name: 'Премиум+',
-                        duration: '6 месяцев',
-                        price: 1399,
-                        currency: 'RUB',
-                        features: ['Безлимитный трафик', '70+ стран', 'Максимальная скорость', 'Поддержка 24/7', 'Дедикативные IP'],
-                        popular: false,
-                        discount: 30
-                    },
-                    {
-                        id: '4',
-                        name: 'Годовой',
-                        duration: '12 месяцев',
-                        price: 2399,
-                        currency: 'RUB',
-                        features: ['Безлимитный трафик', '70+ стран', 'Максимальная скорость', 'Поддержка 24/7', 'Дедикативные IP', 'Приоритет подключения'],
-                        popular: false,
-                        discount: 50
-                    }
-                ];
+
+                // Нормализуем данные с API
+                this.services = this.services.map(service => ({
+                    ...service,
+                    features: service.features || [],
+                    currency: service.currency || 'RUB',
+                    discount: service.discount || 0,
+                    popular: service.popular || false,
+                    // Конвертируем duration_days в читаемый формат
+                    duration: this.formatDuration(service.duration_days)
+                }));
             }
+
+            // ⚠️ НОВОЕ: Загружаем данные пользователя для пробного периода
+            await this.loadUserData();
 
             Utils.log('info', 'Services loaded:', this.services);
 
@@ -131,6 +106,28 @@ window.ServiceSelector = {
         }
     },
 
+    async loadUserData() {
+        try {
+            if (window.UserAPI) {
+                const response = await window.UserAPI.getCurrentUser();
+                this.userData = response.user || response;
+                Utils.log('info', 'User data loaded:', this.userData);
+            } else {
+                this.userData = { trial_activated: false }; // Fallback
+            }
+        } catch (error) {
+            Utils.log('error', 'Failed to load user data:', error);
+            this.userData = { trial_activated: false };
+        }
+    },
+
+    // ⚠️ НОВЫЙ метод для форматирования продолжительности
+    formatDuration(days) {
+        if (days >= 360) return `${Math.round(days / 365)} год`;
+        if (days >= 30) return `${Math.round(days / 30)} мес`;
+        return `${days} дн`;
+    },
+
     /**
      * Рендеринг селектора
      */
@@ -138,12 +135,22 @@ window.ServiceSelector = {
         const modal = this.getModalElement();
 
         const titleText = this.mode === 'renew' ? 'Продление подписки' : 'Новая подписка';
-        const subtitleText = this.mode === 'renew'
-            ? 'Выберите тариф для продления текущей подписки'
-            : 'Выберите подходящий тариф для начала работы';
+
+        // ⚠️ Добавляем иконки к пояснениям
+        let explanationText = '';
+        if (this.mode === 'renew') {
+            explanationText = '<i class="fas fa-sync-alt"></i>Выберите тариф для продления. Новый период добавится к текущему.';
+        } else {
+            const hasActiveSubscription = this.checkForActiveSubscriptions();
+            if (hasActiveSubscription) {
+                explanationText = '<i class="fas fa-info-circle"></i>У вас уже есть подписка. Оплата создаст новую отдельную подписку.';
+            } else {
+                explanationText = '<i class="fas fa-rocket"></i>Выберите подходящий тариф для начала работы с VPN.';
+            }
+        }
 
         modal.innerHTML = `
-            <div class="modal">
+            <div class="modal modal-services">
                 <div class="modal-header">
                     <div class="modal-title">
                         <i class="fas fa-shopping-cart"></i>
@@ -154,13 +161,13 @@ window.ServiceSelector = {
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="service-selector-header">
-                        <h3 class="service-selector-title">${titleText}</h3>
-                        <p class="service-selector-subtitle">${subtitleText}</p>
+                    <div class="service-explanation">
+                        ${explanationText}
                     </div>
-                    <div class="services-grid">
-                        ${this.renderServices()}
+                    <div class="services-grid-compact">
+                        ${this.renderCompactServices()}
                     </div>
+                    ${this.renderTrialService()}
                 </div>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" id="serviceSelectorCancel">
@@ -177,6 +184,61 @@ window.ServiceSelector = {
         this.setupEventListeners();
     },
 
+    checkForActiveSubscriptions() {
+        // Если есть SubscriptionScreen, проверяем его данные
+        if (window.SubscriptionScreen && window.SubscriptionScreen.currentSubscriptions) {
+            const activeSubscriptions = window.SubscriptionScreen.currentSubscriptions.filter(sub => {
+                const daysLeft = Utils.daysBetween(sub.end_date);
+                return daysLeft > 0 && (sub.status === 'active' || sub.status === 'trial');
+            });
+            return activeSubscriptions.length > 0;
+        }
+        return false;
+    },
+
+    // ⚠️ НОВЫЙ компактный рендеринг услуг
+    renderCompactServices() {
+        // ⚠️ Сортируем услуги по цене (по возрастанию)
+        const sortedServices = [...this.services].sort((a, b) => a.price - b.price);
+
+        return sortedServices.map(service => {
+            return `
+                <div class="service-card-compact" data-service-id="${service.id}">
+                    <div class="service-compact-content">
+                        <h4 class="service-compact-name">${service.name}</h4>
+                        <div class="service-compact-price">${Utils.formatPrice(service.price, service.currency)}</div>
+                        <div class="service-compact-period">${service.duration}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    // ⚠️ НОВЫЙ рендеринг пробного периода
+    renderTrialService() {
+        const isActivated = this.userData?.trial_activated || false;
+        const gifSrc = isActivated ?
+            'assets/images/gifs/gift-opened.png' :
+            'assets/images/gifs/gift-animate.gif';
+
+        return `
+            <div class="trial-service ${isActivated ? 'trial-activated' : 'trial-available'}" data-service-id="trial">
+                <div class="trial-content">
+                    <div class="trial-icon">
+                        <img src="${gifSrc}" alt="Gift" class="gift-image" />
+                    </div>
+                    <div class="trial-info">
+                        <h4 class="trial-title">Бесплатный период</h4>
+                        <div class="trial-duration">5 дней</div>
+                    </div>
+                    <div class="trial-status">
+                        ${isActivated ? 'Использован' : 'Доступен'}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
     /**
      * Рендеринг списка услуг
      */
@@ -186,6 +248,9 @@ window.ServiceSelector = {
             const originalPrice = service.original_price || service.price;
             const hasDiscount = service.discount && service.discount > 0;
 
+            // ⚠️ Защита от отсутствующих features
+            const features = service.features || [];
+
             return `
                 <div class="service-card" data-service-id="${service.id}">
                     ${service.popular ? '<div class="service-badge">Популярный</div>' : ''}
@@ -194,7 +259,7 @@ window.ServiceSelector = {
                     <div class="service-header">
                         <div class="service-info">
                             <h4 class="service-name">${service.name}</h4>
-                            <p class="service-duration">${service.duration}</p>
+                            <p class="service-duration">${service.duration || 'Не указано'}</p>
                         </div>
                         <div class="service-pricing">
                             <div class="service-price">${Utils.formatPrice(service.price, service.currency)}</div>
@@ -204,7 +269,7 @@ window.ServiceSelector = {
                     </div>
 
                     <ul class="service-features">
-                        ${service.features.map(feature => `<li>${feature}</li>`).join('')}
+                        ${features.map(feature => `<li>${feature}</li>`).join('')}
                     </ul>
 
                     ${hasDiscount ? `
@@ -221,15 +286,24 @@ window.ServiceSelector = {
      * Вычисление месячной цены
      */
     calculateMonthlyPrice(service) {
-        const durationMap = {
-            '1 месяц': 1,
-            '3 месяца': 3,
-            '6 месяцев': 6,
-            '12 месяцев': 12
-        };
+        // Парсим продолжительность более надежно
+        const duration = service.duration || service.duration_days;
 
-        const months = durationMap[service.duration] || 1;
-        return Math.round(service.price / months);
+        let months = 1;
+        if (typeof duration === 'string') {
+            const durationMap = {
+                '1 месяц': 1,
+                '3 месяца': 3,
+                '6 месяцев': 6,
+                '12 месяцев': 12
+            };
+            months = durationMap[duration] || 1;
+        } else if (typeof duration === 'number') {
+            // Если duration_days приходит как число дней
+            months = Math.max(1, Math.round(duration / 30));
+        }
+
+        return Math.round((service.price || 0) / months);
     },
 
     /**
@@ -238,32 +312,61 @@ window.ServiceSelector = {
     setupEventListeners() {
         const modal = this.getModalElement();
 
+        if (!modal) {
+            Utils.log('error', 'Modal element not found in setupEventListeners');
+            return;
+        }
+
         // Закрытие модального окна
-        modal.querySelector('#serviceSelectorClose').addEventListener('click', () => {
-            this.hide();
-        });
+        const closeBtn = modal.querySelector('#serviceSelectorClose');
+        const cancelBtn = modal.querySelector('#serviceSelectorCancel');
+        const continueBtn = modal.querySelector('#serviceSelectorContinue');
 
-        modal.querySelector('#serviceSelectorCancel').addEventListener('click', () => {
-            this.hide();
-        });
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                this.hide();
+            });
+        }
 
-        // Выбор услуги
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                this.hide();
+            });
+        }
+
+        if (continueBtn) {
+            continueBtn.addEventListener('click', () => {
+                this.handleContinue();
+            });
+        }
+
+        // ⚠️ ИСПРАВЛЯЕМ: Выбор услуги - правильные селекторы
         modal.addEventListener('click', (e) => {
-            const serviceCard = e.target.closest('.service-card');
-            if (!serviceCard) return;
+            // Проверяем клик по обычным услугам
+            const serviceCard = e.target.closest('.service-card-compact');
+            if (serviceCard) {
+                const serviceId = serviceCard.dataset.serviceId;
+                this.selectService(serviceId);
 
-            const serviceId = serviceCard.dataset.serviceId;
-            this.selectService(serviceId);
-
-            // Вибрация
-            if (window.TelegramApp) {
-                window.TelegramApp.haptic.selection();
+                // Вибрация
+                if (window.TelegramApp) {
+                    window.TelegramApp.haptic.selection();
+                }
+                return;
             }
-        });
 
-        // Продолжить
-        modal.querySelector('#serviceSelectorContinue').addEventListener('click', () => {
-            this.handleContinue();
+            // Проверяем клик по пробному периоду
+            const trialCard = e.target.closest('.trial-service');
+            if (trialCard) {
+                const serviceId = trialCard.dataset.serviceId;
+                this.selectService(serviceId);
+
+                // Вибрация
+                if (window.TelegramApp) {
+                    window.TelegramApp.haptic.selection();
+                }
+                return;
+            }
         });
 
         // Закрытие по клику вне модального окна
@@ -281,28 +384,51 @@ window.ServiceSelector = {
      * Выбор услуги
      */
     selectService(serviceId) {
-        const service = this.services.find(s => s.id === serviceId);
-        if (!service) return;
+        // Проверяем пробный период
+        if (serviceId === 'trial') {
+            if (this.userData?.trial_activated) {
+                if (window.Toast) {
+                    window.Toast.warning('Пробный период уже использован');
+                }
+                return; // Не даем выбрать
+            }
 
-        // Убираем выделение с предыдущей услуги
-        const previousSelected = this.getModalElement().querySelector('.service-card.selected');
-        if (previousSelected) {
-            previousSelected.classList.remove('selected');
+            // Особая обработка для пробного периода
+            this.selectedService = {
+                id: 'trial',
+                name: 'Пробный период',
+                price: 0,
+                duration_days: 7,
+                type: 'trial'
+            };
+        } else {
+            const service = this.services.find(s => s.id === serviceId);
+            if (!service) return;
+            this.selectedService = service;
         }
 
-        // Выделяем новую услугу
-        const serviceCard = this.getModalElement().querySelector(`[data-service-id="${serviceId}"]`);
-        if (serviceCard) {
-            serviceCard.classList.add('selected');
+        // Остальная логика выделения...
+        const modal = this.getModalElement();
+        if (!modal) return;
+
+        // Убираем все выделения
+        modal.querySelectorAll('.service-card-compact, .trial-service').forEach(card => {
+            card.classList.remove('selected');
+        });
+
+        // Выделяем выбранный
+        const selectedCard = modal.querySelector(`[data-service-id="${serviceId}"]`);
+        if (selectedCard) {
+            selectedCard.classList.add('selected');
         }
 
-        this.selectedService = service;
+        // Активируем кнопку
+        const continueBtn = modal.querySelector('#serviceSelectorContinue');
+        if (continueBtn) {
+            continueBtn.disabled = false;
+        }
 
-        // Активируем кнопку продолжения
-        const continueBtn = this.getModalElement().querySelector('#serviceSelectorContinue');
-        continueBtn.disabled = false;
-
-        Utils.log('info', 'Service selected:', service);
+        Utils.log('info', 'Service selected:', this.selectedService);
     },
 
     /**
@@ -332,7 +458,7 @@ window.ServiceSelector = {
     /**
      * Создание платежа
      */
-        async createPayment() {
+    async createPayment() {
         try {
             if (window.Loading) {
                 window.Loading.show('Создание платежа...');
@@ -378,7 +504,7 @@ window.ServiceSelector = {
                 window.Loading.hide();
             }
         }
-    }
+    },
 
     /**
      * Обработка клавиши Escape

@@ -1,0 +1,604 @@
+// Main Application File for Dragon VPN Mini App
+
+window.DragonVPNApp = {
+    isInitialized: false,
+    isReady: false,
+    initializationPromise: null,
+
+    /**
+     * Инициализация приложения
+     */
+    async init() {
+        if (this.initializationPromise) {
+            return this.initializationPromise;
+        }
+
+        this.initializationPromise = this._performInit();
+        return this.initializationPromise;
+    },
+
+    /**
+     * Выполнение инициализации
+     */
+async _performInit() {
+    try {
+        Utils.log('info', 'Dragon VPN App initialization started');
+
+            // 1. СНАЧАЛА инициализируем Loading без показа
+            if (window.Loading) {
+                window.Loading.init();
+            }
+
+            // 2. ПОТОМ показываем загрузку
+            this.showInitialLoading();
+
+            // 3. Остальная инициализация...
+            await this.initializeTelegram();
+
+            // 2. Инициализация системы хранилища
+            await this.initializeStorage();
+
+            // 3. Парсинг реферальных ссылок
+            await this.parseReferralData();
+
+            // 4. Инициализация компонентов
+            await this.initializeComponents();
+
+            // 5. Инициализация экранов
+            await this.initializeScreens();
+
+            // 6. Настройка роутера
+            await this.initializeRouter();
+
+            // 7. Проверка pending платежей
+            await this.checkPendingPayments();
+
+            // 8. Финализация
+            await this.finalize();
+
+            this.isInitialized = true;
+            this.isReady = true;
+
+            Utils.log('info', 'Dragon VPN App initialized successfully');
+
+        } catch (error) {
+            Utils.log('error', 'App initialization failed:', error);
+            await this.handleInitializationError(error);
+        }
+    },
+
+    /**
+     * Показ начальной загрузки
+     */
+    showInitialLoading() {
+        const loadingSteps = [
+            'Подключение к Telegram...',
+            'Загрузка данных пользователя...',
+            'Инициализация компонентов...',
+            'Проверка подписок...',
+            'Подготовка интерфейса...'
+        ];
+
+        // Показываем загрузку с шагами
+        if (window.Loading && window.Loading.overlay) {
+            window.Loading.showSteps(loadingSteps, 0);
+        } else {
+            console.warn('Loading component not ready, skipping initial loading display');
+        }
+    },
+
+    /**
+     * Инициализация Telegram WebApp
+     */
+    async initializeTelegram() {
+        Utils.log('info', 'Initializing Telegram WebApp');
+
+        if (window.TelegramApp) {
+            window.TelegramApp.init();
+
+            // Ждем готовности
+            await new Promise(resolve => {
+                if (window.TelegramApp.isInitialized) {
+                    resolve();
+                } else {
+                    setTimeout(resolve, 1000);
+                }
+            });
+        }
+
+        if (window.Loading) {
+            window.Loading.showSteps(['', 'Загрузка данных пользователя...'], 1);
+        }
+    },
+
+    /**
+     * Инициализация системы хранилища
+     */
+    async initializeStorage() {
+        Utils.log('info', 'Initializing Storage System');
+
+        if (window.Storage) {
+            await window.Storage.init();
+            await window.Storage.sync();
+        }
+    },
+
+    /**
+     * Парсинг реферальных данных
+     */
+    async parseReferralData() {
+        Utils.log('info', 'Parsing referral data');
+
+        try {
+            // Проверяем URL на наличие реферальных параметров
+            const urlParams = new URLSearchParams(window.location.search);
+            const startParam = urlParams.get('startapp') || urlParams.get('start');
+
+            if (startParam) {
+                // Парсим реферальную ссылку
+                await this.handleReferralLink(startParam);
+            }
+
+            // Также проверяем Telegram initData
+            if (window.TelegramApp && window.TelegramApp.webApp) {
+                const initDataUnsafe = window.TelegramApp.webApp.initDataUnsafe;
+                if (initDataUnsafe && initDataUnsafe.start_param) {
+                    await this.handleReferralLink(initDataUnsafe.start_param);
+                }
+            }
+
+        } catch (error) {
+            Utils.log('error', 'Failed to parse referral data:', error);
+        }
+
+        if (window.Loading) {
+            window.Loading.showSteps(['', '', 'Инициализация компонентов...'], 2);
+        }
+    },
+
+    /**
+     * Обработка реферальной ссылки
+     */
+    async handleReferralLink(startParam) {
+        try {
+            // Ожидаем формат: ref_USER_ID или просто USER_ID
+            let referrerId = null;
+
+            if (startParam.startsWith('ref_')) {
+                referrerId = startParam.substring(4);
+            } else if (/^\d+$/.test(startParam)) {
+                referrerId = startParam;
+            }
+
+            if (referrerId) {
+                Utils.log('info', `Referral detected: ${referrerId}`);
+
+                // Сохраняем реферальные данные
+                if (window.Storage) {
+                    await window.Storage.set('referrer_id', referrerId);
+                }
+
+                // Отправляем на сервер при регистрации пользователя
+                this.pendingReferrerId = referrerId;
+            }
+
+        } catch (error) {
+            Utils.log('error', 'Failed to handle referral link:', error);
+        }
+    },
+
+    /**
+     * Инициализация компонентов
+     */
+    async initializeComponents() {
+        Utils.log('info', 'Initializing components');
+
+        // Базовые компоненты
+        if (window.Toast) {
+            window.Toast.init();
+        }
+
+        if (window.Modal) {
+            window.Modal.init();
+        }
+
+        if (window.Loading) {
+            window.Loading.init();
+        }
+
+        if (window.Navigation) {
+            window.Navigation.init();
+        }
+
+        // Новые компоненты
+        if (window.PaymentBanner) {
+            window.PaymentBanner.init();
+        }
+
+        if (window.Loading) {
+            window.Loading.showSteps(['', '', '', 'Проверка подписок...'], 3);
+        }
+    },
+
+    /**
+     * Инициализация экранов
+     */
+    async initializeScreens() {
+        Utils.log('info', 'Initializing screens');
+
+        // Инициализируем только экран подписок по умолчанию
+        // Остальные экраны будут инициализированы при переходе к ним
+        if (window.SubscriptionScreen) {
+            await window.SubscriptionScreen.init();
+        }
+
+        if (window.Loading) {
+            window.Loading.showSteps(['', '', '', '', 'Подготовка интерфейса...'], 4);
+        }
+    },
+
+    /**
+     * Инициализация роутера
+     */
+    async initializeRouter() {
+        Utils.log('info', 'Initializing router');
+
+        if (window.Router) {
+            window.Router.init();
+        }
+
+        if (window.Navigation) {
+            window.Navigation.handleAppEvents();
+            await window.Navigation.updateNavigationState();
+        }
+    },
+
+    /**
+     * Проверка pending платежей
+     */
+    async checkPendingPayments() {
+        try {
+            const pendingPayments = await window.Storage?.getPendingPayments() || [];
+
+            if (pendingPayments.length > 0) {
+                Utils.log('info', `Found ${pendingPayments.length} pending payments`);
+
+                // Показываем плашку оплаты для первого pending платежа
+                const latestPayment = pendingPayments[pendingPayments.length - 1];
+                if (window.PaymentBanner) {
+                    window.PaymentBanner.show(latestPayment);
+                }
+
+                // Запускаем мониторинг платежей
+                if (window.PaymentMonitor) {
+                    window.PaymentMonitor.start();
+                }
+            }
+        } catch (error) {
+            Utils.log('error', 'Failed to check pending payments:', error);
+        }
+    },
+
+    /**
+     * Финализация инициализации
+     */
+    async finalize() {
+        // Скрываем загрузку
+        if (window.Loading) {
+            await window.Loading.simulateProgress(500, 'Готово!');
+        }
+
+        // Анимация появления интерфейса
+        this.animateAppearance();
+
+        // Регистрируем пользователя если нужно
+        await this.ensureUserRegistration();
+
+        // Настраиваем периодические задачи
+        this.setupPeriodicTasks();
+
+        // Обновляем последнюю активность
+        if (window.Storage) {
+            await window.Storage.updateLastActivity();
+        }
+
+        Utils.log('info', 'App finalization completed');
+    },
+
+    /**
+     * Анимация появления приложения
+     */
+    animateAppearance() {
+        const screens = document.querySelectorAll('.screen');
+        const navigation = document.querySelector('.bottom-nav');
+
+        screens.forEach(screen => {
+            screen.classList.add('animate-fade-in');
+        });
+
+        if (navigation) {
+            // ПРАВИЛЬНО: сохраняем и горизонтальное, и вертикальное смещение
+            navigation.style.transform = 'translateX(-50%) translateY(100%)';
+            setTimeout(() => {
+                navigation.style.transition = 'transform 0.3s ease';
+                navigation.style.transform = 'translateX(-50%) translateY(0)';
+            }, 200);
+        }
+    },
+
+    /**
+     * Регистрация пользователя
+     */
+    async ensureUserRegistration() {
+        try {
+            const userData = await window.Storage?.getUserData();
+            const telegramUser = window.TelegramApp?.getUserInfo();
+
+            if (!userData && telegramUser) {
+                Utils.log('info', 'Registering new user');
+
+                const registrationData = {
+                    referrer_id: this.pendingReferrerId || null
+                };
+
+                if (window.UserAPI) {
+                    const result = await window.UserAPI.registerUser(registrationData);
+                    await window.Storage?.setUserData(result.user);
+
+                    if (window.Toast) {
+                        window.Toast.success('Добро пожаловать в Dragon VPN!');
+                    }
+                }
+            }
+        } catch (error) {
+            Utils.log('error', 'User registration failed:', error);
+        }
+    },
+
+    /**
+     * Настройка периодических задач
+     */
+    setupPeriodicTasks() {
+        // Проверка состояния подписок каждые 5 минут
+        setInterval(() => {
+            if (window.SubscriptionScreen) {
+                window.SubscriptionScreen.checkExpiredSubscriptions();
+            }
+        }, 5 * 60 * 1000);
+
+        // Обновление навигации каждые 2 минуты
+        setInterval(() => {
+            if (window.Navigation) {
+                window.Navigation.updateNavigationState();
+            }
+        }, 2 * 60 * 1000);
+
+        // Синхронизация данных каждые 10 минут
+        setInterval(() => {
+            if (window.Storage) {
+                window.Storage.sync();
+            }
+        }, 10 * 60 * 1000);
+    },
+
+    /**
+     * Обработка ошибки инициализации
+     */
+    async handleInitializationError(error) {
+        Utils.log('error', 'Critical initialization error:', error);
+
+        // Скрываем загрузку
+        if (window.Loading) {
+            window.Loading.hide();
+        }
+
+        // Показываем ошибку
+        if (window.TelegramApp) {
+            await window.TelegramApp.showAlert('Ошибка запуска приложения. Попробуйте перезапустить.');
+        } else {
+            alert('Ошибка запуска приложения. Попробуйте перезапустить.');
+        }
+
+        // Попытка восстановления
+        setTimeout(() => {
+            this.attemptRecovery();
+        }, 2000);
+    },
+
+    /**
+     * Попытка восстановления после ошибки
+     */
+    async attemptRecovery() {
+        try {
+            Utils.log('info', 'Attempting app recovery');
+
+            // Очищаем состояние
+            this.isInitialized = false;
+            this.isReady = false;
+            this.initializationPromise = null;
+
+            // Перезапускаем инициализацию
+            await this.init();
+
+        } catch (error) {
+            Utils.log('error', 'Recovery failed:', error);
+
+            // Если восстановление не удалось, предлагаем перезагрузку
+            if (window.TelegramApp) {
+                const restart = await window.TelegramApp.showConfirm(
+                    'Не удалось восстановить приложение. Перезагрузить страницу?'
+                );
+                if (restart) {
+                    window.location.reload();
+                }
+            }
+        }
+    },
+
+    /**
+     * Обработка lifecycle событий
+     */
+    handleLifecycleEvents() {
+        // Приложение становится активным
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState === 'visible' && this.isReady) {
+                await this.onAppResume();
+            }
+        });
+
+        // Перед закрытием приложения
+        window.addEventListener('beforeunload', () => {
+            this.onAppPause();
+        });
+
+        // Обработка ошибок
+        window.addEventListener('error', (event) => {
+            this.handleGlobalError(event.error);
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            this.handleGlobalError(event.reason);
+        });
+    },
+
+    /**
+     * Приложение стало активным
+     */
+    async onAppResume() {
+        Utils.log('info', 'App resumed');
+
+        try {
+            // Обновляем данные
+            await this.refreshAppData();
+
+            // Проверяем pending платежи
+            await this.checkPendingPayments();
+
+            // Обновляем навигацию
+            if (window.Navigation) {
+                await window.Navigation.updateNavigationState();
+            }
+
+        } catch (error) {
+            Utils.log('error', 'Failed to handle app resume:', error);
+        }
+    },
+
+    /**
+     * Приложение уходит в фон
+     */
+    onAppPause() {
+        Utils.log('info', 'App paused');
+
+        // Сохраняем последнюю активность
+        if (window.Storage) {
+            window.Storage.updateLastActivity();
+        }
+    },
+
+    /**
+     * Обновление данных приложения
+     */
+    async refreshAppData() {
+        try {
+            // Обновляем подписки
+            if (window.SubscriptionScreen && window.SubscriptionScreen.isLoaded) {
+                await window.SubscriptionScreen.refresh();
+            }
+
+            // Синхронизируем хранилище
+            if (window.Storage) {
+                await window.Storage.sync();
+            }
+
+        } catch (error) {
+            Utils.log('error', 'Failed to refresh app data:', error);
+        }
+    },
+
+    /**
+     * Обработка глобальных ошибок
+     */
+    handleGlobalError(error) {
+        Utils.log('error', 'Global error caught:', error);
+
+        // Показываем пользователю только критические ошибки
+        if (error.message && error.message.includes('Network')) {
+            if (window.Toast) {
+                window.Toast.networkError();
+            }
+        }
+    },
+
+    /**
+     * Проверка готовности приложения
+     */
+    isAppReady() {
+        return this.isReady;
+    },
+
+    /**
+     * Получение статуса приложения
+     */
+    getAppStatus() {
+        return {
+            isInitialized: this.isInitialized,
+            isReady: this.isReady,
+            currentScreen: window.Router?.getCurrentScreen(),
+            hasActiveModals: window.Modal?.hasActiveModals(),
+            pendingPayments: window.Storage?.getPendingPayments().length || 0,
+            lastActivity: window.Storage?.getLastActivity()
+        };
+    },
+
+    /**
+     * Перезапуск приложения
+     */
+    async restart() {
+        Utils.log('info', 'Restarting application');
+
+        try {
+            // Очищаем все компоненты
+            this.cleanup();
+
+            // Перезапускаем инициализацию
+            await this.init();
+
+            if (window.Toast) {
+                window.Toast.success('Приложение перезапущено');
+            }
+
+        } catch (error) {
+            Utils.log('error', 'Restart failed:', error);
+            window.location.reload();
+        }
+    },
+
+    /**
+     * Очистка приложения
+     */
+    cleanup() {
+        // Очищаем компоненты
+        if (window.Toast) window.Toast.cleanup();
+        if (window.Modal) window.Modal.cleanup();
+        if (window.Loading) window.Loading.cleanup();
+        if (window.Navigation) window.Navigation.cleanup();
+        if (window.SubscriptionScreen) window.SubscriptionScreen.cleanup();
+
+        // Сбрасываем состояние
+        this.isInitialized = false;
+        this.isReady = false;
+        this.initializationPromise = null;
+        this.pendingReferrerId = null;
+    }
+};
+
+// Автоматическая инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        await window.DragonVPNApp.init();
+        window.DragonVPNApp.handleLifecycleEvents();
+    } catch (error) {
+        console.error('Failed to start Dragon VPN App:', error);
+    }
+});

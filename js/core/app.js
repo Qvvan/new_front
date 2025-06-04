@@ -32,6 +32,10 @@ async _performInit() {
             // 2. ПОТОМ показываем загрузку
             this.showInitialLoading();
 
+            if (window.Assets) {
+                window.Assets.preloadAssets();
+            }
+
             // 3. Остальная инициализация...
             await this.initializeTelegram();
 
