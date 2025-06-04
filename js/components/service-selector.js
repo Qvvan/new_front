@@ -378,7 +378,7 @@ window.ServiceSelector = {
                 window.Loading.hide();
             }
         }
-    }
+    },
 
     /**
      * Обработка клавиши Escape

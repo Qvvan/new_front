@@ -35,8 +35,17 @@ window.SubscriptionAPI = {
      * @returns {Promise<Object>} Список подписок
      */
     async listSubscriptions(params = {}) {
-        // Убираем автоматическое добавление user_id
-        // Сервер сам извлечет данные пользователя из заголовка
+        // Автоматически добавляем user_id из Telegram
+        const telegramUser = window.TelegramApp?.getUserInfo();
+        if (telegramUser?.id && !params.user_id) {
+            try {
+                const user = await window.UserAPI.getUserByTelegramId(telegramUser.id);
+                params.user_id = user.user.telegram_id; // Используем telegram_id для фильтрации
+            } catch (error) {
+                Utils.log('warn', 'Could not get user for subscriptions filter');
+            }
+        }
+
         return await window.APIClient.get('/subscriptions', params);
     },
 

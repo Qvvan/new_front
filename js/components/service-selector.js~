@@ -332,53 +332,53 @@ window.ServiceSelector = {
     /**
      * Создание платежа
      */
-    async createPayment() {
-    try {
-        if (window.Loading) {
-            window.Loading.show('Создание платежа...');
-        }
+        async createPayment() {
+        try {
+            if (window.Loading) {
+                window.Loading.show('Создание платежа...');
+            }
 
-        const paymentData = {
-            service_id: this.selectedService.id,
-            service_type: this.mode === 'renew' ? 'old' : 'new',
-            subscription_id: this.subscriptionId || undefined,
-            description: `${this.selectedService.name} - ${this.mode === 'renew' ? 'Продление' : 'Новая подписка'}`,
-            price: this.selectedService.price
-        };
+            const paymentData = {
+                service_id: this.selectedService.id,
+                service_type: this.mode === 'renew' ? 'old' : 'new',
+                subscription_id: this.subscriptionId || undefined,
+                description: `${this.selectedService.name} - ${this.mode === 'renew' ? 'Продление' : 'Новая подписка'}`,
+                price: this.selectedService.price
+            };
 
-        // Создаем платеж с автоматическим мониторингом
-        const response = await window.PaymentAPI.createPaymentWithMonitoring(paymentData);
-        const payment = response.payment || response;
+            // Создаем платеж с автоматическим мониторингом
+            const response = await window.PaymentAPI.createPaymentWithMonitoring(paymentData);
+            const payment = response.payment || response;
 
-        // Скрываем селектор
-        this.hide();
+            // Скрываем селектор
+            this.hide();
 
-        // Показываем плашку оплаты
-        if (window.PaymentBanner) {
-            window.PaymentBanner.show(payment);
-        }
+            // Показываем плашку оплаты
+            if (window.PaymentBanner) {
+                window.PaymentBanner.show(payment);
+            }
 
-        // Открываем страницу оплаты
-        if (response.url) {
-            window.TelegramApp.openLink(response.url);
-        }
+            // Открываем страницу оплаты
+            if (response.url) {
+                window.TelegramApp.openLink(response.url);
+            }
 
-        Utils.log('info', 'Payment created and monitoring started:', payment.id);
+            Utils.log('info', 'Payment created and monitoring started:', payment.id);
 
-    } catch (error) {
-        Utils.log('error', 'Failed to create payment:', error);
+        } catch (error) {
+            Utils.log('error', 'Failed to create payment:', error);
 
-        if (window.Toast) {
-            const message = error.message || 'Ошибка создания платежа';
-            window.Toast.error(message);
-        }
-        throw error;
-    } finally {
-        if (window.Loading) {
-            window.Loading.hide();
+            if (window.Toast) {
+                const message = error.message || 'Ошибка создания платежа';
+                window.Toast.error(message);
+            }
+            throw error;
+        } finally {
+            if (window.Loading) {
+                window.Loading.hide();
+            }
         }
     }
-}
 
     /**
      * Обработка клавиши Escape

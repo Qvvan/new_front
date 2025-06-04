@@ -47,17 +47,7 @@ window.PaymentAPI = {
      * @returns {Promise<Object>} Список платежей
      */
     async listPayments(params = {}) {
-        // Автоматически добавляем user_id из Telegram
-        const telegramUser = window.TelegramApp?.getUserInfo();
-        if (telegramUser?.id && !params.user_id) {
-            try {
-                const user = await window.UserAPI.getUserByTelegramId(telegramUser.id);
-                params.user_id = user.user.telegram_id;
-            } catch (error) {
-                Utils.log('warn', 'Could not get user for payments filter');
-            }
-        }
-
+        // Убираем добавление user_id в параметры
         return await window.APIClient.get('/payments', params);
     },
 
