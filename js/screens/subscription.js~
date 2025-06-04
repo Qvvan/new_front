@@ -402,7 +402,7 @@ window.SubscriptionScreen = {
                     <div class="auto-renewal" data-subscription-id="${subscription.id}">
                         <div class="auto-renewal-info">
                             <div class="auto-renewal-icon">
-                                <i class="fas fa-sync-alt"></i>
+                                <img src="${window.Assets.getGif('auto-renewal.gif')}" alt="Auto renewal" class="auto-renewal-gif" />
                             </div>
                             <div class="auto-renewal-text">
                                 <h4>Автопродление</h4>
@@ -573,6 +573,7 @@ window.SubscriptionScreen = {
      * Обновление UI автопродления
      */
     updateAutoRenewalUI(subscriptionId, autoRenewal) {
+        // Обновляем полный формат
         const toggle = document.querySelector(`[data-subscription-id="${subscriptionId}"] .toggle-switch`);
         const statusText = document.querySelector(`[data-subscription-id="${subscriptionId}"] .auto-renewal-status`);
 
@@ -588,6 +589,12 @@ window.SubscriptionScreen = {
                     ? `Продление ${renewalDate}`
                     : `Завершится ${renewalDate}`;
             }
+        }
+
+        // Обновляем компактный формат
+        const compactToggle = document.querySelector(`[data-subscription-id="${subscriptionId}"] .toggle-switch-compact`);
+        if (compactToggle) {
+            compactToggle.classList.toggle('active', autoRenewal);
         }
     },
 

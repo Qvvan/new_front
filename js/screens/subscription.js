@@ -402,7 +402,7 @@ window.SubscriptionScreen = {
                     <div class="auto-renewal" data-subscription-id="${subscription.id}">
                         <div class="auto-renewal-info">
                             <div class="auto-renewal-icon">
-                                <i class="fas fa-sync-alt"></i>
+                                <img src="${window.Assets.getGif('auto-renewal.gif')}" alt="Auto renewal" class="auto-renewal-gif" />
                             </div>
                             <div class="auto-renewal-text">
                                 <h4>Автопродление</h4>
@@ -502,7 +502,7 @@ window.SubscriptionScreen = {
         return `
             <div class="section">
                 <h2 class="section-title">
-                    <i class="fas fa-bolt"></i>
+                    <img src="${window.Assets.getGif('management.gif')}" alt="Management" class="section-title-gif" />
                     Управление
                 </h2>
                 <div class="action-grid">

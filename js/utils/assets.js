@@ -17,7 +17,9 @@ class Assets {
     static preloadAssets() {
         const criticalAssets = [
             this.getGif('gift-animate.gif'),
-            this.getGif('gift-opened.png')
+            this.getGif('gift-opened.png'),
+            this.getGif('auto-renewal.gif'),      // Новая гифка
+            this.getGif('management.gif')         // Новая гифка
         ];
 
         criticalAssets.forEach(src => {
