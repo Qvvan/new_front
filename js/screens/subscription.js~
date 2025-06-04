@@ -430,15 +430,18 @@ window.SubscriptionScreen = {
             const daysLeft = Utils.daysBetween(subscription.end_date);
             const isExpired = daysLeft <= 0;
             const isTrial = this.isTrialSubscription(subscription);
+            const subscriptionType = this.getSubscriptionType(subscription);
 
-            // Только 2 статуса
-            const statusClass = isExpired ? 'expired' : 'active';
-            const statusText = isExpired ? 'Истекла' : 'Активна';
+            const statusText = {
+                'trial': 'Пробная',
+                'expired': 'Истекла',
+                'active': 'Активна'
+            }[subscriptionType];
 
             const serviceName = this.getServiceName(subscription);
 
             content += `
-                <div class="subscription-compact ${statusClass}" data-subscription-id="${subscription.id}">
+                <div class="subscription-compact ${subscriptionType}" data-subscription-id="${subscription.id}">
                     <div class="subscription-compact-info">
                         <div class="subscription-compact-icon">
                             <i class="fas ${isTrial ? 'fa-gift' : 'fa-shield-alt'}"></i>
@@ -455,9 +458,11 @@ window.SubscriptionScreen = {
                         </div>
                     </div>
                     <div class="subscription-compact-actions">
-                        <button class="btn btn-sm btn-primary" data-action="renew" data-subscription-id="${subscription.id}">
-                            <i class="fas fa-credit-card"></i>
-                        </button>
+                        ${!isTrial ? `
+                            <button class="btn btn-sm btn-primary" data-action="renew" data-subscription-id="${subscription.id}">
+                                <i class="fas fa-credit-card"></i>
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             `;
@@ -465,6 +470,7 @@ window.SubscriptionScreen = {
 
         content += '</div>';
 
+        // Добавляем общие кнопки действий
         content += `
             <div class="subscription-actions">
                 <button class="btn btn-primary" data-action="buy">

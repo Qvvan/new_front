@@ -56,5 +56,13 @@ window.SubscriptionAPI = {
      */
     async deleteSubscription(subscriptionId) {
         return await window.APIClient.delete(`/subscription/${subscriptionId}`);
+    },
+
+    /**
+     * Активация пробного периода
+     * @returns {Promise<Object>} Созданная пробная подписка
+     */
+    async activateTrial() {
+        return await window.APIClient.post('/subscription/trial');
     }
 };

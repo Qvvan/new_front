@@ -174,11 +174,6 @@
     color: var(--text-primary);
 }
 
-.subscription-status.trial {
-    background: var(--accent-blue);
-    color: var(--text-primary);
-}
-
 .plan-details {
     display: flex;
     justify-content: space-between;
@@ -776,6 +771,21 @@
 .subscription-compact.expired {
     border-color: var(--accent-red);
     background: rgba(255, 71, 87, 0.1);
+}
+
+.subscription-compact.active {
+    border-color: var(--border-light);
+    background: var(--bg-secondary);
+}
+
+.subscription-compact.active:hover {
+    border-color: var(--border-light);
+    background: var(--bg-tertiary);
+}
+
+.subscription-compact.expired:hover {
+    border-color: var(--accent-red);
+    background: rgba(255, 71, 87, 0.15);
 }
 
 .subscription-compact.trial {
