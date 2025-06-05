@@ -20,6 +20,22 @@ window.PaymentBanner = {
     async show(payment) {
         if (!this.element || !payment) return;
 
+        // ✅ ИСПРАВЛЕНИЕ: Убеждаемся что URL сохранен
+        if (!payment.payment_url && !payment.url) {
+            Utils.log('warn', 'Payment URL missing, trying to get from storage');
+
+            // Пытаемся получить URL из pending платежей в Storage
+            const pendingPayments = await window.Storage?.getPendingPayments() || [];
+            const storedPayment = pendingPayments.find(p =>
+                p.id === payment.id || p.payment_id === payment.payment_id
+            );
+
+            if (storedPayment && storedPayment.payment_url) {
+                payment.payment_url = storedPayment.payment_url;
+                Utils.log('info', 'Restored payment URL from storage');
+            }
+        }
+
         // Обогащаем платеж данными сервиса
         await this.enrichPaymentWithServiceData(payment);
 
@@ -188,11 +204,25 @@ window.PaymentBanner = {
             window.TelegramApp.haptic.light();
         }
 
-        // Открываем ссылку на оплату (если есть)
-        if (this.currentPayment.payment_url) {
-            window.TelegramApp.openLink(this.currentPayment.payment_url);
+        // ✅ ИСПРАВЛЕНИЕ: Проверяем наличие URL оплаты
+        const paymentUrl = this.currentPayment.payment_url || this.currentPayment.url;
+
+        if (paymentUrl) {
+            Utils.log('info', 'Opening payment URL:', paymentUrl);
+
+            if (window.TelegramApp) {
+                window.TelegramApp.openLink(paymentUrl);
+            } else {
+                window.open(paymentUrl, '_blank');
+            }
         } else {
-            // Переходим на экран платежей
+            Utils.log('error', 'Payment URL not found for payment:', this.currentPayment.id);
+
+            // Fallback - переходим на экран платежей
+            if (window.Toast) {
+                window.Toast.warning('Ссылка на оплату недоступна');
+            }
+
             if (window.Router) {
                 window.Router.navigate('payments');
             }

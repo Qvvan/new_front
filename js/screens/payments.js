@@ -347,13 +347,43 @@ window.PaymentsScreen = {
             window.TelegramApp.haptic.light();
         }
 
-        // Если pending - продолжаем оплату
-        if (payment.status === 'pending' && payment.payment_url) {
-            window.TelegramApp.openLink(payment.payment_url);
-            return;
+        // ✅ ИСПРАВЛЕНИЕ: Для pending платежей сразу открываем оплату
+        if (payment.status === 'pending') {
+            const paymentUrl = payment.payment_url || payment.url;
+
+            if (paymentUrl) {
+                Utils.log('info', 'Opening pending payment URL:', paymentUrl);
+
+                if (window.TelegramApp) {
+                    window.TelegramApp.openLink(paymentUrl);
+                } else {
+                    window.open(paymentUrl, '_blank');
+                }
+                return; // ✅ Важно: выходим, не показываем модалку
+            } else {
+                // Если URL нет - пытаемся найти в Storage
+                const pendingPayments = await window.Storage?.getPendingPayments() || [];
+                const storedPayment = pendingPayments.find(p =>
+                    p.id === payment.id || p.payment_id === payment.payment_id
+                );
+
+                if (storedPayment && storedPayment.payment_url) {
+                    if (window.TelegramApp) {
+                        window.TelegramApp.openLink(storedPayment.payment_url);
+                    } else {
+                        window.open(storedPayment.payment_url, '_blank');
+                    }
+                    return;
+                } else {
+                    // URL недоступен
+                    if (window.Toast) {
+                        window.Toast.warning('Ссылка на оплату недоступна');
+                    }
+                }
+            }
         }
 
-        // Показываем детали в модальном окне
+        // Для остальных статусов показываем детали в модальном окне
         this.showPaymentModal(payment);
     },
 

@@ -131,17 +131,22 @@ window.Storage = {
         const exists = pending.some(p => p.id === payment.id || p.payment_id === payment.payment_id);
 
         if (!exists) {
-            pending.push({
+            const paymentData = {
                 id: payment.id,
                 payment_id: payment.payment_id,
                 price: payment.price,
                 created_at: payment.created_at,
-                payment_url: payment.url || payment.payment_url,
-                description: payment.description
-            });
+                description: payment.description,
+                service_id: payment.service_id,
+                service_name: payment.service_name,
+                // ✅ ИСПРАВЛЕНИЕ: Сохраняем все возможные варианты URL
+                payment_url: payment.payment_url || payment.url || payment.confirmation_url,
+                url: payment.url, // Дублируем для совместимости
+            };
 
+            pending.push(paymentData);
             this.session.set('pending_payments', pending);
-            Utils.log('info', `Added pending payment: ${payment.id}`);
+            Utils.log('info', `Added pending payment with URL: ${payment.id}`, paymentData);
         }
     },
 

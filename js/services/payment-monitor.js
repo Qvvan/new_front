@@ -11,13 +11,16 @@ window.PaymentMonitor = {
     addPayment(paymentId) {
         if (!paymentId) return;
 
+        // ✅ Добавляем дополнительные флаги для отслеживания
         this.pendingPayments.set(paymentId, {
             id: paymentId,
             addedAt: Date.now(),
-            lastChecked: null
+            lastChecked: null,
+            wasSuccessful: false, // ⭐ Новый флаг!
+            checkCount: 0         // ⭐ Счетчик проверок
         });
 
-        Utils.log('info', `Added payment to monitoring: ${paymentId}`);
+        Utils.log('info', `Added payment ${paymentId} to monitoring`);
         this.start();
     },
 
@@ -78,21 +81,32 @@ window.PaymentMonitor = {
             return;
         }
 
+        // ✅ Защита от слишком частых проверок одного платежа
+        const maxChecks = 120; // Максимум 120 проверок (10 минут при интервале 5 сек)
+
         try {
-            // Получаем все платежи пользователя
             const response = await window.PaymentAPI.listPayments({
                 status: 'pending,succeeded,canceled'
             });
             const payments = response.payments || [];
 
-            // Проверяем каждый pending платеж
             for (const [paymentId, info] of this.pendingPayments.entries()) {
+                // ⚠️ Увеличиваем счетчик проверок
+                info.checkCount = (info.checkCount || 0) + 1;
+
+                // ⚠️ Если слишком много проверок - удаляем платеж
+                if (info.checkCount > maxChecks) {
+                    Utils.log('warn', `Payment ${paymentId} exceeded max checks, removing`);
+                    this.removePayment(paymentId);
+                    continue;
+                }
+
                 const payment = payments.find(p => p.id === paymentId || p.payment_id === paymentId);
 
                 if (payment) {
                     await this.handlePaymentStatusChange(payment, info);
                 } else {
-                    // Платеж не найден - возможно удален
+                    Utils.log('info', `Payment ${paymentId} not found in API, removing from monitoring`);
                     this.removePayment(paymentId);
                 }
             }
@@ -107,18 +121,31 @@ window.PaymentMonitor = {
      */
     async handlePaymentStatusChange(payment, info) {
         const currentStatus = payment.status;
+        const paymentId = payment.id;
+
+        Utils.log('info', `Payment ${paymentId} status: ${currentStatus}`);
 
         if (currentStatus === 'succeeded') {
-            await this.handlePaymentSuccess(payment);
-            this.removePayment(payment.id);
+            // ✅ Проверяем, что это действительно новый успешный платеж
+            if (!info.wasSuccessful) {
+                info.wasSuccessful = true; // Помечаем как обработанный
+                await this.handlePaymentSuccess(payment);
+            }
+            this.removePayment(paymentId);
 
         } else if (currentStatus === 'canceled') {
+            Utils.log('info', `Payment ${paymentId} was canceled`);
             await this.handlePaymentCanceled(payment);
-            this.removePayment(payment.id);
+            this.removePayment(paymentId);
 
         } else if (currentStatus === 'pending') {
             // Остается pending - обновляем время последней проверки
             info.lastChecked = Date.now();
+            Utils.log('debug', `Payment ${paymentId} still pending`);
+        } else {
+            // Неизвестный статус - удаляем из мониторинга
+            Utils.log('warn', `Payment ${paymentId} has unknown status: ${currentStatus}`);
+            this.removePayment(paymentId);
         }
     },
 

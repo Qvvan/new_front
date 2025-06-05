@@ -46,9 +46,9 @@ window.PaymentAPI = {
      * @param {Object} params - Параметры фильтрации
      * @returns {Promise<Object>} Список платежей
      */
-    async listPayments(params = {}) {
+    async listPayments() {
         // Убираем добавление user_id в параметры
-        return await window.APIClient.get('/payments', params);
+        return await window.APIClient.get('/payments');
     },
 
     /**
@@ -57,20 +57,29 @@ window.PaymentAPI = {
      */
     async getPendingPayments() {
         try {
-            const response = await this.listPayments({ status: 'pending' });
+            // ✅ Получаем только реально pending платежи
+            const response = await this.listPayments({
+                status: 'pending',
+                // Добавляем ограничение по времени - только за последние 24 часа
+                created_since: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+            });
+
             const payments = response.payments || [];
 
-            // Обогащаем каждый платеж данными сервиса
-            for (const payment of payments) {
-                try {
-                    const service = await window.ServiceAPI.getService(payment.service_id);
-                    if (service) {
-                        payment.service_name = service.name;
-                        payment.service_duration_days = service.duration_days;
+            Utils.log('info', `API returned ${payments.length} pending payments`);
+
+            // Обогащаем данными сервисов только если есть платежи
+            if (payments.length > 0) {
+                for (const payment of payments) {
+                    try {
+                        const service = await window.ServiceAPI.getService(payment.service_id);
+                        if (service && service.service) {
+                            payment.service_name = service.service.name;
+                            payment.service_duration_days = service.service.duration_days;
+                        }
+                    } catch (error) {
+                        Utils.log('warn', `Could not load service ${payment.service_id}:`, error);
                     }
-                } catch (error) {
-                    // Игнорируем ошибки получения сервиса для отдельных платежей
-                    Utils.log('warn', `Could not load service ${payment.service_id}:`, error);
                 }
             }
 
@@ -90,18 +99,28 @@ window.PaymentAPI = {
             const payment = response.payment || response;
 
             if (payment.id && payment.status === 'pending') {
+                // ✅ ИСПРАВЛЕНИЕ: Правильно передаем URL
+                const paymentWithUrl = {
+                    ...payment,
+                    payment_url: response.url || response.confirmation_url, // URL из ответа API
+                    url: response.url // Дублируем для совместимости
+                };
+
                 // Сохраняем в pending платежи
                 if (window.Storage) {
-                    await window.Storage.addPendingPayment({
-                        ...payment,
-                        payment_url: response.url // URL для оплаты
-                    });
+                    await window.Storage.addPendingPayment(paymentWithUrl);
                 }
 
                 // Добавляем в мониторинг
                 if (window.PaymentMonitor) {
                     window.PaymentMonitor.addPayment(payment.id);
                 }
+
+                // ✅ Возвращаем объединенные данные
+                return {
+                    ...response,
+                    payment: paymentWithUrl
+                };
             }
 
             return response;

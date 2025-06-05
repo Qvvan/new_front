@@ -282,13 +282,22 @@ window.DragonVPNApp = {
      */
     async checkPendingPayments() {
         try {
-            // Сначала получаем pending из API
+            // ✅ СНАЧАЛА очищаем старые данные
+            if (window.Storage) {
+                await window.Storage.clearPendingPayments();
+            }
+
+            if (window.PaymentMonitor) {
+                window.PaymentMonitor.cleanup();
+            }
+
+            // Получаем актуальные pending платежи с API
             const pendingPayments = await window.PaymentAPI.getPendingPayments();
 
             if (pendingPayments.length > 0) {
-                Utils.log('info', `Found ${pendingPayments.length} pending payments`);
+                Utils.log('info', `Found ${pendingPayments.length} actual pending payments`);
 
-                // Сохраняем в локальный список
+                // Сохраняем только актуальные pending
                 for (const payment of pendingPayments) {
                     await window.Storage.addPendingPayment(payment);
                 }
@@ -299,21 +308,20 @@ window.DragonVPNApp = {
                     window.PaymentBanner.show(latestPayment);
                 }
 
-                // Запускаем мониторинг
+                // Запускаем мониторинг ТОЛЬКО для актуальных платежей
                 if (window.PaymentMonitor) {
                     pendingPayments.forEach(payment => {
                         window.PaymentMonitor.addPayment(payment.id);
                     });
-                    window.PaymentMonitor.start();
-                }
-            } else {
-                // Очищаем локальный список если нет pending
-                if (window.Storage) {
-                    await window.Storage.clearPendingPayments();
                 }
             }
         } catch (error) {
             Utils.log('error', 'Failed to check pending payments:', error);
+
+            // При ошибке очищаем все локальные данные
+            if (window.Storage) {
+                await window.Storage.clearPendingPayments();
+            }
         }
     },
 

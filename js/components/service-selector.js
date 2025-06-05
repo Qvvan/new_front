@@ -462,16 +462,13 @@ window.ServiceSelector = {
                 price: this.selectedService.price // ✅ Передаем цену из сервиса
             };
 
-            // Создаем платеж с автоматическим мониторингом
             const response = await window.PaymentAPI.createPaymentWithMonitoring(paymentData);
             const payment = response.payment || response;
 
-            // ✅ ИСПРАВЛЕНО: Обогащаем платеж данными сервиса
             payment.service_name = this.selectedService.name;
             payment.service_duration = this.selectedService.duration;
             payment.service_original_price = this.selectedService.price;
 
-            // Убеждаемся что цена установлена
             if (!payment.price) {
                 payment.price = this.selectedService.price;
             }
