@@ -20,44 +20,44 @@ window.DragonVPNApp = {
     /**
      * Выполнение инициализации
      */
-async _performInit() {
-    try {
-        Utils.log('info', 'Dragon VPN App initialization started');
+    async _performInit() {
+        try {
+            Utils.log('info', 'Dragon VPN App initialization started');
 
-            // 1. СНАЧАЛА инициализируем Loading без показа
+            // 1. Инициализируем Loading без показа
             if (window.Loading) {
                 window.Loading.init();
             }
 
-            // 2. ПОТОМ показываем загрузку
+            // 2. Показываем загрузку
             this.showInitialLoading();
 
             if (window.Assets) {
                 window.Assets.preloadAssets();
             }
 
-            // 3. Остальная инициализация...
+            // 3. Инициализация Telegram WebApp
             await this.initializeTelegram();
 
-            // 2. Инициализация системы хранилища
+            // 4. Инициализация системы хранилища с очисткой
             await this.initializeStorage();
 
-            // 3. Парсинг реферальных ссылок
+            // 5. Парсинг реферальных ссылок
             await this.parseReferralData();
 
-            // 4. Инициализация компонентов
+            // 6. Инициализация компонентов
             await this.initializeComponents();
 
-            // 5. Инициализация экранов
+            // 7. Инициализация экранов
             await this.initializeScreens();
 
-            // 6. Настройка роутера
+            // 8. Настройка роутера
             await this.initializeRouter();
 
-            // 7. Проверка pending платежей
+            // 9. Проверка pending платежей
             await this.checkPendingPayments();
 
-            // 8. Финализация
+            // 10. Финализация
             await this.finalize();
 
             this.isInitialized = true;
@@ -77,18 +77,47 @@ async _performInit() {
     showInitialLoading() {
         const loadingSteps = [
             'Подключение к Telegram...',
-            'Загрузка данных пользователя...',
+            'Очистка кеша...',
             'Инициализация компонентов...',
-            'Проверка подписок...',
+            'Загрузка данных...',
             'Подготовка интерфейса...'
         ];
 
-        // Показываем загрузку с шагами
-        if (window.Loading && window.Loading.overlay) {
-            window.Loading.showSteps(loadingSteps, 0);
-        } else {
-            console.warn('Loading component not ready, skipping initial loading display');
+        try {
+            if (window.Loading && window.Loading.overlay) {
+                window.Loading.showSteps(loadingSteps, 0);
+            } else {
+                // Fallback - создаем простую загрузку
+                this.createFallbackLoading();
+            }
+        } catch (error) {
+            Utils.log('error', 'Failed to show initial loading:', error);
+            // Продолжаем без загрузки
         }
+    },
+
+    /**
+     * Fallback загрузка если основная не работает
+     */
+    createFallbackLoading() {
+        const loadingEl = document.createElement('div');
+        loadingEl.id = 'fallbackLoading';
+        loadingEl.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0d0d0d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            color: white;
+            font-family: system-ui;
+        `;
+        loadingEl.innerHTML = '<div>Загрузка Dragon VPN...</div>';
+        document.body.appendChild(loadingEl);
     },
 
     /**
@@ -100,12 +129,25 @@ async _performInit() {
         if (window.TelegramApp) {
             window.TelegramApp.init();
 
-            // Ждем готовности
+            // Более надежное ожидание готовности
             await new Promise(resolve => {
                 if (window.TelegramApp.isInitialized) {
                     resolve();
                 } else {
-                    setTimeout(resolve, 1000);
+                    // Проверяем каждые 100мс до 5 секунд
+                    let attempts = 0;
+                    const maxAttempts = 50;
+
+                    const checkReady = () => {
+                        attempts++;
+                        if (window.TelegramApp.isInitialized || attempts >= maxAttempts) {
+                            resolve();
+                        } else {
+                            setTimeout(checkReady, 100);
+                        }
+                    };
+
+                    setTimeout(checkReady, 100);
                 }
             });
         }
@@ -119,11 +161,15 @@ async _performInit() {
      * Инициализация системы хранилища
      */
     async initializeStorage() {
-        Utils.log('info', 'Initializing Storage System');
+        Utils.log('info', 'Initializing Storage System with cleanup');
 
         if (window.Storage) {
-            await window.Storage.init();
-            await window.Storage.sync();
+            await window.Storage.init(); // Теперь включает очистку стейл кеша
+            // НЕ вызываем sync() - только актуальные данные
+        }
+
+        if (window.Loading) {
+            window.Loading.showSteps(['', 'Загрузка данных пользователя...'], 1);
         }
     },
 
@@ -287,24 +333,17 @@ async _performInit() {
      * Финализация инициализации
      */
     async finalize() {
-        // Скрываем загрузку
-        if (window.Loading) {
-            await window.Loading.simulateProgress(500, 'Готово!');
-        }
+        // Скрываем любую загрузку
+        this.hideLoading();
 
         // Анимация появления интерфейса
         this.animateAppearance();
 
-        // Регистрируем пользователя если нужно
+        // Регистрируем пользователя если нужно (БЕЗ кеширования)
         await this.ensureUserRegistration();
 
         // Настраиваем периодические задачи
         this.setupPeriodicTasks();
-
-        // Обновляем последнюю активность
-        if (window.Storage) {
-            await window.Storage.updateLastActivity();
-        }
 
         Utils.log('info', 'App finalization completed');
     },
@@ -327,6 +366,25 @@ async _performInit() {
                 navigation.style.transition = 'transform 0.3s ease';
                 navigation.style.transform = 'translateY(0)';
             }, 200);
+        }
+    },
+
+    /**
+     * Скрытие всех загрузок
+     */
+    hideLoading() {
+        try {
+            if (window.Loading) {
+                window.Loading.hide();
+            }
+
+            // Убираем fallback загрузку
+            const fallbackLoading = document.getElementById('fallbackLoading');
+            if (fallbackLoading) {
+                fallbackLoading.remove();
+            }
+        } catch (error) {
+            Utils.log('error', 'Failed to hide loading:', error);
         }
     },
 

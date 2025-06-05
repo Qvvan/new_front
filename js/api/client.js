@@ -19,56 +19,37 @@ window.APIClient = {
             method: method.toUpperCase(),
             headers: {
                 'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache', // ⚠️ Принудительно отключаем кеш
+                'Pragma': 'no-cache',
                 ...this.getAuthHeaders(),
                 ...options.headers
             },
             ...options
         };
 
-        // Добавляем данные для POST/PUT/PATCH запросов
         if (data && ['POST', 'PUT', 'PATCH'].includes(config.method)) {
             config.body = JSON.stringify(data);
         }
 
         try {
-            Utils.log('debug', `API Request: ${method} ${endpoint}`, data);
+            Utils.log('debug', `API Request: ${method} ${endpoint}`);
 
-            // Добавляем timeout
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Request timeout')),
-                    options.timeout || this.defaultTimeout);
-            });
+            const response = await fetch(url, config);
 
-            const fetchPromise = fetch(url, config);
-            const response = await Promise.race([fetchPromise, timeoutPromise]);
-
-            Utils.log('debug', `API Response: ${response.status}`, {
-                url,
-                status: response.status,
-                statusText: response.statusText
-            });
-
-            // Проверяем статус ответа
             if (!response.ok) {
                 await this.handleErrorResponse(response);
             }
 
-            // Парсим JSON ответ
             const result = await response.json();
-            Utils.log('debug', 'API Success:', result);
 
+            // НЕ кешируем API ответы - всегда актуальные данные
             return result;
 
         } catch (error) {
             Utils.log('error', 'API Error:', error);
 
-            // Обрабатываем различные типы ошибок
             if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
                 throw new Error('Нет соединения с сервером. Проверьте интернет подключение.');
-            } else if (error.message === 'Request timeout') {
-                throw new Error('Время ожидания запроса истекло. Попробуйте позже.');
-            } else if (error.message.includes('CORS')) {
-                throw new Error('Ошибка доступа к серверу. Обратитесь в поддержку.');
             }
 
             throw error;

@@ -1,26 +1,20 @@
 // Subscription Screen for Dragon VPN Mini App
 
 window.SubscriptionScreen = {
-    currentSubscriptions: [],
-    servicesCache: new Map(), // Кеш для услуг
+    currentSubscriptions: [], // Только в памяти
+    servicesCache: new Map(), // Сессионный кеш услуг
     isLoaded: false,
-    isEmpty: false,
-    isProcessingAction: false,
 
     /**
      * Инициализация экрана подписки
      */
     async init() {
         Utils.log('info', 'Initializing Subscription Screen');
-        this.isProcessingAction = false; // ✅ Сбрасываем флаг
 
-        // Сначала загружаем услуги для кеширования названий
+        // Всегда загружаем свежие данные
         await this.loadServices();
-
-        // Затем загружаем подписки
         await this.loadSubscriptions();
 
-        this.setupEventListeners();
         this.render();
         this.isLoaded = true;
     },
@@ -51,29 +45,31 @@ window.SubscriptionScreen = {
      */
     async loadSubscriptions() {
         try {
-            // Получаем подписки через API
+            // Всегда свежие данные с API
             const response = await window.SubscriptionAPI.listSubscriptions();
             this.currentSubscriptions = response.subscriptions || [];
-            this.isEmpty = this.currentSubscriptions.length === 0;
 
-            // Сортируем подписки: активные первыми, потом по дате создания
-            this.currentSubscriptions.sort((a, b) => {
-                if (a.status === 'active' && b.status !== 'active') return -1;
-                if (a.status !== 'active' && b.status === 'active') return 1;
-                return new Date(b.created_at) - new Date(a.created_at);
-            });
+            // Сохраняем в сессионный кеш для быстрого доступа
+            if (window.Storage) {
+                window.Storage.setSubscriptions(this.currentSubscriptions);
+            }
 
-            Utils.log('info', 'Subscriptions loaded:', this.currentSubscriptions);
+            Utils.log('info', `Loaded ${this.currentSubscriptions.length} subscriptions`);
 
         } catch (error) {
             Utils.log('error', 'Failed to load subscriptions:', error);
-            this.isEmpty = true;
-            this.currentSubscriptions = [];
 
-            if (window.Toast) {
-                window.Toast.error('Ошибка загрузки подписок');
+            // Fallback - пытаемся взять из сессии
+            if (window.Storage) {
+                this.currentSubscriptions = await window.Storage.getSubscriptions();
             }
-        } finally {
+
+            if (this.currentSubscriptions.length === 0) {
+                this.isEmpty = true;
+                if (window.Toast) {
+                    window.Toast.error('Ошибка загрузки подписок');
+                }
+            }
         }
     },
 
@@ -681,7 +677,9 @@ window.SubscriptionScreen = {
      * Обновление данных подписки
      */
     async refresh() {
-        await this.loadServices(); // Обновляем кеш услуг
+        // Принудительно обновляем без кеша
+        this.servicesCache.clear();
+        await this.loadServices();
         await this.loadSubscriptions();
         this.render();
     },
