@@ -70,15 +70,6 @@ window.ReferralAPI = {
     },
 
     /**
-     * Получение статистики рефералов пользователя
-     * @param {number} userId - ID пользователя
-     * @returns {Promise<Object>} Статистика рефералов
-     */
-    async getReferralStats(userId) {
-        return await window.APIClient.get(`/user/${userId}/referrals`);
-    },
-
-    /**
      * Генерация реферальной ссылки
      * @returns {Promise<Object>} Реферальная ссылка и код
      */

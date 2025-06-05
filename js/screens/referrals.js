@@ -22,49 +22,23 @@ window.ReferralsScreen = {
      */
     async loadData() {
         try {
-            // Параллельная загрузка данных
-            const [referralsResponse, statsResponse, linkData] = await Promise.all([
-                window.ReferralAPI.listReferrals(),
-                this.loadStats(),
+            const [referralsResponse, linkData] = await Promise.all([
+                window.ReferralAPI.listReferrals(),           // → /referrals (содержит и список, и статистику)
                 window.ReferralAPI.generateReferralLink()
             ]);
 
             this.referrals = referralsResponse.referrals || [];
-            this.stats = statsResponse;
-            this.referralLink = linkData;
 
-            Utils.log('info', 'Referrals data loaded:', {
-                referrals: this.referrals.length,
-                stats: this.stats
-            });
+            // ✅ Вычисляем статистику из полученных данных
+            this.stats = this.calculateStatsFromReferrals(this.referrals, referralsResponse);
+            this.referralLink = linkData;
 
         } catch (error) {
             Utils.log('error', 'Failed to load referrals data:', error);
-
-            // Fallback данные
             this.referrals = [];
             this.stats = { total_count: 0, invited: 0, partners: 0 };
             this.referralLink = await window.ReferralAPI.generateReferralLink();
-
-        } finally {
         }
-    },
-
-    /**
-     * Загрузка статистики
-     */
-    async loadStats() {
-        try {
-            const telegramUser = window.TelegramApp?.getUserInfo();
-            if (telegramUser?.id) {
-                const response = await window.ReferralAPI.getReferralStats(telegramUser.id);
-                return response;
-            }
-        } catch (error) {
-            Utils.log('error', 'Failed to load referral stats:', error);
-        }
-
-        return { total_count: 0, invited: 0, partners: 0 };
     },
 
     /**
@@ -81,6 +55,14 @@ window.ReferralsScreen = {
             const action = target.dataset.action;
             this.handleAction(action, target.dataset);
         });
+    },
+
+    calculateStatsFromReferrals(referrals, response) {
+        return {
+            total_count: response.total_count || referrals.length,
+            invited: referrals.filter(r => r.status === 'invited').length,
+            partners: referrals.filter(r => r.status === 'partner').length
+        };
     },
 
     /**
