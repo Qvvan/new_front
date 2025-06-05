@@ -57,33 +57,25 @@ window.PaymentAPI = {
      */
     async getPendingPayments() {
         try {
-            // ✅ Получаем только реально pending платежи
-            const response = await this.listPayments({
-                status: 'pending',
-                // Добавляем ограничение по времени - только за последние 24 часа
-                created_since: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+            // ✅ Запрашиваем все платежи и фильтруем только pending
+            const response = await this.listPayments();
+            const allPayments = response.payments || [];
+
+            // ✅ Фильтруем только pending и недавние (последние 24 часа)
+            const now = Date.now();
+            const dayAgo = now - (24 * 60 * 60 * 1000);
+
+            const pendingPayments = allPayments.filter(payment => {
+                const isActuallyPending = payment.status === 'pending';
+                const createdAt = new Date(payment.created_at).getTime();
+                const isRecent = createdAt > dayAgo;
+
+                return isActuallyPending && isRecent;
             });
 
-            const payments = response.payments || [];
+            Utils.log('info', `Filtered ${pendingPayments.length} pending payments from ${allPayments.length} total`);
 
-            Utils.log('info', `API returned ${payments.length} pending payments`);
-
-            // Обогащаем данными сервисов только если есть платежи
-            if (payments.length > 0) {
-                for (const payment of payments) {
-                    try {
-                        const service = await window.ServiceAPI.getService(payment.service_id);
-                        if (service && service.service) {
-                            payment.service_name = service.service.name;
-                            payment.service_duration_days = service.service.duration_days;
-                        }
-                    } catch (error) {
-                        Utils.log('warn', `Could not load service ${payment.service_id}:`, error);
-                    }
-                }
-            }
-
-            return payments;
+            return pendingPayments;
         } catch (error) {
             Utils.log('error', 'Failed to get pending payments:', error);
             return [];

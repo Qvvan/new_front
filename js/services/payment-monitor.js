@@ -1,9 +1,9 @@
 // Payment Monitor Service
 window.PaymentMonitor = {
-    monitoringInterval: null,
     pendingPayments: new Map(),
+    processedSuccessfulPayments: new Set(),
     isActive: false,
-    checkInterval: 8000, // 8 секунд
+    checkInterval: 8000,
 
     /**
      * Добавить платеж в мониторинг
@@ -11,13 +11,17 @@ window.PaymentMonitor = {
     addPayment(paymentId) {
         if (!paymentId) return;
 
-        // ✅ Добавляем дополнительные флаги для отслеживания
+        // ✅ Проверяем что платеж еще не был успешно обработан
+        if (this.processedSuccessfulPayments.has(paymentId)) {
+            Utils.log('info', `Payment ${paymentId} already processed successfully, skipping`);
+            return;
+        }
+
         this.pendingPayments.set(paymentId, {
             id: paymentId,
             addedAt: Date.now(),
             lastChecked: null,
-            wasSuccessful: false, // ⭐ Новый флаг!
-            checkCount: 0         // ⭐ Счетчик проверок
+            checkCount: 0
         });
 
         Utils.log('info', `Added payment ${paymentId} to monitoring`);
@@ -153,7 +157,18 @@ window.PaymentMonitor = {
      * Обработка успешного платежа
      */
     async handlePaymentSuccess(payment) {
-        Utils.log('info', 'Payment succeeded:', payment.id);
+        const paymentId = payment.id;
+
+        // ✅ Проверяем что этот платеж еще не обрабатывался
+        if (this.processedSuccessfulPayments.has(paymentId)) {
+            Utils.log('info', `Payment ${paymentId} already processed, skipping success handler`);
+            return;
+        }
+
+        // ✅ Добавляем в Set обработанных платежей
+        this.processedSuccessfulPayments.add(paymentId);
+
+        Utils.log('info', 'Processing payment success:', paymentId);
 
         // Скрываем баннер
         if (window.PaymentBanner) {
@@ -252,6 +267,7 @@ window.PaymentMonitor = {
      */
     cleanup() {
         this.stop();
+        this.processedSuccessfulPayments.clear();
         this.pendingPayments.clear();
     }
 };
