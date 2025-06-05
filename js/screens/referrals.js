@@ -22,10 +22,6 @@ window.ReferralsScreen = {
      */
     async loadData() {
         try {
-            if (window.Loading) {
-                window.Loading.show('Загрузка рефералов...');
-            }
-
             // Параллельная загрузка данных
             const [referralsResponse, statsResponse, linkData] = await Promise.all([
                 window.ReferralAPI.listReferrals(),
@@ -51,9 +47,6 @@ window.ReferralsScreen = {
             this.referralLink = await window.ReferralAPI.generateReferralLink();
 
         } finally {
-            if (window.Loading) {
-                window.Loading.hide();
-            }
         }
     },
 
