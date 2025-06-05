@@ -513,7 +513,7 @@
 
 .modal {
     width: 90%;
-    max-width: 400px;
+    max-width: 400px; /* Модалки остаются центрированными */
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
     border-radius: var(--border-radius-xl);
@@ -582,6 +582,8 @@
     bottom: calc(var(--nav-height) + var(--spacing-xl));
     left: 50%;
     transform: translateX(-50%);
+    max-width: 428px; /* Соответствует ширине контента */
+    width: calc(100% - var(--spacing-xl) * 2);
     z-index: var(--z-toast);
     display: flex;
     flex-direction: column;

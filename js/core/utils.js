@@ -203,6 +203,15 @@ window.Utils = {
     },
 
     /**
+     * Обертка контента в центрированный контейнер
+     * @param {string} content - HTML контент
+     * @returns {string} Обернутый контент
+     */
+    wrapContent(content) {
+        return `<div class="content-wrapper">${content}</div>`;
+    },
+
+    /**
      * Анимация числа с эффектом подсчета
      * @param {HTMLElement} element - Элемент для анимации
      * @param {number} start - Начальное значение
@@ -393,5 +402,5 @@ window.Utils = {
                 setTimeout(() => reject(new Error('Operation timed out')), timeout)
             )
         ]);
-    }
+    },
 };

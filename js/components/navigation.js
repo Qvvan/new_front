@@ -24,10 +24,15 @@ window.Navigation = {
      * Настройка обработчиков событий
      */
     setupEventListeners() {
-        // Обработка кликов по элементам навигации
+        // Обработка кликов по элементам навигации с throttling
         document.addEventListener('click', (e) => {
             const navItem = e.target.closest('.nav-item');
             if (!navItem) return;
+
+            // Throttling для навигации
+            if (navItem.hasAttribute('data-navigating')) return;
+            navItem.setAttribute('data-navigating', 'true');
+            setTimeout(() => navItem.removeAttribute('data-navigating'), 500);
 
             const screen = navItem.dataset.screen;
             if (screen && screen !== this.currentScreen) {
@@ -50,11 +55,15 @@ window.Navigation = {
             return;
         }
 
+        // Предотвращаем множественные переходы
+        if (this.isNavigating) return;
+        this.isNavigating = true;
+
         try {
             // Анимация нажатия
             this.animateNavItem(screen);
 
-            // Вибрация
+            // Вибрация только один раз
             if (window.TelegramApp) {
                 window.TelegramApp.haptic.selection();
             }
@@ -75,6 +84,11 @@ window.Navigation = {
             if (window.Toast) {
                 window.Toast.error('Ошибка навигации');
             }
+        } finally {
+            // Снимаем блокировку
+            setTimeout(() => {
+                this.isNavigating = false;
+            }, 300);
         }
     },
 

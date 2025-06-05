@@ -70,7 +70,8 @@
     --font-weight-bold: 700;
 
     /* Layout */
-    --max-width: 428px;
+    --max-width-mobile: 428px;  /* Оставляем для мобильных */
+    --max-width-desktop: 100%;
     --nav-height: 80px;
     --payment-banner-height: 70px;
 
@@ -104,9 +105,8 @@ html {
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background: var(--bg-primary);
+    background: var(--bg-primary); /* Дублируем для уверенности */
     color: var(--text-primary);
-    overflow-x: hidden;
     min-height: 100vh;
     line-height: 1.5;
     user-select: none;
@@ -133,14 +133,31 @@ p {
     color: var(--text-secondary);
 }
 
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary); /* Черный фон на весь браузер */
+    overflow-x: hidden;
+}
+
 /* Layout Base Classes */
 .app-container {
-    max-width: var(--max-width);
-    margin: 0 auto;
+    /* ❌ Убираем max-width полностью */
+    width: 100%;
     background: var(--bg-primary);
     min-height: 100vh;
     position: relative;
     overflow: hidden;
+    /* Никакого margin: 0 auto - растягиваем на всю ширину */
+}
+
+.content-wrapper {
+    max-width: 428px; /* Контент остается фиксированной ширины */
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
+    position: relative;
 }
 
 .main-content {
@@ -282,4 +299,23 @@ p {
 :focus-visible {
     outline: 2px solid var(--accent-white);
     outline-offset: 2px;
+}
+
+@media (min-width: 992px) {
+    .app-container {
+        /* Убираем эти строки для полноэкранного режима */
+        /* border-left: 1px solid var(--border-dark); */
+        /* border-right: 1px solid var(--border-dark); */
+        min-height: 100vh;
+    }
+
+    .bottom-nav {
+        /* border-left: 1px solid var(--border-dark); */
+        /* border-right: 1px solid var(--border-dark); */
+    }
+
+    .payment-banner {
+        /* border-left: 1px solid var(--border-dark); */
+        /* border-right: 1px solid var(--border-dark); */
+    }
 }

@@ -188,8 +188,6 @@
 /* Large devices (desktops, 992px and up) */
 @media (min-width: 992px) {
     .app-container {
-        border-left: 1px solid var(--border-dark);
-        border-right: 1px solid var(--border-dark);
         min-height: 100vh;
     }
 
@@ -451,5 +449,42 @@
         .form-input, .form-textarea, .form-select {
             font-size: 16px; /* Prevent zoom */
         }
+    }
+}
+
+@media (min-width: 768px) {
+    .screen {
+        padding: var(--spacing-xl) var(--spacing-3xl);
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .subscription-card,
+    .action-grid {
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .content-wrapper {
+        max-width: 500px; /* Немного шире на планшетах */
+    }
+}
+
+@media (min-width: 1024px) {
+    .screen {
+        padding: var(--spacing-2xl) var(--spacing-3xl);
+    }
+
+    /* На больших экранах делаем контент в две колонки */
+    .action-grid {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 1000px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .content-wrapper {
+        max-width: 600px; /* Еще шире на больших экранах */
     }
 }

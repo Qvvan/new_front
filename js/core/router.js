@@ -75,10 +75,8 @@ window.Router = {
                 this.addToHistory(this.currentScreen);
             }
 
-            // Сохраняем предыдущий экран
+            // Сохраняем предыдущий экрран
             this.previousScreen = this.currentScreen;
-
-            // Обновляем текущий экран
             this.currentScreen = screenName;
 
             // Выполняем переход
@@ -86,15 +84,11 @@ window.Router = {
 
             // Обновляем навигацию
             this.updateNavigation();
-
-            // Обновляем кнопку назад в Telegram
             this.updateTelegramBackButton();
-
-            // Сохраняем состояние
             this.saveState();
 
-            // Вибрация при переключении
-            if (window.TelegramApp) {
+            // ✅ Вибрация только один раз при успешном переходе
+            if (window.TelegramApp && this.previousScreen !== screenName) {
                 window.TelegramApp.haptic.selection();
             }
 

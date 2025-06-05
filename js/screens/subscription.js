@@ -5,12 +5,14 @@ window.SubscriptionScreen = {
     servicesCache: new Map(), // Кеш для услуг
     isLoaded: false,
     isEmpty: false,
+    isProcessingAction: false,
 
     /**
      * Инициализация экрана подписки
      */
     async init() {
         Utils.log('info', 'Initializing Subscription Screen');
+        this.isProcessingAction = false; // ✅ Сбрасываем флаг
 
         // Сначала загружаем услуги для кеширования названий
         await this.loadServices();
@@ -86,11 +88,21 @@ window.SubscriptionScreen = {
      * Настройка обработчиков событий
      */
     setupEventListeners() {
+        // ❌ ПРОБЛЕМА: обработчики ищут элементы в старой структуре
+
+        // ✅ ИСПРАВЛЕНИЕ: используем делегирование событий
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('#subscriptionScreen')) return;
+            // Проверяем что клик внутри нашего экрана
+            const subscriptionScreen = e.target.closest('#subscriptionScreen');
+            if (!subscriptionScreen) return;
 
             const target = e.target.closest('[data-action]');
             if (!target) return;
+
+            // Throttling для предотвращения double-click
+            if (target.hasAttribute('data-processing')) return;
+            target.setAttribute('data-processing', 'true');
+            setTimeout(() => target.removeAttribute('data-processing'), 300);
 
             const action = target.dataset.action;
             const subscriptionId = target.dataset.subscriptionId;
@@ -100,8 +112,16 @@ window.SubscriptionScreen = {
 
         // Обработчик для автопродления (полный формат)
         document.addEventListener('click', (e) => {
+            const subscriptionScreen = e.target.closest('#subscriptionScreen');
+            if (!subscriptionScreen) return;
+
             const autoRenewal = e.target.closest('.auto-renewal');
-            if (!autoRenewal || !autoRenewal.closest('#subscriptionScreen')) return;
+            if (!autoRenewal) return;
+
+            // Throttling
+            if (autoRenewal.hasAttribute('data-processing')) return;
+            autoRenewal.setAttribute('data-processing', 'true');
+            setTimeout(() => autoRenewal.removeAttribute('data-processing'), 300);
 
             const subscriptionId = autoRenewal.dataset.subscriptionId;
             this.handleAutoRenewalToggle(subscriptionId);
@@ -109,8 +129,16 @@ window.SubscriptionScreen = {
 
         // Обработчик для автопродления (компактный формат)
         document.addEventListener('click', (e) => {
+            const subscriptionScreen = e.target.closest('#subscriptionScreen');
+            if (!subscriptionScreen) return;
+
             const compactAutoRenewal = e.target.closest('.subscription-compact-auto-renewal');
-            if (!compactAutoRenewal || !compactAutoRenewal.closest('#subscriptionScreen')) return;
+            if (!compactAutoRenewal) return;
+
+            // Throttling
+            if (compactAutoRenewal.hasAttribute('data-processing')) return;
+            compactAutoRenewal.setAttribute('data-processing', 'true');
+            setTimeout(() => compactAutoRenewal.removeAttribute('data-processing'), 300);
 
             const subscriptionId = compactAutoRenewal.dataset.subscriptionId;
             this.handleAutoRenewalToggle(subscriptionId);
@@ -121,29 +149,40 @@ window.SubscriptionScreen = {
      * Обработка действий
      */
     async handleAction(action, subscriptionId = null) {
-        // Вибрация
-        if (window.TelegramApp) {
-            window.TelegramApp.haptic.light();
-        }
+        // Добавляем debounce для предотвращения множественных вызовов
+        if (this.isProcessingAction) return;
+        this.isProcessingAction = true;
 
-        switch (action) {
-            case 'renew':
-                await this.handleRenewSubscription(subscriptionId);
-                break;
-            case 'buy':
-                await this.handleBuyNewSubscription();
-                break;
-            case 'activate-trial':
-                await this.handleActivateTrial();
-                break;
-            case 'instructions':
-                this.handleViewInstructions();
-                break;
-            case 'support':
-                this.handleContactSupport();
-                break;
-            default:
-                Utils.log('warn', 'Unknown action:', action);
+        try {
+            // Вибрация только один раз
+            if (window.TelegramApp) {
+                window.TelegramApp.haptic.light();
+            }
+
+            switch (action) {
+                case 'renew':
+                    await this.handleRenewSubscription(subscriptionId);
+                    break;
+                case 'buy':
+                    await this.handleBuyNewSubscription();
+                    break;
+                case 'activate-trial':
+                    await this.handleActivateTrial();
+                    break;
+                case 'instructions':
+                    this.handleViewInstructions();
+                    break;
+                case 'support':
+                    this.handleContactSupport();
+                    break;
+                default:
+                    Utils.log('warn', 'Unknown action:', action);
+            }
+        } finally {
+            // Снимаем блокировку через 500мс
+            setTimeout(() => {
+                this.isProcessingAction = false;
+            }, 500);
         }
     },
 
@@ -316,20 +355,17 @@ window.SubscriptionScreen = {
         let content = '';
 
         if (this.isEmpty) {
-            // Нет подписок - показываем пустое состояние
             content = this.renderEmptyState();
         } else if (this.currentSubscriptions.length === 1) {
-            // Одна подписка - полный формат
             content = this.renderSingleSubscription(this.currentSubscriptions[0]);
         } else {
-            // Несколько подписок - компактный формат
             content = this.renderMultipleSubscriptions();
         }
 
-        // Добавляем быстрые действия
         content += this.renderQuickActions();
 
-        container.innerHTML = content;
+        // ✅ ОБОРАЧИВАЕМ контент в content-wrapper
+        container.innerHTML = Utils.wrapContent(content);
         this.animateElements();
     },
 

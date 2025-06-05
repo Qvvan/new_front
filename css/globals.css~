@@ -71,7 +71,7 @@
 
     /* Layout */
     --max-width-mobile: 428px;  /* Оставляем для мобильных */
-    --max-width-desktop: 100%;   /* Новое: полная ширина для десктопа */
+    --max-width-desktop: 100%;
     --nav-height: 80px;
     --payment-banner-height: 70px;
 
@@ -105,9 +105,8 @@ html {
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background: var(--bg-primary);
+    background: var(--bg-primary); /* Дублируем для уверенности */
     color: var(--text-primary);
-    overflow-x: hidden;
     min-height: 100vh;
     line-height: 1.5;
     user-select: none;
@@ -134,16 +133,24 @@ p {
     color: var(--text-secondary);
 }
 
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary); /* Черный фон на весь браузер */
+    overflow-x: hidden;
+}
+
 /* Layout Base Classes */
 .app-container {
-    /* Адаптивная ширина */
-    max-width: 100%;
+    /* ❌ Убираем max-width полностью */
     width: 100%;
-    margin: 0 auto;
     background: var(--bg-primary);
     min-height: 100vh;
     position: relative;
     overflow: hidden;
+    /* Никакого margin: 0 auto - растягиваем на всю ширину */
 }
 
 .main-content {
