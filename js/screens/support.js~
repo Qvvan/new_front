@@ -1,16 +1,11 @@
-// Support Screen for Dragon VPN Mini App
-
 window.SupportScreen = {
     isVisible: false,
     modal: null,
-    currentView: 'main', // 'main' или 'faq'
+    currentView: 'main',
     currentFAQ: null,
-    escapeHandler: null,
 
     async show(params = {}) {
         this.isVisible = true;
-        this.currentView = 'main';
-        this.currentFAQ = null;
 
         // Закрываем предыдущий модаль если есть
         if (this.modal) {
@@ -25,6 +20,7 @@ window.SupportScreen = {
         }, 10);
 
         this.render();
+        this.setupEventListeners();
 
         // Вибрация открытия
         if (window.TelegramApp) {
@@ -42,16 +38,6 @@ window.SupportScreen = {
     render() {
         if (!this.modal) return;
 
-        if (this.currentView === 'faq') {
-            this.renderFAQView();
-        } else {
-            this.renderMainView();
-        }
-
-        this.setupEventListeners();
-    },
-
-    renderMainView() {
         this.modal.innerHTML = `
             <div class="modal modal-support">
                 <div class="modal-header">
@@ -97,54 +83,8 @@ window.SupportScreen = {
                 </div>
             </div>
         `;
-    },
 
-    renderFAQView() {
-        const faqContent = this.getFAQContent(this.currentFAQ);
-
-        this.modal.innerHTML = `
-            <div class="modal modal-support">
-                <div class="modal-header">
-                    <div class="modal-title">
-                        <i class="fas fa-question-circle"></i>
-                        ${faqContent.title}
-                    </div>
-                    <button class="modal-close" id="supportClose">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="faq-content">
-                        ${this.formatFAQContent(faqContent.content)}
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary" id="faqBack">
-                        <i class="fas fa-arrow-left"></i>
-                        Назад
-                    </button>
-                    <button class="btn btn-primary" id="contactTechSupport">
-                        <i class="fas fa-paper-plane"></i>
-                        Написать в поддержку
-                    </button>
-                </div>
-            </div>
-        `;
-    },
-
-    formatFAQContent(content) {
-        // Преобразуем текст в HTML список
-        const steps = content.split('\n').filter(step => step.trim());
-        return `
-            <div class="faq-steps">
-                ${steps.map(step => `
-                    <div class="faq-step">
-                        <i class="fas fa-check-circle"></i>
-                        <span>${step}</span>
-                    </div>
-                `).join('')}
-            </div>
-        `;
+        this.setupEventListeners();
     },
 
     setupEventListeners() {
@@ -155,51 +95,27 @@ window.SupportScreen = {
         const cancelBtn = this.modal.querySelector('#supportCancel');
 
         if (closeBtn) {
-            closeBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.hide();
-            });
+            closeBtn.addEventListener('click', () => this.hide());
         }
 
         if (cancelBtn) {
-            cancelBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.hide();
-            });
+            cancelBtn.addEventListener('click', () => this.hide());
         }
 
         // Переход в тех поддержку
         const techSupportBtn = this.modal.querySelector('#contactTechSupport');
         if (techSupportBtn) {
-            techSupportBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.contactTechSupport();
-            });
+            techSupportBtn.addEventListener('click', () => this.contactTechSupport());
         }
 
-        // FAQ в главном виде
+        // FAQ
         const faqItems = this.modal.querySelectorAll('.faq-item');
         faqItems.forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
+            item.addEventListener('click', () => {
                 const faqType = item.dataset.faq;
                 this.showFAQ(faqType);
             });
         });
-
-        // Кнопка "Назад" в FAQ виде
-        const backBtn = this.modal.querySelector('#faqBack');
-        if (backBtn) {
-            backBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.showMainView();
-            });
-        }
 
         // Закрытие по клику вне модала
         this.modal.addEventListener('click', (e) => {
@@ -209,16 +125,7 @@ window.SupportScreen = {
         });
 
         // Закрытие по Escape
-        this.escapeHandler = (e) => {
-            if (e.key === 'Escape' && this.isVisible) {
-                if (this.currentView === 'faq') {
-                    this.showMainView();
-                } else {
-                    this.hide();
-                }
-            }
-        };
-        document.addEventListener('keydown', this.escapeHandler);
+        document.addEventListener('keydown', this.handleEscapeKey.bind(this));
     },
 
     contactTechSupport() {
@@ -236,22 +143,16 @@ window.SupportScreen = {
     },
 
     showFAQ(type) {
-        this.currentFAQ = type;
-        this.currentView = 'faq';
-        this.render();
+        const faqContent = this.getFAQContent(type);
 
-        // Вибрация
         if (window.TelegramApp) {
-            window.TelegramApp.haptic.light();
+            window.TelegramApp.showAlert(`${faqContent.title}\n\n${faqContent.content}`);
+        } else {
+            // Fallback для браузера
+            alert(`${faqContent.title}\n\n${faqContent.content}`);
         }
-    },
 
-    showMainView() {
-        this.currentView = 'main';
-        this.currentFAQ = null;
-        this.render();
-
-        // Вибрация
+        // Вибрация при показе FAQ
         if (window.TelegramApp) {
             window.TelegramApp.haptic.light();
         }
@@ -280,6 +181,12 @@ window.SupportScreen = {
         return faqs[type] || { title: 'Помощь', content: 'Информация не найдена' };
     },
 
+    handleEscapeKey(e) {
+        if (e.key === 'Escape' && this.isVisible) {
+            this.hide();
+        }
+    },
+
     hide() {
         if (!this.modal) return;
 
@@ -295,14 +202,9 @@ window.SupportScreen = {
     },
 
     cleanup() {
-        // Убираем обработчик Escape
-        if (this.escapeHandler) {
-            document.removeEventListener('keydown', this.escapeHandler);
-            this.escapeHandler = null;
-        }
-
         this.modal = null;
-        this.currentView = 'main';
-        this.currentFAQ = null;
+
+        // Убираем обработчик Escape
+        document.removeEventListener('keydown', this.handleEscapeKey.bind(this));
     }
 };

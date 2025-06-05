@@ -524,6 +524,16 @@ window.InstructionsScreen = {
         }
 
         this.hide();
+
+        // Показываем уведомление
+        if (window.Toast) {
+            window.Toast.success('Инструкции завершены! Теперь получите VPN ключи.', {
+                action: {
+                    text: 'Получить ключи',
+                    handler: () => window.Router?.navigate('keys')
+                }
+            });
+        }
     },
 
     hide() {
