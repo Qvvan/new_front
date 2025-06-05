@@ -48,11 +48,18 @@ window.Utils = {
      * @returns {string} Отформатированная цена
      */
     formatPrice(price, currency = 'RUB') {
+        if (!price || price === 0) return '0 ₽';
+
+        // Если цена меньше 100, считаем что это уже в рублях
+        // Если больше 100, то в копейках - делим на 100
+        const rubles = price >= 100 ? price / 100 : price;
+
         return new Intl.NumberFormat('ru-RU', {
             style: 'currency',
             currency: currency,
-            minimumFractionDigits: 0
-        }).format(price);
+            minimumFractionDigits: rubles % 1 === 0 ? 0 : 2, // Показываем копейки только если есть
+            maximumFractionDigits: 2
+        }).format(rubles);
     },
 
     /**

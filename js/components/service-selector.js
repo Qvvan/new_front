@@ -189,9 +189,7 @@ window.ServiceSelector = {
         return false;
     },
 
-    // ⚠️ НОВЫЙ компактный рендеринг услуг
     renderCompactServices() {
-        // ⚠️ Сортируем услуги по цене (по возрастанию)
         const sortedServices = [...this.services].sort((a, b) => a.price - b.price);
 
         return sortedServices.map(service => {
@@ -199,8 +197,8 @@ window.ServiceSelector = {
                 <div class="service-card-compact" data-service-id="${service.id}">
                     <div class="service-compact-content">
                         <h4 class="service-compact-name">${service.name}</h4>
-                        <div class="service-compact-price">${Utils.formatPrice(service.price, service.currency)}</div>
-                        <div class="service-compact-period">${service.duration}</div>
+                        <div class="service-compact-price">${Utils.formatPrice(service.price)}</div>
+                        <div class="service-compact-period">${this.formatDuration(service.duration_days)}</div>
                     </div>
                 </div>
             `;
@@ -461,12 +459,22 @@ window.ServiceSelector = {
                 service_type: this.mode === 'renew' ? 'old' : 'new',
                 subscription_id: this.subscriptionId || undefined,
                 description: `${this.selectedService.name} - ${this.mode === 'renew' ? 'Продление' : 'Новая подписка'}`,
-                price: this.selectedService.price
+                price: this.selectedService.price // ✅ Передаем цену из сервиса
             };
 
             // Создаем платеж с автоматическим мониторингом
             const response = await window.PaymentAPI.createPaymentWithMonitoring(paymentData);
             const payment = response.payment || response;
+
+            // ✅ ИСПРАВЛЕНО: Обогащаем платеж данными сервиса
+            payment.service_name = this.selectedService.name;
+            payment.service_duration = this.selectedService.duration;
+            payment.service_original_price = this.selectedService.price;
+
+            // Убеждаемся что цена установлена
+            if (!payment.price) {
+                payment.price = this.selectedService.price;
+            }
 
             // Скрываем селектор
             this.hide();
@@ -491,7 +499,6 @@ window.ServiceSelector = {
                 window.Toast.error(message);
             }
             throw error;
-        } finally {
         }
     },
 

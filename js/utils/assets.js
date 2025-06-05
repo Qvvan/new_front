@@ -18,8 +18,10 @@ class Assets {
         const criticalAssets = [
             this.getGif('gift-animate.gif'),
             this.getGif('gift-opened.png'),
-            this.getGif('auto-renewal.gif'),      // Новая гифка
-            this.getGif('management.gif')         // Новая гифка
+            this.getGif('auto-renewal.gif'),
+            this.getGif('payment-pending.gif'),
+            this.getGif('payment-success.gif'),
+            this.getGif('management.gif')
         ];
 
         criticalAssets.forEach(src => {

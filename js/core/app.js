@@ -282,18 +282,34 @@ window.DragonVPNApp = {
      */
     async checkPendingPayments() {
         try {
-            const pendingPayments = await window.Storage?.getPendingPayments() || [];
+            // Сначала получаем pending из API
+            const pendingPayments = await window.PaymentAPI.getPendingPayments();
 
             if (pendingPayments.length > 0) {
                 Utils.log('info', `Found ${pendingPayments.length} pending payments`);
 
+                // Сохраняем в локальный список
+                for (const payment of pendingPayments) {
+                    await window.Storage.addPendingPayment(payment);
+                }
+
+                // Показываем баннер для последнего платежа
                 const latestPayment = pendingPayments[pendingPayments.length - 1];
                 if (window.PaymentBanner) {
                     window.PaymentBanner.show(latestPayment);
                 }
 
+                // Запускаем мониторинг
                 if (window.PaymentMonitor) {
+                    pendingPayments.forEach(payment => {
+                        window.PaymentMonitor.addPayment(payment.id);
+                    });
                     window.PaymentMonitor.start();
+                }
+            } else {
+                // Очищаем локальный список если нет pending
+                if (window.Storage) {
+                    await window.Storage.clearPendingPayments();
                 }
             }
         } catch (error) {

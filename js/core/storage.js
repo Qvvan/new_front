@@ -119,5 +119,44 @@ window.Storage = {
 
     async setSettings(settings) {
         return await this.set('settings', settings, true); // Персистентно
+    },
+
+    // Добавим методы для работы с pending платежами
+    async getPendingPayments() {
+        return this.session.get('pending_payments') || [];
+    },
+
+    async addPendingPayment(payment) {
+        const pending = await this.getPendingPayments();
+        const exists = pending.some(p => p.id === payment.id || p.payment_id === payment.payment_id);
+
+        if (!exists) {
+            pending.push({
+                id: payment.id,
+                payment_id: payment.payment_id,
+                price: payment.price,
+                created_at: payment.created_at,
+                payment_url: payment.url || payment.payment_url,
+                description: payment.description
+            });
+
+            this.session.set('pending_payments', pending);
+            Utils.log('info', `Added pending payment: ${payment.id}`);
+        }
+    },
+
+    async removePendingPayment(paymentId) {
+        const pending = await this.getPendingPayments();
+        const filtered = pending.filter(p => p.id !== paymentId && p.payment_id !== paymentId);
+
+        this.session.set('pending_payments', filtered);
+        Utils.log('info', `Removed pending payment: ${paymentId}`);
+
+        return filtered.length;
+    },
+
+    async clearPendingPayments() {
+        this.session.set('pending_payments', []);
+        Utils.log('info', 'Cleared all pending payments');
     }
 };

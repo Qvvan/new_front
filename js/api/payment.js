@@ -58,7 +58,23 @@ window.PaymentAPI = {
     async getPendingPayments() {
         try {
             const response = await this.listPayments({ status: 'pending' });
-            return response.payments || [];
+            const payments = response.payments || [];
+
+            // Обогащаем каждый платеж данными сервиса
+            for (const payment of payments) {
+                try {
+                    const service = await window.ServiceAPI.getService(payment.service_id);
+                    if (service) {
+                        payment.service_name = service.name;
+                        payment.service_duration_days = service.duration_days;
+                    }
+                } catch (error) {
+                    // Игнорируем ошибки получения сервиса для отдельных платежей
+                    Utils.log('warn', `Could not load service ${payment.service_id}:`, error);
+                }
+            }
+
+            return payments;
         } catch (error) {
             Utils.log('error', 'Failed to get pending payments:', error);
             return [];
@@ -76,7 +92,10 @@ window.PaymentAPI = {
             if (payment.id && payment.status === 'pending') {
                 // Сохраняем в pending платежи
                 if (window.Storage) {
-                    await window.Storage.addPendingPayment(payment);
+                    await window.Storage.addPendingPayment({
+                        ...payment,
+                        payment_url: response.url // URL для оплаты
+                    });
                 }
 
                 // Добавляем в мониторинг
