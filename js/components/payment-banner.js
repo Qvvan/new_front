@@ -272,10 +272,6 @@ window.PaymentBanner = {
         if (!this.currentPayment) return;
 
         try {
-            if (window.Loading) {
-                window.Loading.show('Создание нового платежа...');
-            }
-
             // Создаем новый платеж с теми же параметрами
             const newPayment = await window.PaymentAPI.createPayment({
                 service_id: this.currentPayment.service_id,
@@ -297,9 +293,6 @@ window.PaymentBanner = {
                 window.Toast.error('Ошибка создания платежа');
             }
         } finally {
-            if (window.Loading) {
-                window.Loading.hide();
-            }
         }
     },
 

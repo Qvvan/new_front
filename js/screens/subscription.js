@@ -51,10 +51,6 @@ window.SubscriptionScreen = {
      */
     async loadSubscriptions() {
         try {
-            if (window.Loading) {
-                window.Loading.show('Загрузка подписок...');
-            }
-
             // Получаем подписки через API
             const response = await window.SubscriptionAPI.listSubscriptions();
             this.currentSubscriptions = response.subscriptions || [];
@@ -78,9 +74,6 @@ window.SubscriptionScreen = {
                 window.Toast.error('Ошибка загрузки подписок');
             }
         } finally {
-            if (window.Loading) {
-                window.Loading.hide();
-            }
         }
     },
 
@@ -222,10 +215,6 @@ window.SubscriptionScreen = {
 
             if (!confirmed) return;
 
-            if (window.Loading) {
-                window.Loading.show('Активация пробного периода...');
-            }
-
             // Активируем через API
             const response = await window.SubscriptionAPI.activateTrial();
 
@@ -246,10 +235,6 @@ window.SubscriptionScreen = {
 
         } catch (error) {
             Utils.log('error', 'Failed to activate trial:', error);
-
-            if (window.Loading) {
-                window.Loading.hide();
-            }
 
             if (window.Toast) {
                 const message = error.message || 'Ошибка активации пробного периода';
@@ -272,10 +257,6 @@ window.SubscriptionScreen = {
         if (!confirmed) return;
 
         try {
-            if (window.Loading) {
-                window.Loading.show('Обновление настроек...');
-            }
-
             // Обновляем через API
             await window.SubscriptionAPI.updateAutoRenewal(subscriptionId);
 
@@ -305,9 +286,6 @@ window.SubscriptionScreen = {
                 window.Toast.error(message);
             }
         } finally {
-            if (window.Loading) {
-                window.Loading.hide();
-            }
         }
     },
 

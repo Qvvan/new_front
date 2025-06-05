@@ -70,10 +70,6 @@ window.ServiceSelector = {
      */
     async loadServices() {
         try {
-            if (window.Loading) {
-                window.Loading.show('Загрузка услуг...');
-            }
-
             // Загружаем услуги
             if (window.ServiceAPI) {
                 const response = await window.ServiceAPI.getServices();
@@ -100,9 +96,6 @@ window.ServiceSelector = {
             Utils.log('error', 'Failed to load services:', error);
             throw error;
         } finally {
-            if (window.Loading) {
-                window.Loading.hide();
-            }
         }
     },
 
@@ -463,10 +456,6 @@ window.ServiceSelector = {
      */
     async createPayment() {
         try {
-            if (window.Loading) {
-                window.Loading.show('Создание платежа...');
-            }
-
             const paymentData = {
                 service_id: this.selectedService.id,
                 service_type: this.mode === 'renew' ? 'old' : 'new',
@@ -503,9 +492,6 @@ window.ServiceSelector = {
             }
             throw error;
         } finally {
-            if (window.Loading) {
-                window.Loading.hide();
-            }
         }
     },
 
