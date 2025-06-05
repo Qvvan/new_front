@@ -170,6 +170,8 @@ html, body {
     display: none;
     min-height: 100vh;
     padding: var(--spacing-xl) var(--spacing-lg);
+    opacity: 0; /* ✅ По умолчанию скрыты */
+    transition: opacity 0.15s ease-out;
 }
 
 .screen.active {

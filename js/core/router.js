@@ -117,29 +117,29 @@ window.Router = {
      * Показ обычного экрана
      */
     async showScreen(screenName, params) {
-        // Скрываем все экраны
+        const screenElement = document.getElementById(this.screens[screenName]);
+        if (!screenElement) return;
+
+        // ✅ Сначала скрываем ВСЕ экраны мгновенно
         Object.values(this.screens).forEach(screenId => {
             const screen = document.getElementById(screenId);
             if (screen && !screenId.includes('Modal')) {
                 screen.classList.remove('active');
+                screen.style.opacity = '0';
             }
         });
 
-        // Показываем нужный экран
-        const screenElement = document.getElementById(this.screens[screenName]);
-        if (screenElement) {
-            // Анимация входа
-            screenElement.classList.add('screen-enter');
-            screenElement.classList.add('active');
+        // ✅ Показываем нужный экран
+        screenElement.classList.add('active');
 
-            // Инициализируем экран
-            await this.initializeScreen(screenName, params);
+        // ✅ Инициализируем экран (пока он скрытый)
+        await this.initializeScreen(screenName, params);
 
-            // Убираем класс анимации
-            setTimeout(() => {
-                screenElement.classList.remove('screen-enter');
-            }, 300);
-        }
+        // ✅ Одним "морганием" показываем
+        requestAnimationFrame(() => {
+            screenElement.style.transition = 'opacity 0.15s ease-out';
+            screenElement.style.opacity = '1';
+        });
     },
 
     /**

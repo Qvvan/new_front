@@ -330,8 +330,11 @@ window.SubscriptionScreen = {
         const container = document.getElementById('subscriptionScreen');
         if (!container) return;
 
-        let content = '';
+        // ✅ СНАЧАЛА скрываем контейнер
+        container.style.opacity = '0';
+        container.style.transform = 'translateY(10px)';
 
+        let content = '';
         if (this.isEmpty) {
             content = this.renderEmptyState();
         } else if (this.currentSubscriptions.length === 1) {
@@ -342,9 +345,15 @@ window.SubscriptionScreen = {
 
         content += this.renderQuickActions();
 
-        // ✅ ОБОРАЧИВАЕМ контент в content-wrapper
+        // Рендерим контент (пока скрытый)
         container.innerHTML = Utils.wrapContent(content);
-        this.animateElements();
+
+        // ✅ ЗАТЕМ одним "морганием" показываем
+        requestAnimationFrame(() => {
+            container.style.transition = 'all 0.2s ease-out';
+            container.style.opacity = '1';
+            container.style.transform = 'translateY(0)';
+        });
     },
 
     /**
