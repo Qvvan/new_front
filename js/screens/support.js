@@ -1,9 +1,7 @@
-// Support Screen for Dragon VPN Mini App
-
 window.SupportScreen = {
     isVisible: false,
     modal: null,
-    currentView: 'main', // 'main' или 'faq'
+    currentView: 'main',
     currentFAQ: null,
     escapeHandler: null,
 
@@ -12,7 +10,6 @@ window.SupportScreen = {
         this.currentView = 'main';
         this.currentFAQ = null;
 
-        // Закрываем предыдущий модаль если есть
         if (this.modal) {
             this.hide();
         }
@@ -26,7 +23,6 @@ window.SupportScreen = {
 
         this.render();
 
-        // Вибрация открытия
         if (window.TelegramApp) {
             window.TelegramApp.haptic.light();
         }
@@ -133,7 +129,6 @@ window.SupportScreen = {
     },
 
     formatFAQContent(content) {
-        // Преобразуем текст в HTML список
         const steps = content.split('\n').filter(step => step.trim());
         return `
             <div class="faq-steps">
@@ -150,7 +145,6 @@ window.SupportScreen = {
     setupEventListeners() {
         if (!this.modal) return;
 
-        // Закрытие модального окна
         const closeBtn = this.modal.querySelector('#supportClose');
         const cancelBtn = this.modal.querySelector('#supportCancel');
 
@@ -170,7 +164,6 @@ window.SupportScreen = {
             });
         }
 
-        // Переход в тех поддержку
         const techSupportBtn = this.modal.querySelector('#contactTechSupport');
         if (techSupportBtn) {
             techSupportBtn.addEventListener('click', (e) => {
@@ -180,7 +173,6 @@ window.SupportScreen = {
             });
         }
 
-        // FAQ в главном виде
         const faqItems = this.modal.querySelectorAll('.faq-item');
         faqItems.forEach(item => {
             item.addEventListener('click', (e) => {
@@ -191,7 +183,6 @@ window.SupportScreen = {
             });
         });
 
-        // Кнопка "Назад" в FAQ виде
         const backBtn = this.modal.querySelector('#faqBack');
         if (backBtn) {
             backBtn.addEventListener('click', (e) => {
@@ -201,14 +192,12 @@ window.SupportScreen = {
             });
         }
 
-        // Закрытие по клику вне модала
         this.modal.addEventListener('click', (e) => {
             if (e.target === this.modal) {
                 this.hide();
             }
         });
 
-        // Закрытие по Escape
         this.escapeHandler = (e) => {
             if (e.key === 'Escape' && this.isVisible) {
                 if (this.currentView === 'faq') {
@@ -222,7 +211,6 @@ window.SupportScreen = {
     },
 
     contactTechSupport() {
-        // Переходим в Telegram
         const telegramUrl = 'https://t.me/dragonvpn_support';
 
         if (window.TelegramApp) {
@@ -231,7 +219,6 @@ window.SupportScreen = {
             window.open(telegramUrl, '_blank');
         }
 
-        // Закрываем модальное окно
         this.hide();
     },
 
@@ -240,7 +227,6 @@ window.SupportScreen = {
         this.currentView = 'faq';
         this.render();
 
-        // Вибрация
         if (window.TelegramApp) {
             window.TelegramApp.haptic.light();
         }
@@ -251,7 +237,6 @@ window.SupportScreen = {
         this.currentFAQ = null;
         this.render();
 
-        // Вибрация
         if (window.TelegramApp) {
             window.TelegramApp.haptic.light();
         }
@@ -295,7 +280,6 @@ window.SupportScreen = {
     },
 
     cleanup() {
-        // Убираем обработчик Escape
         if (this.escapeHandler) {
             document.removeEventListener('keydown', this.escapeHandler);
             this.escapeHandler = null;

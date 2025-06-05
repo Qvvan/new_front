@@ -11,7 +11,6 @@ window.SubscriptionScreen = {
     async init() {
         Utils.log('info', 'Initializing Subscription Screen');
 
-        // Всегда загружаем свежие данные
         await this.loadServices();
         await this.loadSubscriptions();
 
@@ -28,7 +27,6 @@ window.SubscriptionScreen = {
                 const response = await window.ServiceAPI.getServices();
                 const services = response.services || [];
 
-                // Кешируем услуги по ID для быстрого доступа
                 services.forEach(service => {
                     this.servicesCache.set(service.id, service);
                 });
@@ -45,11 +43,9 @@ window.SubscriptionScreen = {
      */
     async loadSubscriptions() {
         try {
-            // Всегда свежие данные с API
             const response = await window.SubscriptionAPI.listSubscriptions();
             this.currentSubscriptions = response.subscriptions || [];
 
-            // Сохраняем в сессионный кеш для быстрого доступа
             if (window.Storage) {
                 window.Storage.setSubscriptions(this.currentSubscriptions);
             }
@@ -59,7 +55,6 @@ window.SubscriptionScreen = {
         } catch (error) {
             Utils.log('error', 'Failed to load subscriptions:', error);
 
-            // Fallback - пытаемся взять из сессии
             if (window.Storage) {
                 this.currentSubscriptions = await window.Storage.getSubscriptions();
             }
@@ -77,18 +72,13 @@ window.SubscriptionScreen = {
      * Настройка обработчиков событий
      */
     setupEventListeners() {
-        // ❌ ПРОБЛЕМА: обработчики ищут элементы в старой структуре
-
-        // ✅ ИСПРАВЛЕНИЕ: используем делегирование событий
         document.addEventListener('click', (e) => {
-            // Проверяем что клик внутри нашего экрана
             const subscriptionScreen = e.target.closest('#subscriptionScreen');
             if (!subscriptionScreen) return;
 
             const target = e.target.closest('[data-action]');
             if (!target) return;
 
-            // Throttling для предотвращения double-click
             if (target.hasAttribute('data-processing')) return;
             target.setAttribute('data-processing', 'true');
             setTimeout(() => target.removeAttribute('data-processing'), 300);
@@ -99,7 +89,6 @@ window.SubscriptionScreen = {
             this.handleAction(action, subscriptionId);
         });
 
-        // Обработчик для автопродления (полный формат)
         document.addEventListener('click', (e) => {
             const subscriptionScreen = e.target.closest('#subscriptionScreen');
             if (!subscriptionScreen) return;
@@ -107,7 +96,6 @@ window.SubscriptionScreen = {
             const autoRenewal = e.target.closest('.auto-renewal');
             if (!autoRenewal) return;
 
-            // Throttling
             if (autoRenewal.hasAttribute('data-processing')) return;
             autoRenewal.setAttribute('data-processing', 'true');
             setTimeout(() => autoRenewal.removeAttribute('data-processing'), 300);
@@ -116,7 +104,6 @@ window.SubscriptionScreen = {
             this.handleAutoRenewalToggle(subscriptionId);
         });
 
-        // Обработчик для автопродления (компактный формат)
         document.addEventListener('click', (e) => {
             const subscriptionScreen = e.target.closest('#subscriptionScreen');
             if (!subscriptionScreen) return;
@@ -124,7 +111,6 @@ window.SubscriptionScreen = {
             const compactAutoRenewal = e.target.closest('.subscription-compact-auto-renewal');
             if (!compactAutoRenewal) return;
 
-            // Throttling
             if (compactAutoRenewal.hasAttribute('data-processing')) return;
             compactAutoRenewal.setAttribute('data-processing', 'true');
             setTimeout(() => compactAutoRenewal.removeAttribute('data-processing'), 300);
@@ -138,12 +124,10 @@ window.SubscriptionScreen = {
      * Обработка действий
      */
     async handleAction(action, subscriptionId = null) {
-        // Добавляем debounce для предотвращения множественных вызовов
         if (this.isProcessingAction) return;
         this.isProcessingAction = true;
 
         try {
-            // Вибрация только один раз
             if (window.TelegramApp) {
                 window.TelegramApp.haptic.light();
             }
@@ -168,7 +152,6 @@ window.SubscriptionScreen = {
                     Utils.log('warn', 'Unknown action:', action);
             }
         } finally {
-            // Снимаем блокировку через 500мс
             setTimeout(() => {
                 this.isProcessingAction = false;
             }, 500);
@@ -204,27 +187,22 @@ window.SubscriptionScreen = {
         try {
             Utils.log('info', 'Activating trial subscription');
 
-            // Показываем подтверждение
             const confirmed = await window.TelegramApp.showConfirm(
                 'Активировать пробный период на 7 дней бесплатно?'
             );
 
             if (!confirmed) return;
 
-            // Активируем через API
             const response = await window.SubscriptionAPI.activateTrial();
 
             if (window.Loading) {
                 window.Loading.hide();
             }
 
-            // Показываем анимацию успеха
             await this.showTrialActivationAnimation();
 
-            // Обновляем данные
             await this.refresh();
 
-            // Показываем инструкции
             setTimeout(() => {
                 this.handleViewInstructions();
             }, 1000);
@@ -248,18 +226,14 @@ window.SubscriptionScreen = {
 
         const newAutoRenewal = !subscription.auto_renewal;
 
-        // Показываем подтверждение с объяснением
         const confirmed = await this.showAutoRenewalConfirmation(newAutoRenewal);
         if (!confirmed) return;
 
         try {
-            // Обновляем через API
             await window.SubscriptionAPI.updateAutoRenewal(subscriptionId);
 
-            // Обновляем локальные данные
             subscription.auto_renewal = newAutoRenewal;
 
-            // Обновляем UI
             this.updateAutoRenewalUI(subscriptionId, newAutoRenewal);
 
             if (window.Toast) {
@@ -269,7 +243,6 @@ window.SubscriptionScreen = {
                 window.Toast.success(message);
             }
 
-            // Вибрация успеха
             if (window.TelegramApp) {
                 window.TelegramApp.haptic.success();
             }
@@ -326,7 +299,6 @@ window.SubscriptionScreen = {
         const container = document.getElementById('subscriptionScreen');
         if (!container) return;
 
-        // ✅ СНАЧАЛА скрываем контейнер
         container.style.opacity = '0';
         container.style.transform = 'translateY(10px)';
 
@@ -341,10 +313,8 @@ window.SubscriptionScreen = {
 
         content += this.renderQuickActions();
 
-        // Рендерим контент (пока скрытый)
         container.innerHTML = Utils.wrapContent(content);
 
-        // ✅ ЗАТЕМ одним "морганием" показываем
         requestAnimationFrame(() => {
             container.style.transition = 'all 0.2s ease-out';
             container.style.opacity = '1';
@@ -387,7 +357,6 @@ window.SubscriptionScreen = {
         const isExpired = daysLeft <= 0;
         const isTrial = this.isTrialSubscription(subscription);
 
-        // Только 2 статуса: active или expired
         const statusClass = isExpired ? 'expired' : 'active';
         const statusText = isExpired ? 'Истекла' : 'Активна';
 
@@ -459,7 +428,6 @@ window.SubscriptionScreen = {
             const isExpired = daysLeft <= 0;
             const isTrial = this.isTrialSubscription(subscription);
 
-            // Только 2 статуса
             const statusClass = isExpired ? 'expired' : 'active';
             const statusText = isExpired ? 'Истекла' : 'Активна';
 
@@ -549,18 +517,15 @@ window.SubscriptionScreen = {
      * Получение имени сервиса
      */
     getServiceName(subscription) {
-        // Проверяем на пробный период
         if (this.isTrialSubscription(subscription)) {
             return 'Пробный период';
         }
 
-        // Ищем в кеше услуг
         const service = this.servicesCache.get(subscription.service_id);
         if (service) {
             return service.name;
         }
 
-        // Fallback для неизвестных услуг
         return `Подписка ${subscription.service_id.slice(0, 8)}`;
     },
 
@@ -610,7 +575,6 @@ window.SubscriptionScreen = {
             }
         }
 
-        // Обновляем компактный формат
         const compactToggle = document.querySelector(`[data-subscription-id="${subscriptionId}"] .toggle-switch-compact`);
         if (compactToggle) {
             compactToggle.classList.toggle('active', autoRenewal);
@@ -646,12 +610,10 @@ window.SubscriptionScreen = {
                 animationElement.classList.add('active');
             }, 100);
 
-            // Вибрация успеха
             if (window.TelegramApp) {
                 window.TelegramApp.haptic.success();
             }
 
-            // Скрываем через 4 секунды
             setTimeout(() => {
                 animationElement.classList.remove('active');
                 setTimeout(() => {
@@ -677,7 +639,6 @@ window.SubscriptionScreen = {
      * Обновление данных подписки
      */
     async refresh() {
-        // Принудительно обновляем без кеша
         this.servicesCache.clear();
         await this.loadServices();
         await this.loadSubscriptions();
