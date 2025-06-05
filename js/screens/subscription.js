@@ -15,6 +15,7 @@ window.SubscriptionScreen = {
         await this.loadSubscriptions();
 
         this.render();
+        this.setupEventListeners(); // ✅ Добавить эту строку
         this.isLoaded = true;
     },
 
