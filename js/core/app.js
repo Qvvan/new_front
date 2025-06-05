@@ -594,6 +594,79 @@ async _performInit() {
         this.isReady = false;
         this.initializationPromise = null;
         this.pendingReferrerId = null;
+    },
+
+    async parseReferralData() {
+        Utils.log('info', 'Parsing referral data');
+
+        try {
+            const referralData = window.ReferralParser.parseReferralData();
+
+            if (referralData) {
+                Utils.log('info', 'Referral detected:', referralData);
+
+                // Сохраняем для обработки после регистрации
+                this.pendingReferralData = referralData;
+
+                // Сохраняем в Storage
+                if (window.Storage) {
+                    await window.Storage.set('pending_referral', referralData);
+                }
+            }
+
+        } catch (error) {
+            Utils.log('error', 'Failed to parse referral data:', error);
+        }
+    },
+
+    // И в методе ensureUserRegistration() добавляем:
+
+    async ensureUserRegistration() {
+        try {
+            const userData = await window.Storage?.getUserData();
+            const telegramUser = window.TelegramApp?.getUserInfo();
+
+            if (!userData && telegramUser) {
+                Utils.log('info', 'Registering new user');
+
+                // Регистрируем пользователя
+                if (window.UserAPI) {
+                    const result = await window.UserAPI.registerUser();
+                    await window.Storage?.setUserData(result.user);
+
+                    // Обрабатываем реферал после регистрации
+                    await this.processReferralAfterRegistration();
+
+                    if (window.Toast) {
+                        window.Toast.success('Добро пожаловать в Dragon VPN!');
+                    }
+                }
+            }
+        } catch (error) {
+            Utils.log('error', 'User registration failed:', error);
+        }
+    },
+
+    async processReferralAfterRegistration() {
+        try {
+            const pendingReferral = await window.Storage?.get('pending_referral');
+
+            if (pendingReferral && window.ReferralParser) {
+                const success = await window.ReferralParser.submitReferral(pendingReferral);
+
+                if (success) {
+                    // Показываем бонус за реферал
+                    if (window.Toast) {
+                        window.Toast.success('🎁 Бонус за приглашение получен!');
+                    }
+
+                    // Очищаем pending данные
+                    await window.Storage?.remove('pending_referral');
+                }
+            }
+        } catch (error) {
+            Utils.log('error', 'Failed to process referral after registration:', error);
+        }
     }
 };
 
