@@ -9,30 +9,30 @@
     backdrop-filter: blur(20px);
     border-top: 1px solid var(--border-dark);
     z-index: var(--z-nav);
-    padding: 0; /* ❌ Убираем padding отсюда */
+    padding: 0; /* ← Убираем padding отсюда */
 }
 
 .nav-grid {
-    width: 100%; /* ✅ Растягиваем на всю ширину */
+    width: 100%;
     display: flex;
-    justify-content: space-around; /* ✅ Равномерно распределяем */
+    justify-content: space-around;
     align-items: center;
-    padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-2xl); /* ✅ Padding здесь */
-    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm) env(safe-area-inset-bottom, var(--spacing-md)); /* ← Учитываем safe area */
+    gap: var(--spacing-xs);
 }
 
 .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-sm) var(--spacing-md); /* ✅ Уменьшаем padding */
+    gap: 2px;                    /* ← МИНИМАЛЬНЫЙ зазор */
+    padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--border-radius-md);
     cursor: pointer;
     position: relative;
-    flex: 1; /* ✅ ВАЖНО: делаем элементы растягивающимися */
-    max-width: 80px; /* ✅ Ограничиваем максимальную ширину */
-    min-width: 60px;
+    flex: 1;
+    max-width: 70px;            /* ← Чуть меньше */
+    min-width: 50px;            /* ← Минимум меньше */
     transition: all var(--transition-normal);
 }
 
@@ -562,4 +562,30 @@
 .subscription-compact-label {
     font-size: var(--font-size-xs);
     color: var(--text-secondary);
+}
+
+@media (min-width: 768px) {
+    .content-wrapper {
+        max-width: 500px; /* ← Было 428px, теперь 500px */
+    }
+}
+
+@media (min-width: 1024px) {
+    .content-wrapper {
+        max-width: 550px; /* ← На больших экранах еще шире */
+    }
+}
+
+/* ✅ Модальные окна тоже шире */
+.modal {
+    width: 92%;           /* ← Было 90%, теперь 92% */
+    max-width: 420px;     /* ← Было 400px, теперь 420px */
+    min-width: 300px;
+}
+
+@media (max-width: 400px) {
+    .modal {
+        width: 96%;       /* ← Почти вся ширина экрана */
+        max-width: none;
+    }
 }

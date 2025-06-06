@@ -480,3 +480,60 @@
         max-width: 600px; /* Еще шире на больших экранах */
     }
 }
+
+@media (max-width: 576px) {
+    .screen {
+        padding: var(--spacing-xs) 0; /* ← Почти нет отступов */
+    }
+
+    .card {
+        margin: var(--spacing-xs) var(--spacing-sm); /* ← Минимальные отступы */
+        padding: var(--spacing-lg);
+    }
+}
+
+@media (max-width: 360px) {
+    .screen {
+        padding: 2px 0; /* ← УЛЬТРА-минимум */
+    }
+
+    .content-wrapper {
+        padding: 0 4px; /* ← Только 4px по краям */
+    }
+}
+
+@media (max-width: 320px) {
+    .screen {
+        padding: 0; /* ← Вообще без отступов */
+    }
+
+    .content-wrapper {
+        padding: 0 2px; /* ← 2px - абсолютный минимум */
+    }
+}
+
+.action-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important; /* ← ВСЕГДА 2 колонки */
+    grid-template-rows: 1fr;                    /* ← Одна строка */
+}
+
+@media (max-width: 576px) {
+    .action-grid {
+        grid-template-columns: 1fr 1fr !important; /* ← НЕ меняем на 1fr! */
+    }
+}
+
+@media (max-width: 360px) {
+    .action-grid {
+        grid-template-columns: 1fr 1fr !important; /* ← Все равно 2 колонки! */
+    }
+}
+
+/* ✅ Даже на самых маленьких экранах - квадраты в ряд */
+@media (max-width: 320px) {
+    .action-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 4px; /* ← Минимальный зазор, но 2 колонки */
+    }
+}

@@ -182,7 +182,7 @@
 
 .action-card > * {
     position: relative;
-    z-index: 2;
+    z-index: 1;
 }
 
 /* Тонкая светлая полоска сверху для дополнительного эффекта */
@@ -358,21 +358,29 @@
 
 .action-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr; /* ← Строго 2 колонки */
     gap: var(--spacing-lg);
+    aspect-ratio: 2/1; /* ← Пропорция сетки 2:1 */
 }
 
 .action-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-dark);
     border-radius: var(--border-radius-lg);
-    padding: var(--spacing-2xl) var(--spacing-xl);
+    padding: var(--spacing-lg);
     cursor: pointer;
     transition: all var(--transition-normal);
     position: relative;
     overflow: hidden;
     backdrop-filter: blur(10px);
-    min-height: 120px;
+
+    /* 🔥 КЛЮЧЕВОЕ: ПРИНУДИТЕЛЬНЫЙ квадрат */
+    aspect-ratio: 1/1;           /* ← ВСЕГДА квадрат! */
+    width: 100%;                 /* ← Полная ширина ячейки */
+    height: auto;                /* ← Высота автоматически */
+    min-height: unset;           /* ← Убираем min-height */
+    max-height: none;            /* ← Убираем ограничения */
+
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -390,14 +398,14 @@
 
 .action-card::before {
     content: '';
+    display: block;
+    width: 100%;
+    height: 0;
+    padding-bottom: 100%; /* ← Создает квадратную пропорцию */
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--accent-white);
-    transform: scaleX(0);
-    transition: transform var(--transition-normal);
+    z-index: -1;
 }
 
 .action-card::after {
@@ -428,17 +436,18 @@
 }
 
 .action-icon {
-    width: 46px;
-    height: 46px;
+    width: clamp(32px, 8vw, 46px);      /* ← Адаптивный размер */
+    height: clamp(32px, 8vw, 46px);     /* ← От 32px до 46px */
     border-radius: var(--border-radius-md);
     background: var(--gradient-card);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: var(--spacing-md);
-    font-size: var(--font-size-xl);
+    margin-bottom: clamp(8px, 2vw, 16px); /* ← Адаптивный отступ */
+    font-size: clamp(16px, 4vw, 20px);    /* ← Адаптивная иконка */
     border: 1px solid var(--border-dark);
     transition: all var(--transition-normal);
+    flex-shrink: 0;                       /* ← Не сжимается */
 }
 
 .action-card:hover .action-icon {
@@ -446,14 +455,16 @@
 }
 
 .action-title {
-    font-size: var(--font-size-lg);
+    font-size: clamp(14px, 3.5vw, 17px);  /* ← Адаптивный текст */
     font-weight: var(--font-weight-semibold);
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: clamp(2px, 1vw, 4px);
+    line-height: 1.2;
 }
 
 .action-subtitle {
-    font-size: var(--font-size-sm);
+    font-size: clamp(11px, 2.8vw, 13px);  /* ← Адаптивный подтекст */
     color: var(--text-secondary);
+    line-height: 1.3;
 }
 
 /* Empty State */
@@ -646,7 +657,9 @@
 
 .modal {
     width: 90%;
-    max-width: 400px; /* Модалки остаются центрированными */
+    max-width: 400px;
+    min-width: 280px; /* ← Минимальная ширина */
+    max-height: 85vh; /* ← КЛЮЧЕВОЕ: ограничиваем высоту */
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
     border-radius: var(--border-radius-xl);
@@ -655,6 +668,13 @@
     transition: all var(--transition-normal);
     backdrop-filter: blur(20px);
     box-shadow: var(--shadow-xl);
+    display: flex;           /* ← Flexbox для управления */
+    flex-direction: column;  /* ← Вертикальная ориентация */
+}
+
+.modal-header,
+.modal-actions {
+    flex-shrink: 0;       /* ← НЕ сжимаются */
 }
 
 .modal-overlay.active .modal {
@@ -699,7 +719,11 @@
 }
 
 .modal-body {
-    padding: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    overflow-y: auto;     /* ← Скролл ВНУТРИ модалки */
+    overflow-x: hidden;
+    flex: 1;              /* ← Занимает доступное место */
+    min-height: 0;        /* ← Позволяет сжиматься */
 }
 
 .modal-actions {
@@ -1738,6 +1762,39 @@
 .modal-instructions {
     max-width: 500px;
     width: 95%;
+}
+
+@media (max-width: 400px) {
+    .services-grid-compact {
+        grid-template-columns: 1fr; /* ← Одна колонка вместо 2x2 */
+        gap: var(--spacing-sm);
+    }
+
+    .service-card-compact {
+        min-height: 60px;         /* ← Делаем карточки ниже */
+        padding: var(--spacing-sm);
+    }
+
+    .trial-service {
+        padding: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 450px) {
+    .step-content {
+        min-height: 200px;        /* ← Уменьшаем минимальную высоту */
+        padding: var(--spacing-sm);
+    }
+
+    .device-grid {
+        grid-template-columns: 1fr; /* ← Вертикальная раскладка */
+        gap: var(--spacing-sm);
+    }
+
+    .device-card {
+        min-height: 60px;         /* ← Компактные карточки */
+        padding: var(--spacing-md);
+    }
 }
 
 .steps-indicator {
@@ -3577,5 +3634,87 @@
 
     .trial-benefit {
         padding: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 360px) {
+    .modal {
+        width: 95%;
+        max-width: none;      /* ← Убираем ограничение ширины */
+        min-width: 250px;     /* ← Еще меньше минимум */
+        max-height: 80vh;     /* ← Меньше высота */
+        margin: 0 var(--spacing-xs); /* ← Минимальные отступы */
+    }
+
+    .modal-header,
+    .modal-body,
+    .modal-actions {
+        padding: var(--spacing-md); /* ← Уменьшаем padding */
+    }
+}
+
+@media (max-width: 320px) {
+    .modal {
+        width: 98%;
+        min-width: 220px;
+        max-height: 75vh;
+    }
+}
+
+@media (max-width: 576px) {
+    .action-grid {
+        gap: var(--spacing-md);     /* ← Меньше зазор */
+        aspect-ratio: 2/1;          /* ← Пропорция остается */
+    }
+
+    .action-card {
+        aspect-ratio: 1/1;          /* ← Квадрат неизменен! */
+        padding: var(--spacing-md); /* ← Меньше padding */
+    }
+}
+
+@media (max-width: 360px) {
+    .action-grid {
+        gap: var(--spacing-sm);     /* ← Еще меньше зазор */
+    }
+
+    .action-card {
+        aspect-ratio: 1/1;          /* ← ВСЕ РАВНО квадрат! */
+        padding: var(--spacing-sm); /* ← Минимальный padding */
+    }
+}
+
+@media (max-width: 320px) {
+    .action-grid {
+        gap: var(--spacing-xs);     /* ← Минимальный зазор */
+    }
+
+    .action-card {
+        aspect-ratio: 1/1;          /* ← НИКОГДА не ломается! */
+        padding: var(--spacing-xs); /* ← Крохотный padding */
+    }
+}
+
+@media (max-width: 280px) {
+    .action-card {
+        aspect-ratio: 1/1 !important; /* ← !important для гарантии */
+        min-width: 80px;               /* ← Абсолютный минимум */
+        min-height: 80px;              /* ← Абсолютный минимум */
+    }
+
+    .action-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+
+    .action-title {
+        font-size: 11px;
+        margin-bottom: 2px;
+    }
+
+    .action-subtitle {
+        font-size: 9px;
     }
 }
