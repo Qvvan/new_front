@@ -166,7 +166,7 @@ window.PaymentMonitor = {
         }
 
         // ✅ Добавляем в Set обработанных платежей
-        this.processedSuccessfulPayments.add(paymentId);
+        await this.enrichPaymentWithServiceData(payment);
 
         Utils.log('info', 'Processing payment success:', paymentId);
 
