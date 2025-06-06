@@ -257,13 +257,8 @@ window.Router = {
     updateTelegramBackButton() {
         if (!window.TelegramApp || !window.TelegramApp.webApp) return;
 
-        const shouldShowBack = this.history.length > 0 || this.previousScreen;
-
-        if (shouldShowBack) {
-            window.TelegramApp.showBackButton();
-        } else {
-            window.TelegramApp.hideBackButton();
-        }
+        // Всегда скрываем кнопку назад
+        window.TelegramApp.hideBackButton();
     },
 
     /**
