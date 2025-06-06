@@ -116,10 +116,6 @@
         font-size: var(--font-size-lg);
     }
 
-    .bottom-nav {
-        padding: var(--spacing-xs) var(--spacing-lg) var(--spacing-xl);
-    }
-
     .nav-item {
         min-width: 45px;
         gap: 2px;
@@ -386,10 +382,6 @@
     .app-container {
         padding-left: max(var(--spacing-lg), env(safe-area-inset-left));
         padding-right: max(var(--spacing-lg), env(safe-area-inset-right));
-    }
-
-    .bottom-nav {
-        padding-bottom: max(var(--spacing-2xl), env(safe-area-inset-bottom));
     }
 
     .screen {

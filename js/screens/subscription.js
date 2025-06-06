@@ -263,25 +263,11 @@ window.SubscriptionScreen = {
                             </div>
 
                             <div class="trial-confirmation-details">
-                                <h3>Бесплатный пробный период</h3>
-                                <div class="trial-benefits">
-                                    <div class="trial-benefit">
-                                        <i class="fas fa-clock"></i>
-                                        <span>5 дней бесплатно</span>
-                                    </div>
-                                    <div class="trial-benefit">
-                                        <i class="fas fa-infinity"></i>
-                                        <span>Безлимитный трафик</span>
-                                    </div>
-                                    <div class="trial-benefit">
-                                        <i class="fas fa-globe"></i>
-                                        <span>Все серверы доступны</span>
-                                    </div>
-                                </div>
+                                <h3>Бесплатный пробный период на 5 дней</h3>
 
                                 <div class="trial-note">
                                     <i class="fas fa-info-circle"></i>
-                                    <span>Автопродление отключено. После окончания пробного периода подписка автоматически не продлится.</span>
+                                    <span>После окончания пробного периода подписка автоматически не продлится.</span>
                                 </div>
                             </div>
                         </div>
