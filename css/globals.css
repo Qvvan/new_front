@@ -166,14 +166,23 @@ html, body {
 
 .screen {
     display: none;
-    min-height: 100vh;
-    padding: 1px 0;        /* ← Было 2px, теперь 1px */
+    min-height: calc(100vh - var(--nav-height));
+    padding: var(--spacing-xl) var(--spacing-lg);
     opacity: 0;
     transition: opacity 0.15s ease-out;
+    /* ✅ Контролируем переполнение */
+    overflow-y: auto;
+    /* ✅ Позиционирование для центрирования */
+    position: relative;
 }
 
 .screen.active {
     display: block;
+}
+
+.screen.screen-no-scroll {
+    overflow: hidden;
+    height: calc(100vh - var(--nav-height));
 }
 
 /* Background Effects */

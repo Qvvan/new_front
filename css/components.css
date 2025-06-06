@@ -3718,3 +3718,49 @@
         font-size: 9px;
     }
 }
+
+.empty-state-centered {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: var(--nav-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    /* Блокируем скролл для экранов без контента */
+    overflow: hidden;
+}
+
+.empty-state-centered .empty-state-content {
+    max-width: 320px;
+    width: 100%;
+    text-align: center;
+}
+
+/* Блокировка избыточного скролла */
+.screen-no-scroll {
+    height: calc(100vh - var(--nav-height));
+    overflow: hidden;
+}
+
+/* Автоматический скролл вверх при переходах */
+.screen {
+    scroll-behavior: smooth;
+}
+
+.screen.active {
+    animation: screenEnter 0.2s ease-out forwards;
+}
+
+@keyframes screenEnter {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
