@@ -459,12 +459,13 @@ window.ServiceSelector = {
                 service_type: this.mode === 'renew' ? 'old' : 'new',
                 subscription_id: this.subscriptionId || undefined,
                 description: `${this.selectedService.name} - ${this.mode === 'renew' ? 'Продление' : 'Новая подписка'}`,
-                price: this.selectedService.price // ✅ Передаем цену из сервиса
+                price: this.selectedService.price
             };
 
             const response = await window.PaymentAPI.createPaymentWithMonitoring(paymentData);
             const payment = response.payment || response;
 
+            // ✅ Обогащаем данными сервиса
             payment.service_name = this.selectedService.name;
             payment.service_duration = this.selectedService.duration;
             payment.service_original_price = this.selectedService.price;
@@ -473,27 +474,32 @@ window.ServiceSelector = {
                 payment.price = this.selectedService.price;
             }
 
-            // Скрываем селектор
+            // ✅ Правильно передаем URL - используем receipt_link из API
+            const paymentWithUrl = {
+                ...payment,
+                payment_url: response.receipt_link || response.url, // ← Правильное поле
+                url: response.receipt_link || response.url
+            };
+
             this.hide();
 
-            // Показываем плашку оплаты
+            // Показываем баннер
             if (window.PaymentBanner) {
-                window.PaymentBanner.show(payment);
+                window.PaymentBanner.show(paymentWithUrl);
             }
 
             // Открываем страницу оплаты
-            if (response.url) {
-                window.TelegramApp.openLink(response.url);
+            const paymentUrl = response.receipt_link || response.url;
+            if (paymentUrl && window.TelegramApp) {
+                window.TelegramApp.openLink(paymentUrl);
             }
 
             Utils.log('info', 'Payment created and monitoring started:', payment.id);
 
         } catch (error) {
             Utils.log('error', 'Failed to create payment:', error);
-
             if (window.Toast) {
-                const message = error.message || 'Ошибка создания платежа';
-                window.Toast.error(message);
+                window.Toast.error(error.message || 'Ошибка создания платежа');
             }
             throw error;
         }

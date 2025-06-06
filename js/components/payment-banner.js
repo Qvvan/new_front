@@ -20,8 +20,20 @@ window.PaymentBanner = {
     async show(payment) {
         if (!this.element || !payment) return;
 
-        // ✅ ИСПРАВЛЕНИЕ: Убеждаемся что URL сохранен
-        if (!payment.payment_url && !payment.url) {
+        // ✅ КРИТИЧЕСКИ ВАЖНО: Не показываем баннер для успешных платежей
+        if (payment.status === 'succeeded') {
+            Utils.log('info', `Payment ${payment.id} already succeeded, not showing banner`);
+            return;
+        }
+
+        // ✅ Показываем только для pending
+        if (payment.status !== 'pending') {
+            Utils.log('info', `Payment ${payment.id} status is ${payment.status}, not showing banner`);
+            return;
+        }
+
+        // ✅ ИСПРАВЛЕНИЕ: Проверяем наличие URL для pending платежей
+        if (!payment.payment_url && !payment.url && !payment.receipt_link) {
             Utils.log('warn', 'Payment URL missing, trying to get from storage');
 
             // Пытаемся получить URL из pending платежей в Storage
@@ -30,10 +42,35 @@ window.PaymentBanner = {
                 p.id === payment.id || p.payment_id === payment.payment_id
             );
 
-            if (storedPayment && storedPayment.payment_url) {
-                payment.payment_url = storedPayment.payment_url;
+            if (storedPayment && (storedPayment.payment_url || storedPayment.receipt_link)) {
+                payment.payment_url = storedPayment.payment_url || storedPayment.receipt_link;
+                payment.url = storedPayment.url || storedPayment.receipt_link;
                 Utils.log('info', 'Restored payment URL from storage');
             }
+        }
+
+        // ✅ Если это pending платеж, но нет URL - не показываем баннер
+        if (!payment.payment_url && !payment.url && !payment.receipt_link) {
+            Utils.log('error', `Pending payment ${payment.id} has no payment URL, cannot show banner`);
+
+            // Удаляем этот платеж из мониторинга, так как он некорректный
+            if (window.PaymentMonitor) {
+                window.PaymentMonitor.removePayment(payment.id);
+            }
+
+            if (window.Storage) {
+                await window.Storage.removePendingPayment(payment.id);
+            }
+
+            return;
+        }
+
+        // ✅ Нормализуем URLs - используем receipt_link как основной источник
+        if (!payment.payment_url && payment.receipt_link) {
+            payment.payment_url = payment.receipt_link;
+        }
+        if (!payment.url && payment.receipt_link) {
+            payment.url = payment.receipt_link;
         }
 
         // Обогащаем платеж данными сервиса
@@ -143,12 +180,14 @@ window.PaymentBanner = {
         const formattedTime = this.formatTime(timeLeft);
         const progressPercent = this.getProgressPercent();
 
-        // Используем данные сервиса если доступны
         const serviceName = this.currentPayment.service_name || 'VPN подписка';
         const serviceDuration = this.currentPayment.service_duration || '';
-
-        // ✅ ИСПРАВЛЕНО: Правильно обрабатываем цену
         const paymentPrice = this.currentPayment.price || 0;
+
+        // ✅ Определяем текст кнопки по статусу
+        const isSucceeded = this.currentPayment.status === 'succeeded';
+        const buttonText = isSucceeded ? 'Чек' : 'Продолжить';
+        const buttonIcon = isSucceeded ? 'fa-receipt' : 'fa-credit-card';
 
         this.element.innerHTML = `
             <div class="payment-banner-content">
@@ -161,19 +200,21 @@ window.PaymentBanner = {
                                        stroke-dashoffset="${88 - (88 * progressPercent / 100)}"
                                        class="${timeLeft > 0 ? 'active' : ''}"></circle>
                             </svg>
-                            <span class="timer-text">${formattedTime}</span>
+                            <span class="timer-text">${isSucceeded ? '✓' : formattedTime}</span>
                         </div>
                         <div class="payment-text">
                             <div class="payment-title">${serviceName}</div>
                             <div class="payment-subtitle">
                                 ${Utils.formatPrice(paymentPrice)}
                                 ${serviceDuration ? ` • ${serviceDuration}` : ''}
+                                ${isSucceeded ? ' • Оплачено' : ''}
                             </div>
                         </div>
                     </div>
                 </div>
                 <button class="btn btn-sm btn-primary" id="continuePaymentBtn">
-                    Продолжить
+                    <i class="fas ${buttonIcon}"></i>
+                    ${buttonText}
                 </button>
             </div>
         `;
@@ -204,8 +245,30 @@ window.PaymentBanner = {
             window.TelegramApp.haptic.light();
         }
 
-        // ✅ ИСПРАВЛЕНИЕ: Проверяем наличие URL оплаты
-        const paymentUrl = this.currentPayment.payment_url || this.currentPayment.url;
+        // ✅ ИСПРАВЛЕНИЕ: Проверяем статус платежа
+        if (this.currentPayment.status === 'succeeded') {
+            // Платеж уже успешен - показываем чек
+            const receiptUrl = this.currentPayment.receipt_link;
+            if (receiptUrl) {
+                if (window.TelegramApp) {
+                    window.TelegramApp.openLink(receiptUrl);
+                } else {
+                    window.open(receiptUrl, '_blank');
+                }
+                return;
+            } else {
+                if (window.Toast) {
+                    window.Toast.success('Платеж уже обработан');
+                }
+                this.hide(); // Скрываем баннер
+                return;
+            }
+        }
+
+        // ✅ Для pending платежей ищем правильные поля
+        const paymentUrl = this.currentPayment.payment_url ||
+                          this.currentPayment.url ||
+                          this.currentPayment.receipt_link; // ← Добавить receipt_link как fallback
 
         if (paymentUrl) {
             Utils.log('info', 'Opening payment URL:', paymentUrl);
@@ -216,13 +279,13 @@ window.PaymentBanner = {
                 window.open(paymentUrl, '_blank');
             }
         } else {
-            Utils.log('error', 'Payment URL not found for payment:', this.currentPayment.id);
+            Utils.log('error', 'No payment URL found in payment:', this.currentPayment);
 
-            // Fallback - переходим на экран платежей
             if (window.Toast) {
                 window.Toast.warning('Ссылка на оплату недоступна');
             }
 
+            // Переходим к списку платежей
             if (window.Router) {
                 window.Router.navigate('payments');
             }

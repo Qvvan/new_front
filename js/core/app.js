@@ -282,61 +282,59 @@ window.DragonVPNApp = {
      */
     async checkPendingPayments() {
         try {
-            // ✅ ВСЕГДА очищаем старые данные при старте
+            // Очищаем старые данные
             if (window.Storage) {
                 await window.Storage.clearPendingPayments();
             }
 
-            if (window.PaymentMonitor) {
-                window.PaymentMonitor.cleanup();
-            }
-
             Utils.log('info', 'Checking for actual pending payments from API...');
 
-            // ✅ Получаем ТОЛЬКО актуальные pending платежи с сервера
             const response = await window.PaymentAPI.listPayments();
             const allPayments = response.payments || [];
 
-            // ✅ Фильтруем только pending статусы
+            // ✅ СТРОГО фильтруем только pending
             const actualPendingPayments = allPayments.filter(payment =>
                 payment.status === 'pending'
             );
 
-            Utils.log('info', `Found ${actualPendingPayments.length} actual pending payments from API`);
+            Utils.log('info', `Found ${actualPendingPayments.length} pending payments`);
 
-            // ✅ Только если есть реальные pending платежи - запускаем мониторинг
             if (actualPendingPayments.length > 0) {
-                // Сохраняем в сессионный кеш
+                // Сохраняем в сессионный кеш с правильными полями
                 for (const payment of actualPendingPayments) {
-                    await window.Storage.addPendingPayment(payment);
+                    // ✅ Для pending платежей receipt_link может быть ссылкой на оплату
+                    const paymentWithUrl = {
+                        ...payment,
+                        payment_url: payment.receipt_link, // ← Используем receipt_link как payment_url
+                        url: payment.receipt_link
+                    };
+
+                    await window.Storage.addPendingPayment(paymentWithUrl);
                 }
 
                 // Показываем баннер для последнего платежа
                 const latestPayment = actualPendingPayments[actualPendingPayments.length - 1];
                 if (window.PaymentBanner) {
-                    window.PaymentBanner.show(latestPayment);
+                    window.PaymentBanner.show({
+                        ...latestPayment,
+                        payment_url: latestPayment.receipt_link,
+                        url: latestPayment.receipt_link
+                    });
                 }
 
-                // Запускаем мониторинг ТОЛЬКО для актуальных pending платежей
+                // Запускаем мониторинг
                 if (window.PaymentMonitor) {
                     actualPendingPayments.forEach(payment => {
                         window.PaymentMonitor.addPayment(payment.id);
                     });
                 }
-            } else {
-                Utils.log('info', 'No pending payments found - no monitoring needed');
             }
 
         } catch (error) {
             Utils.log('error', 'Failed to check pending payments:', error);
-
-            // При ошибке всегда очищаем локальные данные
+            // Очищаем при ошибке
             if (window.Storage) {
                 await window.Storage.clearPendingPayments();
-            }
-
-            if (window.PaymentMonitor) {
-                window.PaymentMonitor.cleanup();
             }
         }
     },
