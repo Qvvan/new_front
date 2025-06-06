@@ -3243,3 +3243,240 @@
     }
 }
 
+/* Empty State with GIF */
+.empty-state-icon-gif {
+    margin-bottom: var(--spacing-xl);
+    display: flex;
+    justify-content: center;
+}
+
+.empty-gif-static {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+    /* Убираем анимацию если это gif */
+    animation: none;
+}
+
+.empty-state-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+}
+
+/* Красивая кнопка активации пробного периода */
+.btn-trial-activation {
+    position: relative;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: var(--border-radius-xl);
+    overflow: hidden;
+    padding: 0;
+    transition: all var(--transition-normal);
+    min-height: 80px;
+}
+
+.btn-trial-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.18) 0%,
+        rgba(255, 255, 255, 0.12) 30%,
+        rgba(255, 255, 255, 0.06) 70%,
+        rgba(0, 0, 0, 0.1) 100%
+    );
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-radius: var(--border-radius-xl);
+    backdrop-filter: blur(20px);
+    transition: all var(--transition-normal);
+}
+
+.btn-trial-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    transition: left 0.8s ease;
+}
+
+.btn-trial-activation:hover .btn-trial-shine {
+    left: 100%;
+}
+
+.btn-trial-activation:hover .btn-trial-bg {
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.25) 0%,
+        rgba(255, 255, 255, 0.18) 30%,
+        rgba(255, 255, 255, 0.1) 70%,
+        rgba(0, 0, 0, 0.08) 100%
+    );
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.02);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.btn-trial-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    gap: var(--spacing-md);
+}
+
+.trial-gift-icon {
+    flex-shrink: 0;
+}
+
+.trial-gift-image {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+}
+
+.trial-text {
+    flex: 1;
+    text-align: left;
+    color: var(--text-primary);
+}
+
+.trial-main {
+    display: block;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-xs);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.trial-sub {
+    display: block;
+    font-size: var(--font-size-sm);
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: var(--font-weight-medium);
+}
+
+.trial-arrow {
+    flex-shrink: 0;
+    color: var(--accent-white);
+    font-size: var(--font-size-lg);
+    transition: transform var(--transition-normal);
+}
+
+.btn-trial-activation:hover .trial-arrow {
+    transform: translateX(4px);
+}
+
+/* Уведомление об использованном пробном периоде */
+.trial-used-notice {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    background: rgba(128, 128, 128, 0.1);
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    border-radius: var(--border-radius-lg);
+    color: var(--text-muted);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+}
+
+.trial-used-icon {
+    flex-shrink: 0;
+}
+
+.trial-used-image {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    filter: grayscale(100%) opacity(0.7);
+}
+
+/* Кнопка покупки подписки */
+.btn-subscription-purchase {
+    position: relative;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    padding: 0;
+    transition: all var(--transition-normal);
+    min-height: 56px;
+}
+
+.btn-purchase-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.12) 0%,
+        rgba(255, 255, 255, 0.06) 50%,
+        rgba(0, 0, 0, 0.1) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius-lg);
+    backdrop-filter: blur(10px);
+    transition: all var(--transition-normal);
+}
+
+.btn-subscription-purchase:hover .btn-purchase-bg {
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.18) 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(0, 0, 0, 0.08) 100%
+    );
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.btn-purchase-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.btn-purchase-content i {
+    font-size: var(--font-size-lg);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* Адаптивность */
+@media (max-width: 360px) {
+    .empty-gif-static {
+        width: 80px;
+        height: 80px;
+    }
+
+    .trial-gift-image {
+        width: 40px;
+        height: 40px;
+    }
+
+    .btn-trial-content {

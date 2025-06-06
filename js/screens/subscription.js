@@ -304,7 +304,7 @@ window.SubscriptionScreen = {
         container.style.transform = 'translateY(10px)';
 
         let content = '';
-        if (this.isEmpty) {
+        if (this.currentSubscriptions.length === 0) {
             content = this.renderEmptyState();
         } else if (this.currentSubscriptions.length === 1) {
             content = this.renderSingleSubscription(this.currentSubscriptions[0]);
@@ -327,29 +327,60 @@ window.SubscriptionScreen = {
      * Рендеринг пустого состояния
      */
     renderEmptyState() {
+        // Проверяем доступность пробного периода
+        const isTrialAvailable = !this.userData?.trial_activated;
+        const trialGif = isTrialAvailable ?
+            'assets/images/gifs/gift-animate.gif' :
+            'assets/images/gifs/gift-opened.png';
+
         return `
-            <div class="empty-state">
-                <div class="empty-state-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <h3 class="empty-state-title">Нет активных подписок</h3>
-                <p class="empty-state-text">
-                    Оформите подписку или активируйте пробный период для доступа к VPN
-                </p>
-                <div class="empty-state-actions">
-                    <button class="btn btn-primary btn-full mb-md" data-action="activate-trial">
-                        <i class="fas fa-gift"></i>
-                        Пробный период 7 дней
-                    </button>
-                    <button class="btn btn-secondary btn-full" data-action="buy">
-                        <i class="fas fa-shopping-cart"></i>
-                        Оформить подписку
-                    </button>
+            <div class="empty-state-card">
+                <div class="empty-state-bg"></div>
+                <div class="empty-state-content">
+                    <div class="empty-state-icon-gif">
+                        <img src="${window.Assets.getGif('empty-referrals.gif')}" alt="No subscriptions" class="empty-gif-static" />
+                    </div>
+                    <h3 class="empty-state-title">Нет активных подписок</h3>
+                    <div class="empty-state-actions">
+                        ${isTrialAvailable ? `
+                            <button class="btn-trial-activation" data-action="activate-trial">
+                                <div class="btn-trial-bg">
+                                    <div class="btn-trial-shine"></div>
+                                </div>
+                                <div class="btn-trial-content">
+                                    <div class="trial-gift-icon">
+                                        <img src="${trialGif}" alt="Gift" class="trial-gift-image" />
+                                    </div>
+                                    <div class="trial-text">
+                                        <span class="trial-main">Пробный период</span>
+                                        <span class="trial-sub">7 дней бесплатно</span>
+                                    </div>
+                                    <div class="trial-arrow">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </div>
+                                </div>
+                            </button>
+                        ` : `
+                            <div class="trial-used-notice">
+                                <div class="trial-used-icon">
+                                    <img src="${trialGif}" alt="Used" class="trial-used-image" />
+                                </div>
+                                <span>Пробный период использован</span>
+                            </div>
+                        `}
+
+                        <button class="btn-subscription-purchase" data-action="buy">
+                            <div class="btn-purchase-bg"></div>
+                            <div class="btn-purchase-content">
+                                <i class="fas fa-rocket"></i>
+                                <span>Оформить подписку</span>
+                            </div>
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
     },
-
     /**
      * Рендеринг одной подписки (полный формат)
      */
