@@ -3480,3 +3480,102 @@
     }
 
     .btn-trial-content {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+}
+
+/* Trial Confirmation Modal */
+.trial-confirmation-content {
+    text-align: center;
+    padding: var(--spacing-lg) 0;
+}
+
+.trial-confirmation-icon {
+    margin-bottom: var(--spacing-xl);
+}
+
+.trial-confirmation-gif {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+.trial-confirmation-details h3 {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-xl);
+    color: var(--text-primary);
+}
+
+.trial-benefits {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.trial-benefit {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(255, 255, 255, 0.04) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius-md);
+    backdrop-filter: blur(10px);
+}
+
+.trial-benefit i {
+    color: var(--accent-green);
+    font-size: var(--font-size-lg);
+    width: 20px;
+    text-align: center;
+}
+
+.trial-benefit span {
+    color: var(--text-primary);
+    font-weight: var(--font-weight-medium);
+}
+
+.trial-note {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-lg);
+    background: rgba(255, 159, 67, 0.1);
+    border: 1px solid rgba(255, 159, 67, 0.3);
+    border-radius: var(--border-radius-md);
+    text-align: left;
+}
+
+.trial-note i {
+    color: var(--accent-orange);
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.trial-note span {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
+}
+
+/* Responsive */
+@media (max-width: 360px) {
+    .trial-confirmation-gif {
+        width: 60px;
+        height: 60px;
+    }
+
+    .trial-benefits {
+        gap: var(--spacing-md);
+    }
+
+    .trial-benefit {
+        padding: var(--spacing-sm);
+    }
+}

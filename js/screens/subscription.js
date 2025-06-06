@@ -11,12 +11,26 @@ window.SubscriptionScreen = {
     async init() {
         Utils.log('info', 'Initializing Subscription Screen');
 
+        await this.loadUserData();
         await this.loadServices();
         await this.loadSubscriptions();
 
         this.render();
         this.setupEventListeners(); // ✅ Добавить эту строку
         this.isLoaded = true;
+    },
+
+    async loadUserData() {
+        try {
+            if (window.UserAPI) {
+                const response = await window.UserAPI.getCurrentUser();
+                this.userData = response.user || response;
+                Utils.log('info', 'User data loaded for subscription screen:', this.userData);
+            }
+        } catch (error) {
+            Utils.log('error', 'Failed to load user data:', error);
+            this.userData = { trial_activated: false }; // Fallback
+        }
     },
 
     /**
@@ -186,36 +200,119 @@ window.SubscriptionScreen = {
      */
     async handleActivateTrial() {
         try {
-            Utils.log('info', 'Activating trial subscription');
+            Utils.log('info', 'Requesting trial activation');
 
-            const confirmed = await window.TelegramApp.showConfirm(
-                'Активировать пробный период на 7 дней бесплатно?'
-            );
-
+            // Показываем красивое модальное окно подтверждения
+            const confirmed = await this.showTrialConfirmationModal();
             if (!confirmed) return;
 
+            // Показываем загрузку
+            if (window.Loading) {
+                window.Loading.show('Активация пробного периода...');
+            }
+
+            // ✅ ИСПРАВЛЕНИЕ: Используем правильный API метод
             const response = await window.SubscriptionAPI.activateTrial();
 
             if (window.Loading) {
                 window.Loading.hide();
             }
 
+            // Показываем анимацию успеха
             await this.showTrialActivationAnimation();
 
+            // Обновляем данные подписок
             await this.refresh();
 
+            // ✅ Сразу показываем инструкции
             setTimeout(() => {
-                this.handleViewInstructions();
+                if (window.InstructionsScreen) {
+                    window.InstructionsScreen.show();
+                }
             }, 1000);
+
+            // Вибрация успеха
+            if (window.TelegramApp) {
+                window.TelegramApp.haptic.success();
+            }
 
         } catch (error) {
             Utils.log('error', 'Failed to activate trial:', error);
+
+            if (window.Loading) {
+                window.Loading.hide();
+            }
 
             if (window.Toast) {
                 const message = error.message || 'Ошибка активации пробного периода';
                 window.Toast.error(message);
             }
         }
+    },
+
+    async showTrialConfirmationModal() {
+        return new Promise((resolve) => {
+            if (window.Modal) {
+                window.Modal.show({
+                    title: 'Активировать пробный период?',
+                    size: 'medium',
+                    content: `
+                        <div class="trial-confirmation-content">
+                            <div class="trial-confirmation-icon">
+                                <img src="${window.Assets.getGif('gift-animate.gif')}" alt="Gift" class="trial-confirmation-gif" />
+                            </div>
+
+                            <div class="trial-confirmation-details">
+                                <h3>Бесплатный пробный период</h3>
+                                <div class="trial-benefits">
+                                    <div class="trial-benefit">
+                                        <i class="fas fa-clock"></i>
+                                        <span>5 дней бесплатно</span>
+                                    </div>
+                                    <div class="trial-benefit">
+                                        <i class="fas fa-infinity"></i>
+                                        <span>Безлимитный трафик</span>
+                                    </div>
+                                    <div class="trial-benefit">
+                                        <i class="fas fa-globe"></i>
+                                        <span>Все серверы доступны</span>
+                                    </div>
+                                </div>
+
+                                <div class="trial-note">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Автопродление отключено. После окончания пробного периода подписка автоматически не продлится.</span>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    buttons: [
+                        {
+                            id: 'cancel',
+                            text: 'Отмена',
+                            action: 'cancel'
+                        },
+                        {
+                            id: 'activate',
+                            text: 'Активировать',
+                            type: 'primary',
+                            action: 'confirm'
+                        }
+                    ],
+                    onConfirm: () => {
+                        resolve(true);
+                    },
+                    onCancel: () => {
+                        resolve(false);
+                    }
+                });
+            } else {
+                // Fallback для Telegram
+                resolve(window.TelegramApp?.showConfirm(
+                    'Активировать пробный период на 5 дней бесплатно?\n\nАвтопродление отключено.'
+                ));
+            }
+        });
     },
 
     /**
@@ -353,7 +450,7 @@ window.SubscriptionScreen = {
                                     </div>
                                     <div class="trial-text">
                                         <span class="trial-main">Пробный период</span>
-                                        <span class="trial-sub">7 дней бесплатно</span>
+                                        <span class="trial-sub">5 дней бесплатно</span>
                                     </div>
                                     <div class="trial-arrow">
                                         <i class="fas fa-arrow-right"></i>
@@ -626,7 +723,7 @@ window.SubscriptionScreen = {
                         <i class="fas fa-gift"></i>
                     </div>
                     <h2 class="trial-activation-title">Пробный период активирован!</h2>
-                    <p class="trial-activation-subtitle">Вы получили 7 дней бесплатного доступа</p>
+                    <p class="trial-activation-subtitle">Вы получили 5 дней бесплатного доступа</p>
                     <ul class="trial-activation-features">
                         <li>Безлимитный трафик</li>
                         <li>Все серверы доступны</li>
