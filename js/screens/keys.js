@@ -187,7 +187,6 @@ window.KeysScreen = {
         if (this.subscriptions.length === 0) {
             return `
                 <div class="empty-state-card">
-                    <div class="empty-state-bg"></div>
                     <div class="empty-state-content">
                         <div class="empty-state-icon">
                             <img src="${window.Assets.getGif('empty-profiles.gif')}" alt="Empty" class="empty-gif" />
@@ -263,7 +262,6 @@ window.KeysScreen = {
         if (this.allKeys.length === 0) {
             return `
                 <div class="empty-state-card">
-                    <div class="empty-state-bg"></div>
                     <div class="empty-state-content">
                         <div class="empty-state-icon">
                             <img src="${window.Assets.getGif('empty-profiles.gif')}" alt="Empty" class="empty-gif" />

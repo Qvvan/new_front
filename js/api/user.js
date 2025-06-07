@@ -6,8 +6,23 @@ window.UserAPI = {
      * @param {Object} data - Данные регистрации
      * @returns {Promise<Object>} Результат регистрации
      */
-    async registerUser(data = {}) {
-        return await window.APIClient.post('/user', data);
+    async registerUser(referrerId = null) {
+        const authData = window.TelegramApp?.getAuthData();
+
+        const requestData = {
+            init_data: authData?.initData || '',
+            platform: authData?.platform || 'web',
+            version: authData?.version || '1.0'
+        };
+
+        // Добавляем referrer_id если есть
+        if (referrerId) {
+            requestData.referrer_id = referrerId;
+            Utils.log('info', `Sending referrer: ${referrerId}`);
+        }
+
+        // ✅ ИСПОЛЬЗУЕМ window.APIClient вместо callApi
+        return await window.APIClient.post('/user', requestData);
     },
 
     /**
@@ -48,15 +63,7 @@ window.UserAPI = {
             throw new Error('Telegram user not available');
         }
 
-        try {
-            return await this.getUserByTelegramId(telegramUser.id);
-        } catch (error) {
-            // Если пользователь не найден, создаем нового
-            if (error.status === 404) {
-                Utils.log('info', 'User not found, creating new user');
-                return await this.registerUser();
-            }
-            throw error;
-        }
+        const referrerId = window.TelegramApp?.getReferrerId();
+        return await window.UserAPI.registerUser(referrerId);
     }
 };

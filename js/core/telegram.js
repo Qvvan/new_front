@@ -25,7 +25,15 @@ window.TelegramApp = {
             if (this.webApp.initDataUnsafe && this.webApp.initDataUnsafe.user) {
                 this.user = this.webApp.initDataUnsafe.user;
                 Utils.log('info', 'Telegram user data loaded', this.user);
+
+                if (this.webApp.initDataUnsafe.start_param) {
+                    const referrerId = this.webApp.initDataUnsafe.start_param;
+                    this.referrerId = referrerId;
+                    Utils.log('info', `Referrer detected: ${referrerId}`);
+                }
             }
+
+
 
             // Настраиваем тему
             this.setupTheme();
@@ -47,6 +55,10 @@ window.TelegramApp = {
             Utils.log('error', 'Failed to initialize Telegram WebApp', error);
             this.initFallback();
         }
+    },
+
+    getReferrerId() {
+        return this.referrerId || null;
     },
 
     /**

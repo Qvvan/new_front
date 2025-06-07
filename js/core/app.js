@@ -182,30 +182,63 @@ window.DragonVPNApp = {
      * Парсинг реферальных данных
      */
     async parseReferralData() {
-        Utils.log('info', 'Parsing referral data');
+        Utils.log('info', 'Parsing referral data from all sources');
 
         try {
+            let referrerId = null;
+
+            // 1. Проверяем URL параметры
             const urlParams = new URLSearchParams(window.location.search);
             const startParam = urlParams.get('startapp') || urlParams.get('start');
 
             if (startParam) {
-                await this.handleReferralLink(startParam);
+                referrerId = this.extractReferrerId(startParam);
             }
 
-            if (window.TelegramApp && window.TelegramApp.webApp) {
-                const initDataUnsafe = window.TelegramApp.webApp.initDataUnsafe;
-                if (initDataUnsafe && initDataUnsafe.start_param) {
-                    await this.handleReferralLink(initDataUnsafe.start_param);
+            // 2. Проверяем Telegram WebApp start_param
+            if (!referrerId && window.TelegramApp?.webApp?.initDataUnsafe?.start_param) {
+                referrerId = this.extractReferrerId(window.TelegramApp.webApp.initDataUnsafe.start_param);
+            }
+
+            // 3. Проверяем hash параметры (для веб-версии)
+            if (!referrerId && window.location.hash) {
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const hashStart = hashParams.get('startapp') || hashParams.get('start');
+                if (hashStart) {
+                    referrerId = this.extractReferrerId(hashStart);
+                }
+            }
+
+            if (referrerId) {
+                Utils.log('info', `Referrer detected: ${referrerId}`);
+                this.pendingReferrerId = referrerId;
+
+                // Сохраняем для передачи при регистрации
+                if (window.Storage) {
+                    await window.Storage.set('pending_referrer_id', referrerId);
                 }
             }
 
         } catch (error) {
             Utils.log('error', 'Failed to parse referral data:', error);
         }
+    },
 
-        if (window.Loading) {
-            window.Loading.showSteps(['', '', 'Инициализация компонентов...'], 2);
+    extractReferrerId(startParam) {
+        if (!startParam) return null;
+
+        // Формат: ref_123456 или просто 123456
+        if (startParam.startsWith('ref_')) {
+            return startParam.substring(4);
         }
+
+        // Проверяем что это число
+        if (/^\d+$/.test(startParam)) {
+            return startParam;
+        }
+
+        Utils.log('warn', `Invalid referral format: ${startParam}`);
+        return null;
     },
 
     /**
@@ -430,7 +463,8 @@ window.DragonVPNApp = {
                 };
 
                 if (window.UserAPI) {
-                    const result = await window.UserAPI.registerUser(registrationData);
+                    const referrerId = window.TelegramApp?.getReferrerId();
+                    return await window.UserAPI.registerUser(referrerId);
                     await window.Storage?.setUserData(result.user);
                 }
             }
@@ -653,27 +687,6 @@ window.DragonVPNApp = {
         this.pendingReferrerId = null;
     },
 
-    async parseReferralData() {
-        Utils.log('info', 'Parsing referral data');
-
-        try {
-            const referralData = window.ReferralParser.parseReferralData();
-
-            if (referralData) {
-                Utils.log('info', 'Referral detected:', referralData);
-
-                this.pendingReferralData = referralData;
-
-                if (window.Storage) {
-                    await window.Storage.set('pending_referral', referralData);
-                }
-            }
-
-        } catch (error) {
-            Utils.log('error', 'Failed to parse referral data:', error);
-        }
-    },
-
     async ensureUserRegistration() {
         try {
             const userData = await window.Storage?.getUserData();
@@ -683,7 +696,8 @@ window.DragonVPNApp = {
                 Utils.log('info', 'Registering new user');
 
                 if (window.UserAPI) {
-                    const result = await window.UserAPI.registerUser();
+                    const referrerId = window.TelegramApp?.getReferrerId();
+                    return await window.UserAPI.registerUser(referrerId);
                     await window.Storage?.setUserData(result.user);
 
                     await this.processReferralAfterRegistration();

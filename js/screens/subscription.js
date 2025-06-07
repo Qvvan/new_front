@@ -418,7 +418,6 @@ window.SubscriptionScreen = {
 
         return `
             <div class="empty-state-card">
-                <div class="empty-state-bg"></div>
                 <div class="empty-state-content">
                     <div class="empty-state-icon-gif">
                         <img src="${window.Assets.getGif('empty-referrals.gif')}" alt="No subscriptions" class="empty-gif-static" />
