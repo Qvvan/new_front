@@ -115,22 +115,117 @@ window.TelegramApp = {
         if (!this.webApp) return;
 
         try {
-            // Отключаем подтверждение закрытия по умолчанию
-            this.webApp.disableClosingConfirmation();
+            Utils.log('info', 'Setting up semi-fullscreen interface');
 
-            // Включаем вертикальные свайпы
-            if (this.webApp.enableVerticalSwipes) {
-                this.webApp.enableVerticalSwipes();
+            // 🔥 КРИТИЧЕСКИ ВАЖНО: правильная последовательность вызовов
+
+            // 1. Сначала готовим приложение
+            this.webApp.ready();
+
+            // 2. Расширяем до максимума
+            this.webApp.expand();
+
+            // 3. Настраиваем цвета ОДИНАКОВЫЕ с фоном (скрываем заголовок)
+            this.webApp.setHeaderColor('#0d0d0d');
+            this.webApp.setBackgroundColor('#0d0d0d');
+
+            // 4. Убираем название бота из заголовка
+            if (this.webApp.setBottomBarColor) {
+                this.webApp.setBottomBarColor('#0d0d0d');
             }
 
-            // Скрываем главную кнопку по умолчанию
-            this.webApp.MainButton.hide();
+            // 5. 🔥 БЛОКИРУЕМ закрытие приложения
+            this.webApp.enableClosingConfirmation();
 
-            // Скрываем кнопку назад по умолчанию
+            // 6. Отключаем вертикальные свайпы которые могут закрыть приложение
+            if (this.webApp.disableVerticalSwipes) {
+                this.webApp.disableVerticalSwipes();
+            }
+
+            // 7. Скрываем стандартные кнопки Telegram
+            this.webApp.MainButton.hide();
             this.webApp.BackButton.hide();
+
+            // 8. 🔥 БЛОКИРУЕМ возможность закрытия через скролл
+            this.preventSwipeToClose();
+
+            Utils.log('info', 'Semi-fullscreen interface configured');
 
         } catch (error) {
             Utils.log('error', 'Failed to setup interface', error);
+        }
+    },
+
+    preventSwipeToClose() {
+        if (!this.webApp) return;
+
+        // Отслеживаем изменения viewport
+        this.webApp.onEvent('viewportChanged', (eventData) => {
+            Utils.log('debug', 'Viewport changed:', eventData);
+
+            // Если приложение стало меньше - принудительно расширяем
+            if (eventData && !eventData.isExpanded) {
+                setTimeout(() => {
+                    this.webApp.expand();
+                    Utils.log('info', 'Force expanded app back');
+                }, 50);
+            }
+        });
+
+        // 🔥 Блокируем закрытие через DOM события
+        let startY = 0;
+        let isScrolling = false;
+
+        document.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            isScrolling = false;
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            const currentY = e.touches[0].clientY;
+            const deltaY = currentY - startY;
+
+            // Если пользователь скроллит вниз И находится в начале страницы
+            const mainContent = document.querySelector('.main-content');
+            const isAtTop = mainContent ? mainContent.scrollTop <= 5 : window.scrollY <= 5;
+
+            if (deltaY > 0 && isAtTop && deltaY > 50) {
+                // Блокируем событие которое может закрыть приложение
+                e.preventDefault();
+                e.stopPropagation();
+                isScrolling = true;
+
+                // Принудительно расширяем приложение
+                this.webApp.expand();
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', (e) => {
+            if (isScrolling) {
+                e.preventDefault();
+                e.stopPropagation();
+                // Финальная проверка что приложение расширено
+                this.webApp.expand();
+            }
+        }, { passive: false });
+    },
+
+    forceExpand() {
+        if (!this.webApp) return;
+
+        try {
+            this.webApp.expand();
+            // Дублируем через короткий таймаут для надежности
+            setTimeout(() => {
+                this.webApp.expand();
+            }, 100);
+
+            setTimeout(() => {
+                this.webApp.expand();
+            }, 500);
+
+        } catch (error) {
+            Utils.log('error', 'Failed to force expand', error);
         }
     },
 

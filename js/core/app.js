@@ -110,34 +110,56 @@ window.DragonVPNApp = {
      * Инициализация Telegram WebApp
      */
     async initializeTelegram() {
-        Utils.log('info', 'Initializing Telegram WebApp');
+        Utils.log('info', 'Initializing Telegram WebApp in semi-fullscreen mode');
 
         if (window.TelegramApp) {
+            // Инициализируем базовый функционал
             window.TelegramApp.init();
 
+            // Ждем полной инициализации
             await new Promise(resolve => {
-                if (window.TelegramApp.isInitialized) {
-                    resolve();
-                } else {
-                    let attempts = 0;
-                    const maxAttempts = 50;
+                let attempts = 0;
+                const maxAttempts = 100; // Увеличиваем количество попыток
 
-                    const checkReady = () => {
-                        attempts++;
-                        if (window.TelegramApp.isInitialized || attempts >= maxAttempts) {
-                            resolve();
-                        } else {
-                            setTimeout(checkReady, 100);
-                        }
-                    };
+                const checkReady = () => {
+                    attempts++;
 
-                    setTimeout(checkReady, 100);
-                }
+                    if (window.TelegramApp.isInitialized) {
+                        Utils.log('info', 'Telegram WebApp initialized successfully');
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        Utils.log('warn', 'Telegram WebApp initialization timeout');
+                        resolve();
+                    } else {
+                        setTimeout(checkReady, 50); // Проверяем чаще
+                    }
+                };
+
+                setTimeout(checkReady, 50);
             });
+
+            // 🔥 После инициализации принудительно настраиваем полуполноэкранный режим
+            if (window.TelegramApp.webApp) {
+                // Дополнительная настройка для устойчивости
+                setTimeout(() => {
+                    window.TelegramApp.forceExpand();
+
+                    // Проверяем что настройки применились
+                    if (window.TelegramApp.webApp.isExpanded) {
+                        Utils.log('info', 'App successfully expanded');
+                    } else {
+                        Utils.log('warn', 'App expansion may have failed');
+                        // Повторная попытка
+                        setTimeout(() => {
+                            window.TelegramApp.forceExpand();
+                        }, 1000);
+                    }
+                }, 200);
+            }
         }
 
         if (window.Loading) {
-            window.Loading.showSteps(['', 'Загрузка данных пользователя...'], 1);
+            window.Loading.showSteps(['', 'Полуполноэкранный режим активирован...'], 1);
         }
     },
 

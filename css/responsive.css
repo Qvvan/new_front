@@ -537,3 +537,49 @@
         gap: 4px; /* ← Минимальный зазор, но 2 колонки */
     }
 }
+
+@media (min-width: 992px) {
+    .app-container {
+        /* НЕ ограничиваем ширину - используем весь экран */
+        max-width: none;
+        margin: 0;
+        border: none;
+    }
+
+    .bottom-nav,
+    .payment-banner {
+        /* Убираем боковые границы */
+        border-left: none;
+        border-right: none;
+    }
+}
+
+/* Адаптация для устройств с вырезами */
+@supports (padding: max(0px)) {
+    .app-container {
+        /* Учитываем safe area инсеты */
+        padding-top: max(0px, env(safe-area-inset-top));
+        padding-bottom: max(var(--nav-height), env(safe-area-inset-bottom));
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+
+    .content-wrapper {
+        /* Убираем дополнительные отступы если safe area уже учтена */
+        padding-left: max(var(--spacing-md), env(safe-area-inset-left));
+        padding-right: max(var(--spacing-md), env(safe-area-inset-right));
+    }
+}
+
+/* Ландшафтная ориентация */
+@media (orientation: landscape) and (max-height: 500px) {
+    .content-wrapper {
+        /* Уменьшаем отступы в ландшафте */
+        padding-top: var(--spacing-md);
+        padding-bottom: var(--spacing-md);
+    }
+
+    .subscription-main {
+        margin: var(--spacing-md) 0;
+    }
+}

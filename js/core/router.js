@@ -35,17 +35,53 @@ window.Router = {
     init() {
         Utils.log('info', 'Initializing Router');
 
-        // Настройка кнопки назад в Telegram
+        // 🔥 Принудительно расширяем при инициализации роутера
+        this.ensureExpanded();
+
+        this.setupFullViewport();
         this.setupTelegramBackButton();
-
-        // Обработка событий навигации
         this.setupNavigationEvents();
-
-        // Восстанавливаем состояние из localStorage
         this.restoreState();
-
-        // Устанавливаем начальный экран
         this.navigate(this.currentScreen, false);
+    },
+
+    ensureExpanded() {
+        if (window.TelegramApp && window.TelegramApp.webApp) {
+            window.TelegramApp.forceExpand();
+
+            // Проверяем каждые 2 секунды что приложение расширено
+            setInterval(() => {
+                if (!window.TelegramApp.webApp.isExpanded) {
+                    Utils.log('warn', 'App collapsed, force expanding...');
+                    window.TelegramApp.forceExpand();
+                }
+            }, 2000);
+        }
+    },
+
+    setupFullViewport() {
+        // Устанавливаем CSS переменную высоты viewport
+        const updateViewportHeight = () => {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+
+            if (window.TelegramApp && window.TelegramApp.webApp) {
+                const tgHeight = window.TelegramApp.webApp.viewportHeight;
+                document.documentElement.style.setProperty('--tg-viewport-height', `${tgHeight}px`);
+            }
+        };
+
+        // Обновляем при изменении размера
+        window.addEventListener('resize', updateViewportHeight);
+        window.addEventListener('orientationchange', updateViewportHeight);
+
+        // Обновляем при изменении Telegram viewport
+        if (window.TelegramApp && window.TelegramApp.webApp) {
+            window.TelegramApp.webApp.onEvent('viewportChanged', updateViewportHeight);
+        }
+
+        // Первоначальная установка
+        updateViewportHeight();
     },
 
     /**

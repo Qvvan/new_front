@@ -69,11 +69,20 @@
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
 
-    /* Layout */
-    --max-width-mobile: 428px;  /* Оставляем для мобильных */
+    /* Layout - Полуполноэкранный режим */
+    --max-width-mobile: 500px;    /* Увеличиваем для лучшего использования экрана */
     --max-width-desktop: 100%;
     --nav-height: 80px;
     --payment-banner-height: 70px;
+
+    /* 🔥 Новые переменные для полуполноэкранного режима */
+    --telegram-header-height: 0px;  /* Минимизируем отступ от заголовка Telegram */
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+    --vh: 1vh; /* Fallback для динамической высоты viewport */
+    --tg-viewport-height: 100vh; /* Telegram viewport высота */
 
     /* Transitions */
     --transition-fast: 0.15s ease;
@@ -95,23 +104,71 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+
+    /* 🔥 Полное скрытие скроллбаров для чистого вида */
+    -ms-overflow-style: none;  /* IE и Edge */
+    scrollbar-width: none;     /* Firefox */
+}
+
+*::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
 }
 
 html {
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+
+    /* 🔥 Фиксируем html для полноэкранного режима */
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background: var(--bg-primary); /* Дублируем для уверенности */
+    background: var(--bg-primary);
     color: var(--text-primary);
-    min-height: 100vh;
     line-height: 1.5;
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
+
+    /* 🔥 Полуполноэкранный режим */
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
+    overflow-x: hidden;
+    overflow-y: hidden; /* Контролируем скролл через app-container */
+
+    /* Блокируем случайные скроллы за пределы */
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+
+    --tg-theme-bg-color: #0d0d0d !important;
+    --tg-theme-secondary-bg-color: #0d0d0d !important;
+    --tg-theme-header-bg-color: #0d0d0d !important;
+}
+
+.tgme_widget_message_header,
+.tgme_widget_message_author,
+.tg-webapp-header,
+.webapp-header {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    opacity: 0 !important;
+}
+
+.app-container {
+    margin-top: 0 !important;
+    padding-top: var(--safe-area-top) !important;
+    top: 0 !important;
 }
 
 /* Typography */
@@ -133,56 +190,114 @@ p {
     color: var(--text-secondary);
 }
 
-html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--bg-primary);
-    overflow-x: hidden; /* ← СКРЫВАЕМ горизонтальный скролл */
-}
-
-/* Layout Base Classes */
+/* 🔥 Layout Base Classes - Полуполноэкранный режим */
 .app-container {
+    /* Занимаем весь экран */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
-    background: var(--bg-primary);
-    min-height: 100vh;
-    position: relative;
-    overflow-x: hidden; /* ← ВАЖНО: скрываем скролл */
-}
+    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
 
-.content-wrapper {
-    max-width: 500px;
-    margin: 0 auto;
-    padding: 0 var(--spacing-sm); /* ← Только 8px по бокам */
-    position: relative;
+    background: var(--bg-primary);
+    overflow: hidden;
+
+    /* 🔥 Учитываем safe area но НЕ заходим в системную панель */
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
+
+    /* Блокируем случайный скролл за пределы */
+    overscroll-behavior: contain;
+
+    /* Z-index для корректного отображения */
+    z-index: var(--z-base);
 }
 
 .main-content {
+    /* 🔥 Занимаем всю доступную высоту за вычетом навигации */
     position: relative;
-    min-height: calc(100vh - var(--nav-height));
-    padding-bottom: var(--nav-height);
+    width: 100%;
+    height: calc(100vh - var(--nav-height) - var(--safe-area-top) - var(--safe-area-bottom));
+    height: calc(var(--tg-viewport-height, 100vh) - var(--nav-height) - var(--safe-area-top) - var(--safe-area-bottom));
+
+    /* Контролируемый скролл */
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    /* Плавный скролл */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+
+    /* Убираем отступы - контент идет от края до края */
+    padding: 0;
+    margin: 0;
+}
+
+/* 🔥 Offset для payment banner */
+.main-content.with-payment-banner {
+    height: calc(100vh - var(--nav-height) - var(--payment-banner-height) - var(--safe-area-top) - var(--safe-area-bottom));
+    height: calc(var(--tg-viewport-height, 100vh) - var(--nav-height) - var(--payment-banner-height) - var(--safe-area-top) - var(--safe-area-bottom));
+    padding-top: 0; /* Убираем padding-top, используем offset через height */
 }
 
 .screen {
     display: none;
-    min-height: calc(100vh - var(--nav-height));
-    padding: var(--spacing-xl) var(--spacing-lg);
+    position: relative;
+    width: 100%;
+    min-height: 100%;
+
+    /* 🔥 Убираем все отступы - контент управляется через content-wrapper */
+    padding: 0;
+    margin: 0;
+
+    /* Переходы */
     opacity: 0;
     transition: opacity 0.15s ease-out;
-    /* ✅ Контролируем переполнение */
+
+    /* Контент может скроллиться */
     overflow-y: auto;
-    /* ✅ Позиционирование для центрирования */
-    position: relative;
+    overflow-x: hidden;
+
+    /* Улучшаем скролл на мобильных */
+    -webkit-overflow-scrolling: touch;
 }
 
 .screen.active {
     display: block;
+    opacity: 1;
 }
 
+/* 🔥 Специальный режим без скролла для full-screen контента */
 .screen.screen-no-scroll {
     overflow: hidden;
-    height: calc(100vh - var(--nav-height));
+    height: 100%;
+}
+
+/* 🔥 Content wrapper - ЗДЕСЬ контролируем отступы контента */
+.content-wrapper {
+    /* Центрируем контент */
+    max-width: var(--max-width-mobile);
+    margin: 0 auto;
+    width: 100%;
+
+    /* 🔥 Контролируемые отступы для контента */
+    padding: var(--spacing-lg) var(--spacing-md);
+
+    /* Минимальная высота для корректного отображения */
+    min-height: 100%;
+
+    /* Позиционирование */
+    position: relative;
+    z-index: var(--z-base);
+
+    /* Дополнительные отступы для safe area (если нужно) */
+    padding-left: max(var(--spacing-md), var(--safe-area-left));
+    padding-right: max(var(--spacing-md), var(--safe-area-right));
 }
 
 /* Background Effects */
@@ -310,41 +425,99 @@ html, body {
     outline-offset: 2px;
 }
 
+/* 🔥 Responsive Design для полуполноэкранного режима */
+
+/* Экстра-маленькие экраны */
+@media (max-width: 360px) {
+    .content-wrapper {
+        padding: var(--spacing-md) var(--spacing-xs);
+        padding-left: max(var(--spacing-xs), var(--safe-area-left));
+        padding-right: max(var(--spacing-xs), var(--safe-area-right));
+    }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 320px) {
+    .content-wrapper {
+        padding: var(--spacing-sm) 2px;
+        padding-left: max(2px, var(--safe-area-left));
+        padding-right: max(2px, var(--safe-area-right));
+    }
+}
+
+/* Средние экраны */
+@media (max-width: 480px) {
+    .content-wrapper {
+        padding: var(--spacing-lg) var(--spacing-sm);
+        padding-left: max(var(--spacing-sm), var(--safe-area-left));
+        padding-right: max(var(--spacing-sm), var(--safe-area-right));
+    }
+}
+
+/* Планшеты и больше */
+@media (min-width: 768px) {
+    .content-wrapper {
+        max-width: 600px; /* Немного шире на планшетах */
+        padding: var(--spacing-xl) var(--spacing-lg);
+    }
+}
+
+/* Десктопы */
 @media (min-width: 992px) {
     .app-container {
-        /* Убираем эти строки для полноэкранного режима */
-        /* border-left: 1px solid var(--border-dark); */
-        /* border-right: 1px solid var(--border-dark); */
-        min-height: 100vh;
+        /* Полноэкранный режим на десктопах тоже */
+        border: none;
+        max-width: none;
+        margin: 0;
     }
 
-    .bottom-nav {
-        /* border-left: 1px solid var(--border-dark); */
-        /* border-right: 1px solid var(--border-dark); */
-    }
-
-    .payment-banner {
-        /* border-left: 1px solid var(--border-dark); */
-        /* border-right: 1px solid var(--border-dark); */
+    .content-wrapper {
+        max-width: 700px; /* Оптимальная ширина для чтения */
     }
 }
 
-* {
-    /* Webkit browsers (Chrome, Safari, Edge) */
-    -ms-overflow-style: none;  /* IE и Edge */
-    scrollbar-width: none;     /* Firefox */
+/* Большие десктопы */
+@media (min-width: 1200px) {
+    .content-wrapper {
+        max-width: 800px;
+    }
 }
 
-*::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Edge */
+/* 🔥 Ландшафтная ориентация */
+@media (orientation: landscape) and (max-height: 500px) {
+    .content-wrapper {
+        padding-top: var(--spacing-md);
+        padding-bottom: var(--spacing-md);
+    }
+
+    /* Корректировка для низких экранов в ландшафте */
+    .main-content {
+        height: calc(100vh - var(--nav-height));
+    }
+
+    .main-content.with-payment-banner {
+        height: calc(100vh - var(--nav-height) - var(--payment-banner-height));
+    }
 }
 
-body {
-    overflow-x: hidden; /* Никогда не показываем горизонтальный скролл */
-    overflow-y: auto;   /* Вертикальный скролл разрешен, но НЕ виден */
+/* 🔥 Устройства с вырезами (notch) */
+@supports (padding: max(0px)) {
+    .app-container {
+        /* Используем max() для корректного отображения на устройствах с вырезами */
+        padding-top: max(var(--safe-area-top), 0px);
+        padding-bottom: max(var(--safe-area-bottom), 0px);
+        padding-left: max(var(--safe-area-left), 0px);
+        padding-right: max(var(--safe-area-right), 0px);
+    }
+
+    .content-wrapper {
+        /* Дополнительная защита от заезда под вырез */
+        padding-left: max(var(--spacing-md), var(--safe-area-left));
+        padding-right: max(var(--spacing-md), var(--safe-area-right));
+    }
 }
 
-/* ✅ Для модальных окон тоже скрываем скролл */
+/* 🔥 Модальные окна тоже без скроллбаров */
 .modal {
     overflow-x: hidden;
     overflow-y: auto;
@@ -356,28 +529,62 @@ body {
     display: none;
 }
 
-@media (max-width: 576px) {
-    .content-wrapper {
-        max-width: none;     /* ← Убираем ограничение */
-        width: 100%;         /* ← Полная ширина */
-        padding: 0 3px;      /* ← Было 6px, теперь 3px */
-    }
+/* 🔥 Центрированный контент для пустых состояний */
+.empty-state-centered {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    overflow: hidden;
 }
 
-@media (max-width: 480px) {
-    .content-wrapper {
-        padding: 0 2px;      /* ← Еще меньше отступы */
-    }
+.empty-state-centered .empty-state-content {
+    max-width: 320px;
+    width: 100%;
+    text-align: center;
 }
 
-@media (max-width: 360px) {
-    .content-wrapper {
-        padding: 0 1px;      /* ← Минимальные отступы */
-    }
+/* 🔥 Специальные utility классы для полуполноэкранного режима */
+.fullscreen-safe {
+    /* Учитывает safe area для полноэкранного контента */
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
 }
 
-@media (max-width: 576px) {
-    .screen {
-        padding: 0;        /* ← Вообще без отступов */
+.no-safe-area {
+    /* Убирает safe area отступы */
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* 🔥 Производительность и анимации */
+.screen {
+    /* Аппаратное ускорение для плавных переходов */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000;
+}
+
+.screen.active {
+    animation: screenEnter 0.2s ease-out forwards;
+}
+
+@keyframes screenEnter {
+    from {
+        opacity: 0;
+        transform: translateY(10px) translateZ(0);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) translateZ(0);
     }
 }
