@@ -32,6 +32,7 @@ const server = http.createServer((req, res) => {
     '/css/layouts.css': 'css/layouts.css',
     '/css/animations.css': 'css/animations.css',
     '/css/responsive.css': 'css/responsive.css',
+    '/css/simple-media.css': 'css/simple-media.css',
 
     // Core JS
     '/js/core/utils.js': 'js/core/utils.js',
@@ -74,6 +75,8 @@ const server = http.createServer((req, res) => {
 
     // Utils
     '/js/utils/assets.js': 'js/utils/assets.js',
+    '/js/utils/simple-media-cache.js': 'js/utils/simple-media-cache.js',
+    '/js/utils/simple-lazy.js': 'js/utils/simple-lazy.js',
 
     // Assets
     '/assets/images/gifs/gift-animate.gif': 'assets/images/gifs/gift-animate.gif',

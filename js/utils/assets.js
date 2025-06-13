@@ -6,7 +6,8 @@ class Assets {
     }
 
     static getGif(name) {
-        return this.getImage(`gifs/${name}`);
+        const url = this.getImage(`gifs/${name}`);
+        return url;
     }
 
     static getIcon(name) {
@@ -14,7 +15,7 @@ class Assets {
     }
 
     // Предзагрузка важных ассетов
-    static preloadAssets() {
+    static async preloadAssets() {
         const criticalAssets = [
             this.getGif('gift-animate.gif'),
             this.getGif('gift-opened.png'),
@@ -24,10 +25,7 @@ class Assets {
             this.getGif('management.gif')
         ];
 
-        criticalAssets.forEach(src => {
-            const img = new Image();
-            img.src = src;
-        });
+        await Promise.all(criticalAssets.map(src => window.MediaCache.load(src)));
     }
 }
 
