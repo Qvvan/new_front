@@ -438,14 +438,48 @@ window.ServiceSelector = {
                 subscriptionId: this.subscriptionId
             });
 
-            // Создаем платеж
-            await this.createPayment();
+            // ✅ ИСПРАВЛЕНИЕ: Для пробного периода используем отдельный метод
+            if (this.selectedService.id === 'trial') {
+                await this.activateTrial();
+            } else {
+                await this.createPayment();
+            }
 
         } catch (error) {
             Utils.log('error', 'Failed to process service selection:', error);
             if (window.Toast) {
                 window.Toast.show('Ошибка создания платежа', 'error');
             }
+        }
+    },
+
+    async activateTrial() {
+        try {
+            this.hide();
+
+            // Вызываем тот же метод, что и в SubscriptionScreen
+            if (window.SubscriptionScreen) {
+                await window.SubscriptionScreen.handleActivateTrial();
+            } else {
+                // Fallback - прямой вызов API
+                const response = await window.SubscriptionAPI.activateTrial();
+
+                if (window.Toast) {
+                    window.Toast.success('Пробный период активирован!');
+                }
+
+                // Обновляем экран подписок
+                if (window.SubscriptionScreen) {
+                    await window.SubscriptionScreen.refresh();
+                }
+            }
+
+        } catch (error) {
+            Utils.log('error', 'Failed to activate trial:', error);
+            if (window.Toast) {
+                window.Toast.error(error.message || 'Ошибка активации пробного периода');
+            }
+            throw error;
         }
     },
 
