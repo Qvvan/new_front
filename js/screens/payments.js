@@ -199,7 +199,6 @@ window.PaymentsScreen = {
         }
 
         container.innerHTML = Utils.wrapContent(content);
-        this.animateElements();
     },
 
     /**

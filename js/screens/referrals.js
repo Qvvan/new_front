@@ -230,7 +230,6 @@ ${this.referralLink.link}`;
         `;
 
         container.innerHTML = Utils.wrapContent(content);
-        this.animateElements();
     },
 
     /**
