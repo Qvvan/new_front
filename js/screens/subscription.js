@@ -290,6 +290,9 @@ window.SubscriptionScreen = {
                     },
                     onCancel: () => {
                         resolve(false);
+                    },
+                    onHide: () => {
+                        this.isProcessingAction = false;
                     }
                 });
             } else {
