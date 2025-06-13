@@ -22,16 +22,13 @@ window.MediaCache = {
 
         try {
             const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
             const blob = await response.blob();
             const blobUrl = URL.createObjectURL(blob);
 
             this.cache.set(url, blobUrl);
             return blobUrl;
         } catch (error) {
-            Utils.log('error', `Failed to load media: ${url}`, error);
+            console.warn('Failed to load media:', url, error);
             return url; // Fallback к оригинальному URL
         } finally {
             this.loading.delete(url);
@@ -56,19 +53,8 @@ window.MediaCache = {
 
     // Установка src с кэшем
     async setSrc(element, url) {
-        try {
-            const blobUrl = await this.load(url);
-            if (element) {
-                element.src = blobUrl;
-                element.onerror = () => {
-                    Utils.log('error', `Failed to set src for element: ${url}`);
-                    element.src = url; // Fallback к оригинальному URL
-                };
-            }
-        } catch (error) {
-            Utils.log('error', `Failed to set src: ${url}`, error);
-            if (element) element.src = url;
-        }
+        const blobUrl = await this.load(url);
+        if (element) element.src = blobUrl;
     },
 
     // Очистка при выгрузке страницы
