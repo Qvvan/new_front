@@ -42,9 +42,6 @@ window.KeysScreen = {
             this.subscriptions = [];
             this.allKeys = [];
 
-            if (window.Toast) {
-                window.Toast.error('Ошибка загрузки данных');
-            }
         }
     },
 
@@ -428,16 +425,10 @@ window.KeysScreen = {
     },
 
     async refresh() {
-        if (window.Loading) {
-            window.Loading.show('Обновление...');
-        }
 
         await this.loadData();
         this.render();
 
-        if (window.Loading) {
-            window.Loading.hide();
-        }
     },
 
     cleanup() {
