@@ -211,7 +211,7 @@ window.SupportScreen = {
     },
 
     contactTechSupport() {
-        const telegramUrl = 'https://t.me/dragonvpn_support';
+        const telegramUrl = 'https://t.me/SkyDragonSupport';
 
         if (window.TelegramApp) {
             window.TelegramApp.openTelegramLink(telegramUrl);
