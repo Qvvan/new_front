@@ -15,7 +15,7 @@ services:
     depends_on:
       - frontend
     networks:
-      - common-network
+      - app-network
     restart: unless-stopped
     # Добавим healthcheck для диагностики
     healthcheck:
@@ -31,7 +31,7 @@ services:
     expose:
       - "8080"
     networks:
-      - app-network  # Изменено с common-network
+      - app-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
