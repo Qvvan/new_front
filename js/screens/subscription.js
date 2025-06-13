@@ -606,21 +606,29 @@ window.SubscriptionScreen = {
                     <img src="${window.Assets.getGif('management.gif')}" alt="Management" class="section-title-gif" />
                     Управление
                 </h2>
-                <div class="action-grid">
-                    <div class="action-card" data-action="instructions">
-                        <div class="action-icon">
-                            <i class="fas fa-book"></i>
+                <div class="notcoin-actions-grid">
+                    <div class="notcoin-action-card" data-action="instructions">
+                        <div class="notcoin-action-content">
+                            <div class="notcoin-action-text">
+                                <div class="notcoin-action-title">Инструкции</div>
+                                <div class="notcoin-action-subtitle">Как настроить VPN</div>
+                            </div>
+                            <div class="notcoin-decorative-icon">
+                                <i class="fas fa-book"></i>
+                            </div>
                         </div>
-                        <div class="action-title">Инструкции</div>
-                        <div class="action-subtitle">Как настроить VPN</div>
                     </div>
 
-                    <div class="action-card" data-action="support">
-                        <div class="action-icon">
-                            <i class="fas fa-headset"></i>
+                    <div class="notcoin-action-card" data-action="support">
+                        <div class="notcoin-action-content">
+                            <div class="notcoin-action-text">
+                                <div class="notcoin-action-title">Поддержка</div>
+                                <div class="notcoin-action-subtitle">Помощь 24/7</div>
+                            </div>
+                            <div class="notcoin-decorative-icon">
+                                <i class="fas fa-headset"></i>
+                            </div>
                         </div>
-                        <div class="action-title">Поддержка</div>
-                        <div class="action-subtitle">Помощь 24/7</div>
                     </div>
                 </div>
             </div>

@@ -1,0 +1,15 @@
+{
+  "name": "dragon-vpn-frontend",
+  "version": "1.0.0",
+  "description": "Dragon VPN Frontend Static Server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "",
+  "license": "ISC"
+}

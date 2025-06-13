@@ -492,8 +492,6 @@ window.ServiceSelector = {
                 service_id: this.selectedService.id,
                 service_type: this.mode === 'renew' ? 'old' : 'new',
                 subscription_id: this.subscriptionId || undefined,
-                description: `${this.selectedService.name} - ${this.mode === 'renew' ? 'Продление' : 'Новая подписка'}`,
-                price: this.selectedService.price
             };
 
             const response = await window.PaymentAPI.createPaymentWithMonitoring(paymentData);

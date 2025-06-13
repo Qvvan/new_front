@@ -1,0 +1,17 @@
+# .dockerignore
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+.env
+.nyc_output
+coverage
+.nyc_output
+.vscode
+.idea
+*.log
+ssl/
+nginx/
+docker-compose.yml
+Dockerfile*
