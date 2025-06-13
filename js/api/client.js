@@ -1,7 +1,7 @@
 // API Client for Dragon VPN Mini App
 
 window.APIClient = {
-    baseURL: 'http://localhost:8081', // Замените на ваш API URL
+    baseURL: '/api',
     defaultTimeout: 10000,
 
     /**
