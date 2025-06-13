@@ -95,8 +95,6 @@ window.KeysScreen = {
         document.querySelectorAll('.tab-button').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tab);
         });
-
-        this.animateElements();
     },
 
     async copyProfile(configLink) {
