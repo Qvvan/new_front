@@ -38,5 +38,5 @@ services:
       retries: 3
 
 networks:
-  app-network:
-    driver: bridge
+  common-network:
+    external: true
