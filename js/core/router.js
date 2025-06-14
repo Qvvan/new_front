@@ -156,7 +156,7 @@ window.Router = {
         const screenElement = document.getElementById(this.screens[screenName]);
         if (!screenElement) return;
 
-        // Скрываем все экраны
+        // ✅ Сначала скрываем ВСЕ экраны мгновенно
         Object.values(this.screens).forEach(screenId => {
             const screen = document.getElementById(screenId);
             if (screen && !screenId.includes('Modal')) {
@@ -165,18 +165,13 @@ window.Router = {
             }
         });
 
-        // Показываем нужный экран
+        // ✅ Показываем нужный экран
         screenElement.classList.add('active');
 
-        // Инициализируем экран только если он еще не загружен
-        const handler = this.screenHandlers[screenName]?.();
-        if (handler && !handler.isLoaded) {
-            await handler.init(params);
-        } else if (handler && typeof handler.refresh === 'function') {
-            await handler.refresh(params);
-        }
+        // ✅ Инициализируем экран (пока он скрытый)
+        await this.initializeScreen(screenName, params);
 
-        // Показываем экран с анимацией
+        // ✅ Одним "морганием" показываем
         requestAnimationFrame(() => {
             screenElement.style.transition = 'opacity 0.15s ease-out';
             screenElement.style.opacity = '1';
@@ -190,6 +185,21 @@ window.Router = {
         const handler = this.screenHandlers[screenName]?.();
         if (handler && typeof handler.show === 'function') {
             await handler.show(params);
+        }
+    },
+
+    /**
+     * Инициализация экрана
+     */
+    async initializeScreen(screenName, params) {
+        const handler = this.screenHandlers[screenName]?.();
+
+        if (handler) {
+            if (typeof handler.init === 'function' && !handler.isLoaded) {
+                await handler.init(params);
+            } else if (typeof handler.refresh === 'function') {
+                await handler.refresh(params);
+            }
         }
     },
 
