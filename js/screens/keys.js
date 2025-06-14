@@ -41,6 +41,7 @@ window.KeysScreen = {
             Utils.log('error', 'Failed to load data:', error);
             this.subscriptions = [];
             this.allKeys = [];
+
         }
     },
 
@@ -124,24 +125,16 @@ window.KeysScreen = {
         const container = document.getElementById('keysScreen');
         if (!container) return;
 
-        container.style.opacity = '0';
-        container.style.transform = 'translateY(10px)';
-
-        let content = '';
-        if (this.activeTab === 'profiles') {
-            content = this.renderProfilesTab();
-        } else {
-            content = this.renderKeysTab();
-        }
+        const content = `
+            ${this.renderHeader()}
+            ${this.renderTabs()}
+            <div class="tab-content-container" id="tabContentContainer">
+                ${this.renderTabContent()}
+            </div>
+        `;
 
         container.innerHTML = Utils.wrapContent(content);
-
-        requestAnimationFrame(() => {
-            container.style.transition = 'all 0.2s ease-out';
-            container.style.opacity = '1';
-            container.style.transform = 'translateY(0)';
-            this.animateElements();
-        });
+        this.animateElements();
     },
 
     renderHeader() {

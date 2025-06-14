@@ -11,37 +11,13 @@ window.SubscriptionScreen = {
     async init() {
         Utils.log('info', 'Initializing Subscription Screen');
 
+        await this.loadUserData();
+        await this.loadServices();
         await this.loadSubscriptions();
+
         this.render();
-        this.setupEventListeners();
+        this.setupEventListeners(); // ✅ Добавить эту строку
         this.isLoaded = true;
-    },
-
-    async loadSubscriptions() {
-        try {
-            const response = await window.SubscriptionAPI.listSubscriptions();
-            this.currentSubscriptions = response.subscriptions || [];
-
-            if (window.Storage) {
-                window.Storage.setSubscriptions(this.currentSubscriptions);
-            }
-
-            Utils.log('info', `Loaded ${this.currentSubscriptions.length} subscriptions`);
-
-        } catch (error) {
-            Utils.log('error', 'Failed to load subscriptions:', error);
-
-            if (window.Storage) {
-                this.currentSubscriptions = await window.Storage.getSubscriptions();
-            }
-
-            if (this.currentSubscriptions.length === 0) {
-                this.isEmpty = true;
-                if (window.Toast) {
-                    window.Toast.error('Ошибка загрузки подписок');
-                }
-            }
-        }
     },
 
     async loadUserData() {
@@ -74,6 +50,36 @@ window.SubscriptionScreen = {
             }
         } catch (error) {
             Utils.log('error', 'Failed to load services for caching:', error);
+        }
+    },
+
+    /**
+     * Загрузка подписок пользователя с API
+     */
+    async loadSubscriptions() {
+        try {
+            const response = await window.SubscriptionAPI.listSubscriptions();
+            this.currentSubscriptions = response.subscriptions || [];
+
+            if (window.Storage) {
+                window.Storage.setSubscriptions(this.currentSubscriptions);
+            }
+
+            Utils.log('info', `Loaded ${this.currentSubscriptions.length} subscriptions`);
+
+        } catch (error) {
+            Utils.log('error', 'Failed to load subscriptions:', error);
+
+            if (window.Storage) {
+                this.currentSubscriptions = await window.Storage.getSubscriptions();
+            }
+
+            if (this.currentSubscriptions.length === 0) {
+                this.isEmpty = true;
+                if (window.Toast) {
+                    window.Toast.error('Ошибка загрузки подписок');
+                }
+            }
         }
     },
 
@@ -400,7 +406,6 @@ window.SubscriptionScreen = {
             container.style.transition = 'all 0.2s ease-out';
             container.style.opacity = '1';
             container.style.transform = 'translateY(0)';
-            this.animateElements();
         });
     },
 
