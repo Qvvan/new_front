@@ -307,10 +307,6 @@ window.DragonVPNApp = {
      */
     async initializeScreens() {
         Utils.log('info', 'Initializing screens');
-        if (window.SubscriptionScreen) {
-            await window.SubscriptionScreen.init();
-        }
-
         if (window.Loading) {
             window.Loading.showSteps(['', '', '', '', 'Подготовка интерфейса...'], 4);
         }
