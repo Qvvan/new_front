@@ -77,6 +77,7 @@ const server = http.createServer((req, res) => {
     '/js/utils/assets.js': 'js/utils/assets.js',
     '/js/utils/simple-media-cache.js': 'js/utils/simple-media-cache.js',
     '/js/utils/simple-lazy.js': 'js/utils/simple-lazy.js',
+    '/js/utils/tgs-loader.js': 'js/utils/tgs-loader.js',
 
     // Assets
     '/assets/images/gifs/gift-animate.gif': 'assets/images/gifs/gift-animate.gif',

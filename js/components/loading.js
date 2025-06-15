@@ -1,5 +1,3 @@
-// Loading System for Dragon VPN Mini App
-
 window.Loading = {
     overlay: null,
     isVisible: false,

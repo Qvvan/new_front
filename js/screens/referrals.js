@@ -210,7 +210,7 @@ ${this.referralLink.link}`;
             <!-- Заголовок с гифкой -->
             <div class="section">
                 <h2 class="section-title">
-                    <img src="${window.Assets.getGif('referral-invite.gif')}" alt="Invite" class="section-title-gif" />
+                    <div id="referral-main-animation" style="width: 32px; height: 32px; display: inline-block; margin-right: 8px;"></div>
                     Приглашай друзей
                 </h2>
                 <p class="section-subtitle">Получай бонусы за каждого друга</p>
@@ -230,6 +230,12 @@ ${this.referralLink.link}`;
         `;
 
         container.innerHTML = Utils.wrapContent(content);
+
+        // ✅ Инициализируем анимации после рендера
+        setTimeout(() => {
+            this.initializeTGSAnimations();
+        }, 100);
+
         this.animateElements();
     },
 
@@ -255,6 +261,14 @@ ${this.referralLink.link}`;
         `;
     },
 
+    initializeTGSAnimations() {
+        window.TGSLoader?.initializeScreen('referrals');
+    },
+
+    cleanupTGSAnimations() {
+        window.TGSLoader?.cleanupScreen('referrals');
+    },
+
     /**
      * Рендеринг действий для отправки
      */
@@ -264,7 +278,7 @@ ${this.referralLink.link}`;
                 <div class="share-actions-grid">
                     <div class="share-action-card" data-action="share-telegram">
                         <div class="share-action-icon">
-                            <img src="${window.Assets.getGif('telegram-share.gif')}" alt="Telegram" class="share-gif" />
+                            <div id="telegram-share-animation" style="width: 48px; height: 48px;"></div>
                         </div>
                         <div class="share-action-title">Telegram</div>
                         <div class="share-action-subtitle">Нескольким друзьям</div>
@@ -272,7 +286,7 @@ ${this.referralLink.link}`;
 
                     <div class="share-action-card" data-action="share-story">
                         <div class="share-action-icon">
-                            <img src="${window.Assets.getGif('story-share.gif')}" alt="Story" class="share-gif" />
+                            <div id="story-share-animation" style="width: 48px; height: 48px;"></div>
                         </div>
                         <div class="share-action-title">Stories</div>
                         <div class="share-action-subtitle">В свою историю</div>
@@ -280,7 +294,7 @@ ${this.referralLink.link}`;
 
                     <div class="share-action-card" data-action="share-multiple">
                         <div class="share-action-icon">
-                            <img src="${window.Assets.getGif('multiple-share.gif')}" alt="Multiple" class="share-gif" />
+                            <div id="multiple-share-animation" style="width: 48px; height: 48px;"></div>
                         </div>
                         <div class="share-action-title">Другие</div>
                         <div class="share-action-subtitle">WhatsApp, VK...</div>
@@ -328,7 +342,7 @@ ${this.referralLink.link}`;
                 <div class="section">
                     <div class="empty-state">
                         <div class="empty-state-icon">
-                            <img src="${window.Assets.getGif('empty-referrals.gif')}" alt="Empty" class="empty-gif" />
+                            <div id="referrals-empty-animation" style="width: 80px; height: 80px; margin: 0 auto;"></div>
                         </div>
                         <h3 class="empty-state-title">Пока нет друзей</h3>
                         <p class="empty-state-text">Поделись ссылкой и начни зарабатывать бонусы</p>

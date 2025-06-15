@@ -208,15 +208,27 @@ window.ServiceSelector = {
     // ⚠️ НОВЫЙ рендеринг пробного периода
     renderTrialService() {
         const isActivated = this.userData?.trial_activated || false;
-        const gifSrc = isActivated ?
-            'assets/images/gifs/gift-opened.png' :
-            'assets/images/gifs/gift-animate.gif';
+
+        // ✅ Планируем инициализацию анимации ПОСЛЕ рендера DOM
+        setTimeout(() => {
+            if (window.TGSLoader) {
+                const tgsPath = isActivated ?
+                    'assets/images/gifs/gift-opened.tgs' :
+                    'assets/images/gifs/gift-animate.tgs';
+
+                window.TGSLoader.loadTGSAnimation(
+                    `trial-gift-animation-${isActivated ? 'used' : 'available'}`,
+                    tgsPath,
+                    'fas fa-gift'
+                );
+            }
+        }, 100);
 
         return `
             <div class="trial-service ${isActivated ? 'trial-activated' : 'trial-available'}" data-service-id="trial">
                 <div class="trial-content">
                     <div class="trial-icon">
-                        <img src="${gifSrc}" alt="Gift" class="gift-image" />
+                        <div id="trial-gift-animation-${isActivated ? 'used' : 'available'}" style="width: 48px; height: 48px;"></div>
                     </div>
                     <div class="trial-info">
                         <h4 class="trial-title">Бесплатный период</h4>

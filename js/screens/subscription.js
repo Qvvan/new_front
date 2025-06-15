@@ -259,7 +259,7 @@ window.SubscriptionScreen = {
                     content: `
                         <div class="trial-confirmation-content">
                             <div class="trial-confirmation-icon">
-                                <img src="${window.Assets.getGif('gift-animate.gif')}" alt="Gift" class="trial-confirmation-gif" />
+                                <div id="trial-confirmation-animation" style="width: 64px; height: 64px; margin: 0 auto;"></div>
                             </div>
 
                             <div class="trial-confirmation-details">
@@ -293,6 +293,18 @@ window.SubscriptionScreen = {
                     },
                     onHide: () => {
                         this.isProcessingAction = false;
+                    },
+                    onShow: () => {
+                        // ✅ Инициализируем анимацию в модалке
+                        setTimeout(() => {
+                            if (window.TGSLoader) {
+                                window.TGSLoader.loadTGSAnimation(
+                                    'trial-confirmation-animation',
+                                    'assets/images/gifs/gift-animate.tgs',
+                                    'fas fa-gift'
+                                );
+                            }
+                        }, 100);
                     }
                 });
             } else {
@@ -410,20 +422,47 @@ window.SubscriptionScreen = {
     },
 
     /**
+     * Инициализация TGS анимаций после рендера
+     */
+    initializeTGSAnimations() {
+        // ✅ Просто вызываем универсальный метод
+        if (window.TGSLoader) {
+            window.TGSLoader.initializeScreen('subscription');
+        } else {
+            Utils.log('error', 'TGSLoader not available');
+        }
+    },
+
+    /**
+     * Очистка TGS анимаций (для экономии памяти)
+     */
+    cleanupTGSAnimations() {
+        // ✅ Просто вызываем универсальный cleanup
+        if (window.TGSLoader) {
+            window.TGSLoader.cleanupScreen('subscription');
+        }
+    },
+
+    /**
      * Рендеринг пустого состояния
      */
     renderEmptyState() {
-        // Проверяем доступность пробного периода
+        // ✅ ПРАВИЛЬНАЯ проверка доступности пробного периода
         const isTrialAvailable = !this.userData?.trial_activated;
-        const trialGif = isTrialAvailable ?
-            'assets/images/gifs/gift-animate.gif' :
+        const trialTgs = isTrialAvailable ?
+            'assets/images/gifs/gift-animate.tgs' :
             'assets/images/gifs/gift-opened.png';
+
+        // ⚠️ Планируем инициализацию анимаций ПОСЛЕ рендера DOM
+        setTimeout(() => {
+            this.initializeTGSAnimations();
+        }, 100);
 
         return `
             <div class="empty-state-card">
                 <div class="empty-state-content">
                     <div class="empty-state-icon-gif">
-                        <img src="${window.Assets.getGif('empty-referrals.gif')}" alt="No subscriptions" class="empty-gif-static" />
+                        <div id="tgs-animation-container" style="width: 80px; height: 80px; margin: 0 auto;"></div>
                     </div>
                     <h3 class="empty-state-title">Нет активных подписок</h3>
                     <div class="empty-state-actions">
@@ -434,7 +473,7 @@ window.SubscriptionScreen = {
                                 </div>
                                 <div class="btn-trial-content">
                                     <div class="trial-gift-icon">
-                                        <img src="${trialGif}" alt="Gift" class="trial-gift-image" />
+                                        <div id="trial-gift-tgs" style="width: 24px; height: 24px;" data-tgs="${trialTgs}"></div>
                                     </div>
                                     <div class="trial-text">
                                         <span class="trial-main">Пробный период</span>
@@ -448,7 +487,7 @@ window.SubscriptionScreen = {
                         ` : `
                             <div class="trial-used-notice">
                                 <div class="trial-used-icon">
-                                    <img src="${trialGif}" alt="Used" class="trial-used-image" />
+                                    <div id="trial-used-tgs" style="width: 24px; height: 24px;" data-tgs="${trialTgs}"></div>
                                 </div>
                                 <span>Пробный период использован</span>
                             </div>
@@ -466,6 +505,7 @@ window.SubscriptionScreen = {
             </div>
         `;
     },
+
     /**
      * Рендеринг одной подписки (полный формат)
      */
@@ -503,22 +543,22 @@ window.SubscriptionScreen = {
                     </div>
                 </div>
 
-                ${!isExpired && !isTrial ? `
-                    <div class="auto-renewal" data-subscription-id="${subscription.id}">
-                        <div class="auto-renewal-info">
-                            <div class="auto-renewal-icon">
-                                <img src="${window.Assets.getGif('auto-renewal.gif')}" alt="Auto renewal" class="auto-renewal-gif" />
+                    ${!isExpired && !isTrial ? `
+                        <div class="auto-renewal" data-subscription-id="${subscription.id}">
+                            <div class="auto-renewal-info">
+                                <div class="auto-renewal-icon">
+                                    <div id="auto-renewal-animation-${subscription.id}" style="width: 32px; height: 32px;"></div>
+                                </div>
+                                <div class="auto-renewal-text">
+                                    <h4>Автопродление</h4>
+                                    <p class="auto-renewal-status">${autoRenewalText}</p>
+                                </div>
                             </div>
-                            <div class="auto-renewal-text">
-                                <h4>Автопродление</h4>
-                                <p class="auto-renewal-status">${autoRenewalText}</p>
+                            <div class="toggle-switch ${subscription.auto_renewal ? 'active' : ''}">
+                                <div class="toggle-slider"></div>
                             </div>
                         </div>
-                        <div class="toggle-switch ${subscription.auto_renewal ? 'active' : ''}">
-                            <div class="toggle-slider"></div>
-                        </div>
-                    </div>
-                ` : ''}
+                    ` : ''}
 
                 <div class="subscription-actions">
                     <button class="btn btn-primary" data-action="renew" data-subscription-id="${subscription.id}">
@@ -606,7 +646,7 @@ window.SubscriptionScreen = {
         return `
             <div class="section">
                 <h2 class="section-title">
-                    <img src="${window.Assets.getGif('management.gif')}" alt="Management" class="section-title-gif" />
+                    <div id="management-animation" style="width: 32px; height: 32px; display: inline-block; margin-right: 8px;"></div>
                     Управление
                 </h2>
                 <div class="notcoin-actions-grid">
