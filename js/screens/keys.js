@@ -137,6 +137,14 @@ window.KeysScreen = {
         this.animateElements();
     },
 
+    initializeTGSAnimations() {
+            window.TGSLoader?.initializeScreen('keys');
+        },
+
+        cleanupTGSAnimations() {
+            window.TGSLoader?.cleanupScreen('keys');
+        },
+
     renderHeader() {
         return `
             <div class="section">

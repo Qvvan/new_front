@@ -202,6 +202,14 @@ window.PaymentsScreen = {
         this.animateElements();
     },
 
+    initializeTGSAnimations() {
+        window.TGSLoader?.initializeScreen('payments');
+    },
+
+    cleanupTGSAnimations() {
+        window.TGSLoader?.cleanupScreen('payments');
+    },
+
     /**
      * Рендеринг пустого состояния
      */

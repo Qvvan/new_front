@@ -255,6 +255,14 @@ ${this.referralLink.link}`;
         `;
     },
 
+    initializeTGSAnimations() {
+        window.TGSLoader?.initializeScreen('referrals');
+    },
+
+    cleanupTGSAnimations() {
+        window.TGSLoader?.cleanupScreen('referrals');
+    },
+
     /**
      * Рендеринг действий для отправки
      */

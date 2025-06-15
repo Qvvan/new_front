@@ -410,20 +410,47 @@ window.SubscriptionScreen = {
     },
 
     /**
+     * Инициализация TGS анимаций после рендера
+     */
+    initializeTGSAnimations() {
+        // ✅ Просто вызываем универсальный метод
+        if (window.TGSLoader) {
+            window.TGSLoader.initializeScreen('subscription');
+        } else {
+            Utils.log('error', 'TGSLoader not available');
+        }
+    },
+
+    /**
+     * Очистка TGS анимаций (для экономии памяти)
+     */
+    cleanupTGSAnimations() {
+        // ✅ Просто вызываем универсальный cleanup
+        if (window.TGSLoader) {
+            window.TGSLoader.cleanupScreen('subscription');
+        }
+    },
+
+    /**
      * Рендеринг пустого состояния
      */
     renderEmptyState() {
-        // Проверяем доступность пробного периода
+        // ✅ ПРАВИЛЬНАЯ проверка доступности пробного периода
         const isTrialAvailable = !this.userData?.trial_activated;
-        const trialGif = isTrialAvailable ?
-            'assets/images/gifs/gift-animate.gif' :
+        const trialTgs = isTrialAvailable ?
+            'assets/images/gifs/gift-animate.tgs' :
             'assets/images/gifs/gift-opened.png';
+
+        // ⚠️ Планируем инициализацию анимаций ПОСЛЕ рендера DOM
+        setTimeout(() => {
+            this.initializeTGSAnimations();
+        }, 100);
 
         return `
             <div class="empty-state-card">
                 <div class="empty-state-content">
                     <div class="empty-state-icon-gif">
-                        <img src="${window.Assets.getGif('empty-referrals.gif')}" alt="No subscriptions" class="empty-gif-static" />
+                        <div id="tgs-animation-container" style="width: 80px; height: 80px; margin: 0 auto;"></div>
                     </div>
                     <h3 class="empty-state-title">Нет активных подписок</h3>
                     <div class="empty-state-actions">
@@ -434,7 +461,7 @@ window.SubscriptionScreen = {
                                 </div>
                                 <div class="btn-trial-content">
                                     <div class="trial-gift-icon">
-                                        <img src="${trialGif}" alt="Gift" class="trial-gift-image" />
+                                        <div id="trial-gift-tgs" style="width: 24px; height: 24px;" data-tgs="${trialTgs}"></div>
                                     </div>
                                     <div class="trial-text">
                                         <span class="trial-main">Пробный период</span>
@@ -448,7 +475,7 @@ window.SubscriptionScreen = {
                         ` : `
                             <div class="trial-used-notice">
                                 <div class="trial-used-icon">
-                                    <img src="${trialGif}" alt="Used" class="trial-used-image" />
+                                    <div id="trial-used-tgs" style="width: 24px; height: 24px;" data-tgs="${trialTgs}"></div>
                                 </div>
                                 <span>Пробный период использован</span>
                             </div>
@@ -466,6 +493,7 @@ window.SubscriptionScreen = {
             </div>
         `;
     },
+
     /**
      * Рендеринг одной подписки (полный формат)
      */
