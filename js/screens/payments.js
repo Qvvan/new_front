@@ -214,10 +214,15 @@ window.PaymentsScreen = {
      * Рендеринг пустого состояния
      */
     renderEmptyState() {
+        // ✅ Планируем инициализацию анимаций ПОСЛЕ рендера DOM
+        setTimeout(() => {
+            this.initializeTGSAnimations();
+        }, 100);
+
         return `
             <div class="empty-state">
                 <div class="empty-state-icon">
-                    <i class="fas fa-receipt"></i>
+                    <div id="payments-empty-animation" style="width: 80px; height: 80px; margin: 0 auto;"></div>
                 </div>
                 <h3 class="empty-state-title">Нет платежей</h3>
                 <p class="empty-state-text">

@@ -28,44 +28,79 @@ window.TGSLoader = {
                 containerId: 'trial-gift-tgs',
                 tgsPath: 'assets/images/gifs/gift-animate.tgs',
                 fallbackIcon: 'fas fa-gift',
-                conditional: true // Будет загружен только если элемент существует
+                conditional: true
             },
             {
                 containerId: 'trial-used-tgs',
                 tgsPath: 'assets/images/gifs/gift-opened.png',
                 fallbackIcon: 'fas fa-gift-card',
                 conditional: true
+            },
+            {
+                containerId: 'management-animation',
+                tgsPath: 'assets/images/gifs/management.tgs',
+                fallbackIcon: 'fas fa-cog'
+            },
+            {
+                containerId: /^auto-renewal-animation-.+$/,
+                tgsPath: 'assets/images/gifs/auto-renewal.tgs',
+                fallbackIcon: 'fas fa-sync-alt',
+                dynamic: true
             }
         ],
 
         // Конфигурация для экрана рефералов
         referrals: [
             {
-                containerId: 'referrals-main-animation',
-                tgsPath: 'assets/images/gifs/referral-main.tgs',
+                containerId: 'referral-main-animation',
+                tgsPath: 'assets/images/gifs/referral-invite.tgs',
                 fallbackIcon: 'fas fa-users'
             },
             {
                 containerId: 'referrals-empty-animation',
                 tgsPath: 'assets/images/gifs/empty-referrals.tgs',
                 fallbackIcon: 'fas fa-user-plus'
+            },
+            {
+                containerId: 'telegram-share-animation',
+                tgsPath: 'assets/images/gifs/telegram-share.tgs',
+                fallbackIcon: 'fab fa-telegram-plane'
+            },
+            {
+                containerId: 'story-share-animation',
+                tgsPath: 'assets/images/gifs/story-share.tgs',
+                fallbackIcon: 'fas fa-camera'
+            },
+            {
+                containerId: 'multiple-share-animation',
+                tgsPath: 'assets/images/gifs/multiple-share.tgs',
+                fallbackIcon: 'fas fa-share-alt'
             }
         ],
 
         // Конфигурация для экрана ключей
         keys: [
             {
-                containerId: 'keys-main-animation',
-                tgsPath: 'assets/images/gifs/keys-main.tgs',
+                containerId: 'vpn-access-animation',
+                tgsPath: 'assets/images/gifs/vpn-access.tgs',
+                fallbackIcon: 'fas fa-shield-alt'
+            },
+            {
+                containerId: 'profile-tab-animation',
+                tgsPath: 'assets/images/gifs/profile-tab.tgs',
+                fallbackIcon: 'fas fa-user-cog'
+            },
+            {
+                containerId: 'keys-tab-animation',
+                tgsPath: 'assets/images/gifs/keys-tab.tgs',
                 fallbackIcon: 'fas fa-key'
             },
             {
                 containerId: 'keys-empty-animation',
-                tgsPath: 'assets/images/gifs/empty-keys.tgs',
+                tgsPath: 'assets/images/gifs/empty-profiles.tgs',
                 fallbackIcon: 'fas fa-key'
             }
         ],
-
         // Конфигурация для экрана платежей
         payments: [
             {

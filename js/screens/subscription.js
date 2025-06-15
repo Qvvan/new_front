@@ -259,7 +259,7 @@ window.SubscriptionScreen = {
                     content: `
                         <div class="trial-confirmation-content">
                             <div class="trial-confirmation-icon">
-                                <img src="${window.Assets.getGif('gift-animate.gif')}" alt="Gift" class="trial-confirmation-gif" />
+                                <div id="trial-confirmation-animation" style="width: 64px; height: 64px; margin: 0 auto;"></div>
                             </div>
 
                             <div class="trial-confirmation-details">
@@ -293,6 +293,18 @@ window.SubscriptionScreen = {
                     },
                     onHide: () => {
                         this.isProcessingAction = false;
+                    },
+                    onShow: () => {
+                        // ✅ Инициализируем анимацию в модалке
+                        setTimeout(() => {
+                            if (window.TGSLoader) {
+                                window.TGSLoader.loadTGSAnimation(
+                                    'trial-confirmation-animation',
+                                    'assets/images/gifs/gift-animate.tgs',
+                                    'fas fa-gift'
+                                );
+                            }
+                        }, 100);
                     }
                 });
             } else {
@@ -531,22 +543,22 @@ window.SubscriptionScreen = {
                     </div>
                 </div>
 
-                ${!isExpired && !isTrial ? `
-                    <div class="auto-renewal" data-subscription-id="${subscription.id}">
-                        <div class="auto-renewal-info">
-                            <div class="auto-renewal-icon">
-                                <img src="${window.Assets.getGif('auto-renewal.gif')}" alt="Auto renewal" class="auto-renewal-gif" />
+                    ${!isExpired && !isTrial ? `
+                        <div class="auto-renewal" data-subscription-id="${subscription.id}">
+                            <div class="auto-renewal-info">
+                                <div class="auto-renewal-icon">
+                                    <div id="auto-renewal-animation-${subscription.id}" style="width: 32px; height: 32px;"></div>
+                                </div>
+                                <div class="auto-renewal-text">
+                                    <h4>Автопродление</h4>
+                                    <p class="auto-renewal-status">${autoRenewalText}</p>
+                                </div>
                             </div>
-                            <div class="auto-renewal-text">
-                                <h4>Автопродление</h4>
-                                <p class="auto-renewal-status">${autoRenewalText}</p>
+                            <div class="toggle-switch ${subscription.auto_renewal ? 'active' : ''}">
+                                <div class="toggle-slider"></div>
                             </div>
                         </div>
-                        <div class="toggle-switch ${subscription.auto_renewal ? 'active' : ''}">
-                            <div class="toggle-slider"></div>
-                        </div>
-                    </div>
-                ` : ''}
+                    ` : ''}
 
                 <div class="subscription-actions">
                     <button class="btn btn-primary" data-action="renew" data-subscription-id="${subscription.id}">
@@ -634,7 +646,7 @@ window.SubscriptionScreen = {
         return `
             <div class="section">
                 <h2 class="section-title">
-                    <img src="${window.Assets.getGif('management.gif')}" alt="Management" class="section-title-gif" />
+                    <div id="management-animation" style="width: 32px; height: 32px; display: inline-block; margin-right: 8px;"></div>
                     Управление
                 </h2>
                 <div class="notcoin-actions-grid">

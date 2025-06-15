@@ -149,7 +149,7 @@ window.KeysScreen = {
         return `
             <div class="section">
                 <h2 class="section-title">
-                    <img src="${window.Assets.getGif('vpn-access.gif')}" alt="VPN" class="section-title-gif" />
+                    <div id="vpn-access-animation" style="width: 32px; height: 32px; display: inline-block; margin-right: 8px;"></div>
                     VPN Доступ
                 </h2>
             </div>
@@ -163,13 +163,13 @@ window.KeysScreen = {
                     <button class="tab-button ${this.activeTab === 'profiles' ? 'active' : ''}"
                             data-action="switch-tab"
                             data-tab="profiles">
-                        <img src="${window.Assets.getGif('profile-tab.gif')}" alt="Profiles" class="tab-gif" />
+                        <div id="profile-tab-animation" style="width: 24px; height: 24px; display: inline-block; margin-right: 8px;"></div>
                         Профили
                     </button>
                     <button class="tab-button ${this.activeTab === 'keys' ? 'active' : ''}"
                             data-action="switch-tab"
                             data-tab="keys">
-                        <img src="${window.Assets.getGif('keys-tab.gif')}" alt="Keys" class="tab-gif" />
+                        <div id="keys-tab-animation" style="width: 24px; height: 24px; display: inline-block; margin-right: 8px;"></div>
                         Ключи
                     </button>
                 </div>
@@ -190,11 +190,16 @@ window.KeysScreen = {
      */
     renderProfilesTab() {
         if (this.subscriptions.length === 0) {
+            // ✅ Планируем инициализацию анимаций ПОСЛЕ рендера DOM
+            setTimeout(() => {
+                this.initializeTGSAnimations();
+            }, 100);
+
             return `
                 <div class="empty-state-card">
                     <div class="empty-state-content">
                         <div class="empty-state-icon">
-                            <img src="${window.Assets.getGif('empty-profiles.gif')}" alt="Empty" class="empty-gif" />
+                            <div id="keys-empty-animation" style="width: 80px; height: 80px; margin: 0 auto;"></div>
                         </div>
                         <h3 class="empty-state-title">Нет профилей</h3>
                         <p class="empty-state-text">Оформите подписку чтобы получить VPN профили для подключения</p>
@@ -265,11 +270,16 @@ window.KeysScreen = {
      */
     renderKeysTab() {
         if (this.allKeys.length === 0) {
+            // ✅ Планируем инициализацию анимаций ПОСЛЕ рендера DOM
+            setTimeout(() => {
+                this.initializeTGSAnimations();
+            }, 100);
+
             return `
                 <div class="empty-state-card">
                     <div class="empty-state-content">
                         <div class="empty-state-icon">
-                            <img src="${window.Assets.getGif('empty-profiles.gif')}" alt="Empty" class="empty-gif" />
+                            <div id="keys-empty-animation" style="width: 80px; height: 80px; margin: 0 auto;"></div>
                         </div>
                         <h3 class="empty-state-title">Нет ключей</h3>
                         <p class="empty-state-text">Получите доступ к VPN серверам оформив подписку</p>
