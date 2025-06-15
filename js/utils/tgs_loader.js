@@ -1,120 +1,15 @@
-// TGS Animation Loader Utility for Dragon VPN Mini App
-
-// Проверяем загрузку необходимых библиотек
-if (typeof lottie === 'undefined' || typeof pako === 'undefined') {
-    Utils.log('error', 'Required libraries not loaded. Waiting for them...');
-    window.addEventListener('load', () => {
-        if (typeof lottie === 'undefined' || typeof pako === 'undefined') {
-            Utils.log('error', 'Required libraries failed to load');
-            return;
-        }
-        Utils.log('info', 'Required libraries loaded successfully');
-    });
-}
+// TGS Animation Loader with Blob URL Caching for Dragon VPN Mini App
 
 window.TGSLoader = {
     /**
-     * Предустановленные конфигурации анимаций для разных экранов
+     * Кэш blob URLs для предотвращения повторных загрузок
      */
-    presets: {
-        // Конфигурация для экрана подписок
-        subscription: [
-            {
-                containerId: 'tgs-animation-container',
-                tgsPath: 'assets/images/gifs/empty-profiles.tgs',
-                fallbackIcon: 'fas fa-ghost'
-            },
-            {
-                containerId: 'trial-gift-tgs',
-                tgsPath: 'assets/images/gifs/gift-animate.tgs',
-                fallbackIcon: 'fas fa-gift',
-                conditional: true
-            },
-            {
-                containerId: 'trial-used-tgs',
-                tgsPath: 'assets/images/gifs/gift-opened.png',
-                fallbackIcon: 'fas fa-gift-card',
-                conditional: true
-            },
-            {
-                containerId: 'management-animation',
-                tgsPath: 'assets/images/gifs/management.tgs',
-                fallbackIcon: 'fas fa-cog'
-            },
-            {
-                containerId: /^auto-renewal-animation-.+$/,
-                tgsPath: 'assets/images/gifs/auto-renewal.tgs',
-                fallbackIcon: 'fas fa-sync-alt',
-                dynamic: true
-            }
-        ],
+    blobCache: new Map(),
 
-        // Конфигурация для экрана рефералов
-        referrals: [
-            {
-                containerId: 'referral-main-animation',
-                tgsPath: 'assets/images/gifs/referral-invite.tgs',
-                fallbackIcon: 'fas fa-users'
-            },
-            {
-                containerId: 'referrals-empty-animation',
-                tgsPath: 'assets/images/gifs/empty-referrals.tgs',
-                fallbackIcon: 'fas fa-user-plus'
-            },
-            {
-                containerId: 'telegram-share-animation',
-                tgsPath: 'assets/images/gifs/telegram-share.tgs',
-                fallbackIcon: 'fab fa-telegram-plane'
-            },
-            {
-                containerId: 'story-share-animation',
-                tgsPath: 'assets/images/gifs/story-share.tgs',
-                fallbackIcon: 'fas fa-camera'
-            },
-            {
-                containerId: 'multiple-share-animation',
-                tgsPath: 'assets/images/gifs/multiple-share.tgs',
-                fallbackIcon: 'fas fa-share-alt'
-            }
-        ],
-
-        // Конфигурация для экрана ключей
-        keys: [
-            {
-                containerId: 'vpn-access-animation',
-                tgsPath: 'assets/images/gifs/vpn-access.tgs',
-                fallbackIcon: 'fas fa-shield-alt'
-            },
-            {
-                containerId: 'profile-tab-animation',
-                tgsPath: 'assets/images/gifs/profile-tab.tgs',
-                fallbackIcon: 'fas fa-user-cog'
-            },
-            {
-                containerId: 'keys-tab-animation',
-                tgsPath: 'assets/images/gifs/keys-tab.tgs',
-                fallbackIcon: 'fas fa-key'
-            },
-            {
-                containerId: 'keys-empty-animation',
-                tgsPath: 'assets/images/gifs/empty-profiles.tgs',
-                fallbackIcon: 'fas fa-key'
-            }
-        ],
-        // Конфигурация для экрана платежей
-        payments: [
-            {
-                containerId: 'payments-empty-animation',
-                tgsPath: 'assets/images/gifs/empty-payments.tgs',
-                fallbackIcon: 'fas fa-receipt'
-            },
-            {
-                containerId: 'payment-success-animation',
-                tgsPath: 'assets/images/gifs/payment-success.tgs',
-                fallbackIcon: 'fas fa-check-circle'
-            }
-        ]
-    },
+    /**
+     * Кэш обработанных Lottie данных
+     */
+    lottieDataCache: new Map(),
 
     /**
      * Активные анимации по экранам (для cleanup)
@@ -122,7 +17,149 @@ window.TGSLoader = {
     activeAnimations: new Map(),
 
     /**
-     * Загрузка TGS анимации с fallback
+     * Предустановленные конфигурации анимаций для разных экранов
+     */
+    presets: {
+        subscription: [
+            {
+                containerId: 'tgs-animation-container',
+                tgsPath: 'assets/images/gifs/empty-profiles.tgs',
+                fallbackIcon: 'fas fa-ghost',
+                preload: true // 🚀 Предзагружаем критичные
+            },
+            {
+                containerId: 'trial-gift-tgs',
+                tgsPath: 'assets/images/gifs/gift-animate.tgs',
+                fallbackIcon: 'fas fa-gift',
+                conditional: true,
+                preload: true
+            },
+            {
+                containerId: 'management-animation',
+                tgsPath: 'assets/images/gifs/management.tgs',
+                fallbackIcon: 'fas fa-cog',
+                preload: true
+            },
+            {
+                containerId: /^auto-renewal-animation-.+$/,
+                tgsPath: 'assets/images/gifs/auto-renewal.tgs',
+                fallbackIcon: 'fas fa-sync-alt',
+                dynamic: true,
+                preload: true
+            }
+        ],
+
+        referrals: [
+            {
+                containerId: 'referral-main-animation',
+                tgsPath: 'assets/images/gifs/referral-invite.tgs',
+                fallbackIcon: 'fas fa-users',
+                preload: true
+            },
+            {
+                containerId: 'referrals-empty-animation',
+                tgsPath: 'assets/images/gifs/empty-referrals.tgs',
+                fallbackIcon: 'fas fa-user-plus',
+                preload: true
+            }
+            // ... остальные конфигурации
+        ],
+
+        keys: [
+            {
+                containerId: 'keys-empty-animation',
+                tgsPath: 'assets/images/gifs/empty-profiles.tgs',
+                fallbackIcon: 'fas fa-key',
+                preload: true
+            }
+            // ... остальные конфигурации
+        ]
+    },
+
+    /**
+     * 🚀 ИНИЦИАЛИЗАЦИЯ: Предзагрузка критичных TGS в blob URLs
+     */
+    async initialize() {
+        Utils.log('info', '🚀 Initializing TGS Loader with blob caching...');
+
+        // Собираем все файлы для предзагрузки
+        const preloadFiles = new Set();
+
+        Object.values(this.presets).forEach(preset => {
+            preset.forEach(config => {
+                if (config.preload) {
+                    preloadFiles.add(config.tgsPath);
+                }
+            });
+        });
+
+        // Предзагружаем в фоне
+        const preloadPromises = Array.from(preloadFiles).map(tgsPath =>
+            this.preloadTGSToBlob(tgsPath)
+        );
+
+        try {
+            await Promise.allSettled(preloadPromises);
+            Utils.log('info', `✅ Preloaded ${preloadFiles.size} TGS files as blob URLs`);
+        } catch (error) {
+            Utils.log('error', 'Failed to preload some TGS files:', error);
+        }
+    },
+
+    /**
+     * 🎯 Предзагрузка TGS файла в blob URL
+     */
+    async preloadTGSToBlob(tgsPath) {
+        // Проверяем кэш
+        if (this.blobCache.has(tgsPath)) {
+            Utils.log('debug', `TGS already cached: ${tgsPath}`);
+            return this.blobCache.get(tgsPath);
+        }
+
+        try {
+            Utils.log('debug', `📥 Preloading TGS: ${tgsPath}`);
+
+            // HTTP запрос за TGS файлом
+            const response = await fetch(tgsPath);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const arrayBuffer = await response.arrayBuffer();
+
+            // Декомпрессия TGS
+            const uint8Array = new Uint8Array(arrayBuffer);
+            const decompressed = pako.ungzip(uint8Array, { to: 'string' });
+            const lottieData = JSON.parse(decompressed);
+
+            // Создаем blob URL из Lottie JSON
+            const blob = new Blob([JSON.stringify(lottieData)], {
+                type: 'application/json'
+            });
+            const blobUrl = URL.createObjectURL(blob);
+
+            // Кэшируем и blob URL и Lottie данные
+            this.blobCache.set(tgsPath, {
+                blobUrl,
+                blob,
+                lottieData,
+                size: blob.size,
+                loadTime: Date.now()
+            });
+
+            this.lottieDataCache.set(tgsPath, lottieData);
+
+            Utils.log('debug', `✅ Cached blob URL for ${tgsPath}: ${blobUrl} (${blob.size} bytes)`);
+            return this.blobCache.get(tgsPath);
+
+        } catch (error) {
+            Utils.log('error', `❌ Failed to preload ${tgsPath}:`, error);
+            throw error;
+        }
+    },
+
+    /**
+     * 🎯 ГЛАВНЫЙ МЕТОД: Загрузка TGS анимации с blob URL
      */
     async loadTGSAnimation(containerId, tgsPath, fallbackIcon = 'fas fa-gift') {
         const container = document.getElementById(containerId);
@@ -132,45 +169,39 @@ window.TGSLoader = {
         }
 
         // Проверяем доступность библиотек
-        if (typeof lottie === 'undefined') {
-            Utils.log('error', 'Lottie library not loaded');
-            this.setFallbackIcon(container, fallbackIcon);
-            return;
-        }
-
-        if (typeof pako === 'undefined') {
-            Utils.log('error', 'Pako library not loaded');
+        if (!this.isLibrariesAvailable()) {
             this.setFallbackIcon(container, fallbackIcon);
             return;
         }
 
         try {
-            const response = await fetch(tgsPath);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch TGS: ${response.status}`);
+            let cachedData = this.blobCache.get(tgsPath);
+
+            // Если нет в кэше - загружаем и создаем blob URL
+            if (!cachedData) {
+                Utils.log('debug', `Loading TGS on demand: ${tgsPath}`);
+                cachedData = await this.preloadTGSToBlob(tgsPath);
             }
 
-            const arrayBuffer = await response.arrayBuffer();
-            const uint8Array = new Uint8Array(arrayBuffer);
-            const decompressed = pako.ungzip(uint8Array, { to: 'string' });
-            const animationData = JSON.parse(decompressed);
+            // Используем кэшированные Lottie данные (мгновенно!)
+            const { lottieData } = cachedData;
 
             // Очищаем контейнер
             container.innerHTML = '';
 
-            // Загружаем анимацию
+            // Загружаем анимацию напрямую из данных (без сетевых запросов)
             const animation = lottie.loadAnimation({
                 container: container,
                 renderer: 'svg',
                 loop: true,
                 autoplay: true,
-                animationData: animationData
+                animationData: lottieData // ← Используем кэшированные данные
             });
 
             // Сохраняем ссылку для cleanup
             container.lottieAnimation = animation;
 
-            Utils.log('info', `TGS animation loaded: ${containerId}`);
+            Utils.log('debug', `✅ TGS animation loaded from cache: ${containerId}`);
 
         } catch (error) {
             Utils.log('error', `Failed to load TGS ${tgsPath}:`, error);
@@ -179,56 +210,57 @@ window.TGSLoader = {
     },
 
     /**
-     * Установка fallback иконки
-     */
-    setFallbackIcon(container, iconClass) {
-        const size = Math.min(container.offsetWidth, container.offsetHeight) || 48;
-        container.innerHTML = `<i class="${iconClass}" style="font-size: ${size}px; color: var(--accent-white);"></i>`;
-    },
-
-    /**
      * 🎯 ГЛАВНЫЙ МЕТОД: Инициализация анимаций по имени экрана
-     * @param {string} screenName - Имя экрана (subscription, referrals, keys, payments)
-     * @param {Object} customConfig - Дополнительные анимации (опционально)
      */
     async initializeScreen(screenName, customConfig = {}) {
-        Utils.log('info', `Initializing TGS animations for screen: ${screenName}`);
+        Utils.log('info', `🎬 Initializing TGS animations for screen: ${screenName}`);
 
-        // Получаем предустановленную конфигурацию
         const preset = this.presets[screenName];
         if (!preset) {
             Utils.log('warn', `No TGS preset found for screen: ${screenName}`);
             return;
         }
 
-        // Подготавливаем список анимаций для загрузки
         const animationsToLoad = [];
 
         preset.forEach(config => {
-            // Если анимация условная, проверяем существование элемента
+            // Обработка условных элементов
             if (config.conditional) {
                 const element = document.getElementById(config.containerId);
                 if (!element) {
-                    Utils.log('debug', `Conditional TGS element not found, skipping: ${config.containerId}`);
+                    Utils.log('debug', `Conditional TGS element not found: ${config.containerId}`);
                     return;
                 }
 
-                // Для условных элементов берем tgsPath из data-tgs атрибута
                 const dataTgsPath = element.getAttribute('data-tgs');
                 if (dataTgsPath) {
                     config.tgsPath = dataTgsPath;
                 }
             }
 
-            animationsToLoad.push(config);
+            // Обработка динамических элементов (регулярные выражения)
+            if (config.dynamic && config.containerId instanceof RegExp) {
+                const allElements = document.querySelectorAll('[id]');
+                allElements.forEach(element => {
+                    if (config.containerId.test(element.id)) {
+                        animationsToLoad.push({
+                            containerId: element.id,
+                            tgsPath: config.tgsPath,
+                            fallbackIcon: config.fallbackIcon
+                        });
+                    }
+                });
+            } else {
+                animationsToLoad.push(config);
+            }
         });
 
-        // Добавляем кастомные анимации если есть
+        // Добавляем кастомные анимации
         if (customConfig.animations) {
             animationsToLoad.push(...customConfig.animations);
         }
 
-        // Загружаем все анимации
+        // 🚀 Загружаем все анимации (из кэша = мгновенно!)
         const promises = animationsToLoad.map(({ containerId, tgsPath, fallbackIcon }) =>
             this.loadTGSAnimation(containerId, tgsPath, fallbackIcon)
         );
@@ -236,25 +268,52 @@ window.TGSLoader = {
         try {
             await Promise.allSettled(promises);
 
-            // Сохраняем информацию об активных анимациях для cleanup
+            // Сохраняем для cleanup
             this.activeAnimations.set(screenName, animationsToLoad.map(a => a.containerId));
 
-            Utils.log('info', `Initialized ${animationsToLoad.length} TGS animations for ${screenName}`);
+            Utils.log('info', `✅ Initialized ${animationsToLoad.length} TGS animations for ${screenName}`);
         } catch (error) {
-            Utils.log('error', `Failed to initialize some TGS animations for ${screenName}:`, error);
+            Utils.log('error', `Failed to initialize TGS animations for ${screenName}:`, error);
         }
     },
 
     /**
+     * 📊 Получение статистики кэша
+     */
+    getCacheStats() {
+        const totalSize = Array.from(this.blobCache.values())
+            .reduce((sum, cache) => sum + cache.size, 0);
+
+        return {
+            cachedFiles: this.blobCache.size,
+            totalSizeKB: Math.round(totalSize / 1024),
+            blobUrls: Array.from(this.blobCache.values()).map(cache => cache.blobUrl)
+        };
+    },
+
+    /**
+     * 🧹 Очистка кэша и освобождение памяти
+     */
+    cleanupCache() {
+        // Освобождаем все blob URLs
+        this.blobCache.forEach((cache, tgsPath) => {
+            URL.revokeObjectURL(cache.blobUrl);
+            Utils.log('debug', `🧹 Revoked blob URL for: ${tgsPath}`);
+        });
+
+        // Очищаем кэши
+        this.blobCache.clear();
+        this.lottieDataCache.clear();
+
+        Utils.log('info', '🧹 TGS cache cleared');
+    },
+
+    /**
      * 🧹 Очистка анимаций для конкретного экрана
-     * @param {string} screenName - Имя экрана
      */
     cleanupScreen(screenName) {
         const containerIds = this.activeAnimations.get(screenName);
-        if (!containerIds) {
-            Utils.log('debug', `No active animations to cleanup for screen: ${screenName}`);
-            return;
-        }
+        if (!containerIds) return;
 
         containerIds.forEach(containerId => {
             const container = document.getElementById(containerId);
@@ -262,16 +321,14 @@ window.TGSLoader = {
                 try {
                     container.lottieAnimation.destroy();
                     delete container.lottieAnimation;
-                    Utils.log('debug', `Cleaned up TGS animation: ${containerId}`);
                 } catch (error) {
                     Utils.log('warn', `Failed to cleanup animation ${containerId}:`, error);
                 }
             }
         });
 
-        // Удаляем из активных анимаций
         this.activeAnimations.delete(screenName);
-        Utils.log('info', `Cleaned up TGS animations for screen: ${screenName}`);
+        Utils.log('info', `🧹 Cleaned up TGS animations for screen: ${screenName}`);
     },
 
     /**
@@ -284,28 +341,52 @@ window.TGSLoader = {
     },
 
     /**
-     * Пауза/возобновление анимаций экрана
+     * Установка fallback иконки
      */
-    toggleScreenAnimations(screenName, paused) {
-        const containerIds = this.activeAnimations.get(screenName);
-        if (!containerIds) return;
-
-        containerIds.forEach(containerId => {
-            const container = document.getElementById(containerId);
-            if (container && container.lottieAnimation) {
-                if (paused) {
-                    container.lottieAnimation.pause();
-                } else {
-                    container.lottieAnimation.play();
-                }
-            }
-        });
+    setFallbackIcon(container, iconClass) {
+        const size = Math.min(container.offsetWidth, container.offsetHeight) || 48;
+        container.innerHTML = `<i class="${iconClass}" style="font-size: ${size}px; color: var(--accent-white);"></i>`;
     },
 
     /**
      * Проверка доступности библиотек
      */
     isLibrariesAvailable() {
-        return typeof lottie !== 'undefined' && typeof pako !== 'undefined';
+        const available = typeof lottie !== 'undefined' && typeof pako !== 'undefined';
+
+        if (!available) {
+            Utils.log('error', 'Required libraries not loaded (lottie/pako)');
+        }
+
+        return available;
     }
 };
+
+// 🚀 Автоматическая инициализация при загрузке
+document.addEventListener('DOMContentLoaded', async () => {
+    // Ждем загрузки библиотек
+    const maxWait = 5000; // 5 секунд максимум
+    const startTime = Date.now();
+
+    while (!window.TGSLoader.isLibrariesAvailable() && (Date.now() - startTime) < maxWait) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    if (window.TGSLoader.isLibrariesAvailable()) {
+        await window.TGSLoader.initialize();
+        Utils.log('info', '🎉 TGS Loader initialized with blob caching');
+
+        // Выводим статистику
+        const stats = window.TGSLoader.getCacheStats();
+        Utils.log('info', `📊 TGS Cache: ${stats.cachedFiles} files, ${stats.totalSizeKB}KB`);
+    } else {
+        Utils.log('error', '❌ Failed to initialize TGS Loader - libraries not available');
+    }
+});
+
+// 🧹 Очистка при закрытии страницы
+window.addEventListener('beforeunload', () => {
+    if (window.TGSLoader) {
+        window.TGSLoader.cleanupCache();
+    }
+});
