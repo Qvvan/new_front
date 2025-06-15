@@ -156,26 +156,26 @@ window.Router = {
         const screenElement = document.getElementById(this.screens[screenName]);
         if (!screenElement) return;
 
-        // ✅ Сначала скрываем ВСЕ экраны мгновенно
+        // ✅ Убираем все промежуточные анимации
         Object.values(this.screens).forEach(screenId => {
             const screen = document.getElementById(screenId);
             if (screen && !screenId.includes('Modal')) {
                 screen.classList.remove('active');
-                screen.style.opacity = '0';
+                screen.style.display = 'none'; // Мгновенное скрытие
             }
         });
 
-        // ✅ Показываем нужный экран
-        screenElement.classList.add('active');
-
-        // ✅ Инициализируем экран (пока он скрытый)
+        // ✅ Инициализируем экран до показа
         await this.initializeScreen(screenName, params);
 
-        // ✅ Одним "морганием" показываем
-        requestAnimationFrame(() => {
-            screenElement.style.transition = 'opacity 0.15s ease-out';
-            screenElement.style.opacity = '1';
-        });
+        // ✅ Показываем БЕЗ анимации
+        screenElement.style.display = 'block';
+        screenElement.classList.add('active');
+
+        // ✅ Обновляем навигацию ОДИН раз
+        if (window.Navigation) {
+            window.Navigation.updateActiveState(screenName);
+        }
     },
 
     /**
@@ -250,17 +250,6 @@ window.Router = {
      * Настройка событий навигации
      */
     setupNavigationEvents() {
-        // Обработка кликов по нижней навигации
-        document.addEventListener('click', (e) => {
-            const navItem = e.target.closest('.nav-item');
-            if (!navItem) return;
-
-            const screenName = navItem.dataset.screen;
-            if (screenName && screenName !== this.currentScreen) {
-                this.navigate(screenName);
-            }
-        });
-
         // Обработка событий браузера (для разработки)
         window.addEventListener('popstate', (e) => {
             if (e.state && e.state.screen) {

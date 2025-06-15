@@ -1,4 +1,4 @@
-// Navigation Component for Dragon VPN Mini App
+let _navigationDebounce = null;
 
 window.Navigation = {
     currentScreen: 'subscription',
@@ -24,25 +24,22 @@ window.Navigation = {
      * Настройка обработчиков событий
      */
     setupEventListeners() {
-        // Обработка кликов по элементам навигации с throttling
         document.addEventListener('click', (e) => {
             const navItem = e.target.closest('.nav-item');
             if (!navItem) return;
 
-            // Throttling для навигации
-            if (navItem.hasAttribute('data-navigating')) return;
-            navItem.setAttribute('data-navigating', 'true');
-            setTimeout(() => navItem.removeAttribute('data-navigating'), 500);
-
-            const screen = navItem.dataset.screen;
-            if (screen && screen !== this.currentScreen) {
-                this.navigateTo(screen);
+            // ✅ Debounce для дополнительной защиты
+            if (_navigationDebounce) {
+                clearTimeout(_navigationDebounce);
             }
-        });
 
-        // Слушаем изменения роутера
-        document.addEventListener('routeChanged', (e) => {
-            this.updateActiveState(e.detail.screen);
+            _navigationDebounce = setTimeout(() => {
+                const screen = navItem.dataset.screen;
+                if (screen && screen !== this.currentScreen) {
+                    this.navigateTo(screen);
+                }
+                _navigationDebounce = null;
+            }, 50);
         });
     },
 
@@ -55,40 +52,39 @@ window.Navigation = {
             return;
         }
 
-        // Предотвращаем множественные переходы
-        if (this.isNavigating) return;
+        // ✅ Защита от множественных переходов
+        if (this.isNavigating || screen === this.currentScreen) return;
         this.isNavigating = true;
 
         try {
-            // Анимация нажатия
+            // ✅ Анимация и вибрация ОДИН раз
             this.animateNavItem(screen);
 
-            // Вибрация только один раз
-            if (window.TelegramApp) {
+            if (window.TelegramApp && !this._lastVibration ||
+                Date.now() - this._lastVibration > 300) {
                 window.TelegramApp.haptic.selection();
+                this._lastVibration = Date.now();
             }
 
-            // Навигация через роутер
+            // ✅ Навигация только через роутер
             if (window.Router) {
                 await window.Router.navigate(screen);
             }
 
-            // Обновляем состояние
-            this.updateActiveState(screen);
+            // ✅ НЕ вызываем updateActiveState здесь - Router сам обновит
 
             Utils.log('info', `Navigation: ${this.currentScreen} -> ${screen}`);
 
         } catch (error) {
             Utils.log('error', 'Navigation failed:', error);
-
             if (window.Toast) {
                 window.Toast.error('Ошибка навигации');
             }
         } finally {
-            // Снимаем блокировку
+            // ✅ Снимаем блокировку через фиксированное время
             setTimeout(() => {
                 this.isNavigating = false;
-            }, 300);
+            }, 500); // Увеличиваем до 500ms
         }
     },
 

@@ -275,31 +275,22 @@ window.DragonVPNApp = {
     async initializeComponents() {
         Utils.log('info', 'Initializing components');
 
-        // Базовые компоненты
-        if (window.Toast) {
-            window.Toast.init();
+        // ✅ Инициализируем в правильном порядке
+        if (window.Toast) window.Toast.init();
+        if (window.Modal) window.Modal.init();
+        if (window.Loading) window.Loading.init();
+
+        // ✅ Сначала Router
+        if (window.Router) {
+            window.Router.init();
         }
 
-        if (window.Modal) {
-            window.Modal.init();
-        }
-
-        if (window.Loading) {
-            window.Loading.init();
-        }
-
+        // ✅ Потом Navigation (без дублирования обработчиков)
         if (window.Navigation) {
             window.Navigation.init();
         }
 
-        // Новые компоненты
-        if (window.PaymentBanner) {
-            window.PaymentBanner.init();
-        }
-
-        if (window.Loading) {
-            window.Loading.showSteps(['', '', '', 'Проверка подписок...'], 3);
-        }
+        if (window.PaymentBanner) window.PaymentBanner.init();
     },
 
     /**
