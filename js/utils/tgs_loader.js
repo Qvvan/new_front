@@ -25,12 +25,19 @@ window.TGSLoader = {
                 containerId: 'tgs-animation-container',
                 tgsPath: 'assets/images/gifs/empty-profiles.tgs',
                 fallbackIcon: 'fas fa-ghost',
-                preload: true // 🚀 Предзагружаем критичные
+                preload: true
             },
             {
                 containerId: 'trial-gift-tgs',
                 tgsPath: 'assets/images/gifs/gift-animate.tgs',
                 fallbackIcon: 'fas fa-gift',
+                conditional: true,
+                preload: true
+            },
+            {
+                containerId: 'trial-used-tgs',
+                tgsPath: 'assets/images/gifs/gift-opened.png',
+                fallbackIcon: 'fas fa-gift-card',
                 conditional: true,
                 preload: true
             },
@@ -61,20 +68,68 @@ window.TGSLoader = {
                 tgsPath: 'assets/images/gifs/empty-referrals.tgs',
                 fallbackIcon: 'fas fa-user-plus',
                 preload: true
+            },
+            {
+                containerId: 'telegram-share-animation',
+                tgsPath: 'assets/images/gifs/telegram-share.tgs',
+                fallbackIcon: 'fab fa-telegram-plane',
+                preload: true
+            },
+            {
+                containerId: 'story-share-animation',
+                tgsPath: 'assets/images/gifs/story-share.tgs',
+                fallbackIcon: 'fas fa-camera',
+                preload: true
+            },
+            {
+                containerId: 'multiple-share-animation',
+                tgsPath: 'assets/images/gifs/multiple-share.tgs',
+                fallbackIcon: 'fas fa-share-alt',
+                preload: true
             }
-            // ... остальные конфигурации
         ],
 
         keys: [
+            {
+                containerId: 'vpn-access-animation',
+                tgsPath: 'assets/images/gifs/vpn-access.tgs',
+                fallbackIcon: 'fas fa-shield-alt',
+                preload: true
+            },
+            {
+                containerId: 'profile-tab-animation',
+                tgsPath: 'assets/images/gifs/profile-tab.tgs',
+                fallbackIcon: 'fas fa-user-cog',
+                preload: true
+            },
+            {
+                containerId: 'keys-tab-animation',
+                tgsPath: 'assets/images/gifs/keys-tab.tgs',
+                fallbackIcon: 'fas fa-key',
+                preload: true
+            },
             {
                 containerId: 'keys-empty-animation',
                 tgsPath: 'assets/images/gifs/empty-profiles.tgs',
                 fallbackIcon: 'fas fa-key',
                 preload: true
             }
-            // ... остальные конфигурации
+        ],
+
+        payments: [
+            {
+                containerId: 'payments-empty-animation',
+                tgsPath: 'assets/images/gifs/empty-payments.tgs',
+                fallbackIcon: 'fas fa-receipt'
+            },
+            {
+                containerId: 'payment-success-animation',
+                tgsPath: 'assets/images/gifs/payment-success.tgs',
+                fallbackIcon: 'fas fa-check-circle'
+            }
         ]
     },
+
 
     /**
      * 🚀 ИНИЦИАЛИЗАЦИЯ: Предзагрузка критичных TGS в blob URLs
