@@ -211,7 +211,7 @@ window.SubscriptionScreen = {
      */
     openNewsChannel() {
         // URL вашего канала - замените на настоящий
-        const channelUrl = 'https://t.me/dragon_vpn_news';
+        const channelUrl = 'https://t.me/SkyDragonVPN';
 
         try {
             if (window.TelegramApp) {
