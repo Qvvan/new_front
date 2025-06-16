@@ -3970,33 +3970,36 @@
 }
 
 .glass-action-icon {
-    width: 44px; /* ✅ Уменьшили с 48px до 44px */
-    height: 44px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    width: 72px !important;                    /* ✅ ПРИНУДИТЕЛЬНО */
+    height: 72px !important;                   /* ✅ ПРИНУДИТЕЛЬНО */
+    border-radius: 0 !important;               /* ✅ УБИРАЕМ КРУГ */
+    background: transparent !important;        /* ✅ УБИРАЕМ ФОН */
+    backdrop-filter: none !important;          /* ✅ УБИРАЕМ BLUR */
+    border: none !important;                   /* ✅ УБИРАЕМ ГРАНИЦЫ */
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px; /* ✅ Уменьшили с 20px до 18px */
+    font-size: 36px !important;                /* ✅ БОЛЬШОЙ РАЗМЕР */
     color: var(--text-primary);
     flex-shrink: 0;
     position: relative;
-    overflow: hidden;
-    box-shadow: none;
+    overflow: visible;
+    box-shadow: none !important;
 }
 
 .glass-action-icon img {
-    width: 26px; /* ✅ Уменьшили с 28px до 26px */
-    height: 26px;
-    object-fit: cover;
-    border-radius: 4px;
-    opacity: 0.9;
+    width: 52px !important;                    /* ✅ ПРИНУДИТЕЛЬНО */
+    height: 52px !important;                   /* ✅ ПРИНУДИТЕЛЬНО */
+    object-fit: contain;
+    border-radius: 10px;
+    opacity: 0.95;
+    filter: brightness(1.1) contrast(1.05);
 }
 
 .glass-action-icon.has-image i {
     display: none;
+    color: var(--text-primary);
+    font-size: 36px !important;
 }
 
 .glass-action-text {
@@ -4368,4 +4371,35 @@
     padding: var(--spacing-2xl);
     max-width: 300px;
     margin: 0 auto; /* Центрируем сам контейнер */
+}
+
+.glass-action-icon.has-image {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    border: none !important;
+    width: 72px !important;
+    height: 72px !important;
+}
+
+.glass-action-icon.has-image img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain; /* изменил с cover на contain для сохранения пропорций */
+    border-radius: 4px;
+    opacity: 0.95;
+    filter: brightness(1.1) contrast(1.05); /* небольшое улучшение контраста */
+}
+
+/* Fallback иконка скрыта по умолчанию, показывается только при ошибке загрузки */
+.glass-action-icon.has-image i {
+    display: none;
+    color: var(--text-primary);
+    font-size: 28px;
+}
+
+/* Font Awesome иконки (для fallback и обычных иконок) */
+.glass-action-icon i {
+    font-size: 36px !important;                /* ✅ ПРИНУДИТЕЛЬНО */
+    color: var(--text-primary);
+    opacity: 0.9;
 }

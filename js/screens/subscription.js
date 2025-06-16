@@ -530,13 +530,13 @@ window.SubscriptionScreen = {
                     <h3 class="empty-state-title">Нет активных подписок</h3>
                 </div>
 
-                <!-- НОВЫЕ ШИРОКИЕ КНОПКИ -->
+                <!-- НОВЫЕ ШИРОКИЕ КНОПКИ С КАСТОМНЫМИ ИКОНКАМИ -->
                 <div class="glass-actions-row">
                     ${isTrialAvailable ? `
                         <div class="glass-action-card" data-action="activate-trial">
                             <div class="glass-action-content">
                                 <div class="glass-action-icon">
-                                    <div id="trial-gift-tgs" style="width: 24px; height: 24px;" data-tgs="${trialTgs}"></div>
+                                    <div id="trial-gift-tgs" style="width: 40px; height: 40px;" data-tgs="${trialTgs}"></div>
                                 </div>
                                 <div class="glass-action-text">
                                     <div class="glass-action-title">Пробный период</div>
@@ -551,7 +551,7 @@ window.SubscriptionScreen = {
                         <div class="glass-action-card trial-used-notice">
                             <div class="glass-action-content">
                                 <div class="glass-action-icon" style="opacity: 0.4;">
-                                    <div id="trial-used-tgs" style="width: 24px; height: 24px;" data-tgs="${trialTgs}"></div>
+                                    <div id="trial-used-tgs" style="width: 40px; height: 40px;" data-tgs="${trialTgs}"></div>
                                 </div>
                                 <div class="glass-action-text">
                                     <div class="glass-action-title" style="opacity: 0.6;">Пробный период</div>
@@ -563,9 +563,7 @@ window.SubscriptionScreen = {
 
                     <div class="glass-action-card" data-action="buy">
                         <div class="glass-action-content">
-                            <div class="glass-action-icon">
-                                <i class="fas fa-crown"></i>
-                            </div>
+                            ${this.renderActionIcon('image', 'assets/images/icons/crown.png', 'fas fa-crown')}
                             <div class="glass-action-text">
                                 <div class="glass-action-title">Оформить подписку</div>
                                 <div class="glass-action-subtitle">Выбрать тариф</div>
@@ -717,7 +715,6 @@ window.SubscriptionScreen = {
      * Рендеринг быстрых действий
      */
    renderQuickActions() {
-        // Проверяем есть ли активная подписка
         const hasActiveSubscription = this.currentSubscriptions.some(sub => {
             const daysLeft = Utils.daysBetween(sub.end_date);
             return daysLeft > 0;
@@ -733,9 +730,7 @@ window.SubscriptionScreen = {
                     ${hasActiveSubscription ? `
                         <div class="glass-action-card" data-action="instructions">
                             <div class="glass-action-content">
-                                <div class="glass-action-icon">
-                                    <i class="fas fa-book"></i>
-                                </div>
+                                ${this.renderActionIcon('icon', 'fas fa-book', 'fas fa-book')}
                                 <div class="glass-action-text">
                                     <div class="glass-action-title">Инструкции</div>
                                     <div class="glass-action-subtitle">Настройка VPN</div>
@@ -749,9 +744,7 @@ window.SubscriptionScreen = {
 
                     <div class="glass-action-card" data-action="support">
                         <div class="glass-action-content">
-                            <div class="glass-action-icon">
-                                <i class="fas fa-headset"></i>
-                            </div>
+                            ${this.renderActionIcon('image', 'assets/images/icons/support.png', 'fas fa-headset')}
                             <div class="glass-action-text">
                                 <div class="glass-action-title">Поддержка</div>
                                 <div class="glass-action-subtitle">Помощь 24/7</div>
@@ -764,9 +757,7 @@ window.SubscriptionScreen = {
 
                     <div class="glass-action-card" data-action="news-channel">
                         <div class="glass-action-content">
-                            <div class="glass-action-icon">
-                                <i class="fas fa-newspaper"></i>
-                            </div>
+                            ${this.renderActionIcon('image', 'assets/images/icons/news.png', 'fas fa-newspaper')}
                             <div class="glass-action-text">
                                 <div class="glass-action-title">Новости</div>
                                 <div class="glass-action-subtitle">Наш канал</div>
@@ -791,7 +782,8 @@ window.SubscriptionScreen = {
         if (type === 'image') {
             return `
                 <div class="glass-action-icon has-image">
-                    <img src="${source}" alt="Иконка" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <img src="${source}" alt="Иконка"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <i class="${fallbackIcon}"></i>
                 </div>
             `;
