@@ -4133,3 +4133,239 @@
         font-size: 10px;
     }
 }
+
+.subscription-glass-actions {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: var(--border-radius-lg);
+    padding: 0;
+    margin-bottom: var(--spacing-2xl);
+    overflow: hidden;
+    box-shadow: none;
+    width: 100%;
+    display: flex;
+    flex-direction: column; /* В колонку */
+}
+
+.subscription-glass-actions .glass-action-card {
+    width: 100%;
+    background: transparent;
+    backdrop-filter: none;
+    border: none;
+    border-radius: 0;
+    padding: var(--spacing-lg);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    display: block;
+}
+
+.subscription-glass-actions .glass-action-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-md);
+    position: relative;
+    z-index: 2;
+    min-height: 56px;
+    width: 100%;
+}
+
+.subscription-glass-actions .glass-action-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--text-primary);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.subscription-glass-actions .glass-action-text {
+    flex: 1;
+    text-align: left;
+    min-width: 0;
+}
+
+.subscription-glass-actions .glass-action-title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+
+.subscription-glass-actions .glass-action-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.3;
+    opacity: 0.8;
+}
+
+.subscription-glass-actions .glass-action-arrow {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 12px;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+/* Hover эффекты */
+.subscription-glass-actions .glass-action-card:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.subscription-glass-actions .glass-action-card:hover .glass-action-arrow {
+    transform: translateX(2px);
+    opacity: 1;
+    color: var(--text-primary);
+}
+
+.subscription-glass-actions .glass-action-card:active {
+    background: rgba(255, 255, 255, 0.01);
+}
+
+/* Специальный стиль для использованного пробного периода */
+.subscription-glass-actions .glass-action-card.trial-used-notice {
+    cursor: default;
+}
+
+.subscription-glass-actions .glass-action-card.trial-used-notice:hover {
+    background: transparent;
+}
+
+.subscription-glass-actions .glass-action-card.trial-used-notice .glass-action-arrow {
+    display: none;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+    .subscription-glass-actions .glass-action-card {
+        padding: var(--spacing-md);
+    }
+
+    .subscription-glass-actions .glass-action-content {
+        min-height: 50px;
+        gap: var(--spacing-sm);
+    }
+
+    .subscription-glass-actions .glass-action-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 360px) {
+    .subscription-glass-actions .glass-action-card {
+        padding: var(--spacing-sm);
+    }
+
+    .subscription-glass-actions .glass-action-content {
+        min-height: 46px;
+        gap: var(--spacing-xs);
+    }
+
+    .subscription-glass-actions .glass-action-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 15px;
+    }
+}
+
+.empty-state-card {
+    display: flex;
+    flex-direction: column; /* ✅ В столбец */
+    align-items: center;
+    width: 100%;
+}
+
+.empty-state-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    margin-bottom: var(--spacing-xl); /* ✅ Отступ перед панелью */
+}
+
+.subscription-glass-actions {
+    width: 100%; /* ✅ Полная ширина */
+    max-width: none; /* ✅ Убираем ограничения */
+    /* остальные стили остаются */
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: var(--border-radius-lg);
+    padding: 0;
+    margin-bottom: var(--spacing-2xl);
+    overflow: hidden;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Идеальное центрирование для empty-state-icon-gif */
+.empty-state-icon-gif {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+    width: 100%;
+    min-height: 80px; /* Минимальная высота для стабильности */
+}
+
+/* Центрирование самого контейнера анимации */
+#tgs-animation-container {
+    display: block;
+    margin: 0 auto !important;
+    position: relative;
+    /* Убираем любые смещения */
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+}
+
+/* Центрирование SVG анимации Lottie */
+#tgs-animation-container svg {
+    display: block;
+    margin: 0 auto;
+    position: relative;
+}
+
+/* Центрирование fallback иконки */
+#tgs-animation-container i {
+    display: block;
+    text-align: center;
+    width: 100%;
+    line-height: 80px; /* Совпадает с высотой контейнера */
+    margin: 0;
+}
+
+/* Дополнительная центровка для родительского контейнера */
+.empty-state-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    padding: var(--spacing-2xl);
+    max-width: 300px;
+    margin: 0 auto; /* Центрируем сам контейнер */
+}

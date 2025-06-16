@@ -512,59 +512,68 @@ window.SubscriptionScreen = {
      * Рендеринг пустого состояния
      */
     renderEmptyState() {
-        // ✅ ПРАВИЛЬНАЯ проверка доступности пробного периода
         const isTrialAvailable = !this.userData?.trial_activated;
         const trialTgs = isTrialAvailable ?
             'assets/images/gifs/gift-animate.tgs' :
             'assets/images/gifs/gift-opened.png';
 
-        // ⚠️ Планируем инициализацию анимаций ПОСЛЕ рендера DOM
         setTimeout(() => {
             this.initializeTGSAnimations();
         }, 100);
 
         return `
-            <div class="empty-state-card">
+            <div class="section">
                 <div class="empty-state-content">
                     <div class="empty-state-icon-gif">
                         <div id="tgs-animation-container" style="width: 80px; height: 80px; margin: 0 auto;"></div>
                     </div>
                     <h3 class="empty-state-title">Нет активных подписок</h3>
-                    <div class="empty-state-actions">
-                        ${isTrialAvailable ? `
-                            <button class="btn-trial-activation" data-action="activate-trial">
-                                <div class="btn-trial-bg">
-                                    <div class="btn-trial-shine"></div>
+                </div>
+
+                <!-- НОВЫЕ ШИРОКИЕ КНОПКИ -->
+                <div class="glass-actions-row">
+                    ${isTrialAvailable ? `
+                        <div class="glass-action-card" data-action="activate-trial">
+                            <div class="glass-action-content">
+                                <div class="glass-action-icon">
+                                    <div id="trial-gift-tgs" style="width: 24px; height: 24px;" data-tgs="${trialTgs}"></div>
                                 </div>
-                                <div class="btn-trial-content">
-                                    <div class="trial-gift-icon">
-                                        <div id="trial-gift-tgs" style="width: 24px; height: 24px;" data-tgs="${trialTgs}"></div>
-                                    </div>
-                                    <div class="trial-text">
-                                        <span class="trial-main">Пробный период</span>
-                                        <span class="trial-sub">5 дней бесплатно</span>
-                                    </div>
-                                    <div class="trial-arrow">
-                                        <i class="fas fa-arrow-right"></i>
-                                    </div>
+                                <div class="glass-action-text">
+                                    <div class="glass-action-title">Пробный период</div>
+                                    <div class="glass-action-subtitle">5 дней бесплатно</div>
                                 </div>
-                            </button>
-                        ` : `
-                            <div class="trial-used-notice">
-                                <div class="trial-used-icon">
+                                <div class="glass-action-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="glass-action-card trial-used-notice">
+                            <div class="glass-action-content">
+                                <div class="glass-action-icon" style="opacity: 0.4;">
                                     <div id="trial-used-tgs" style="width: 24px; height: 24px;" data-tgs="${trialTgs}"></div>
                                 </div>
-                                <span>Пробный период использован</span>
+                                <div class="glass-action-text">
+                                    <div class="glass-action-title" style="opacity: 0.6;">Пробный период</div>
+                                    <div class="glass-action-subtitle" style="opacity: 0.6;">Уже использован</div>
+                                </div>
                             </div>
-                        `}
+                        </div>
+                    `}
 
-                        <button class="btn-subscription-purchase" data-action="buy">
-                            <div class="btn-purchase-bg"></div>
-                            <div class="btn-purchase-content">
-                                <i class="fas fa-rocket"></i>
-                                <span>Оформить подписку</span>
+                    <div class="glass-action-card" data-action="buy">
+                        <div class="glass-action-content">
+                            <div class="glass-action-icon">
+                                <i class="fas fa-crown"></i>
                             </div>
-                        </button>
+                            <div class="glass-action-text">
+                                <div class="glass-action-title">Оформить подписку</div>
+                                <div class="glass-action-subtitle">Выбрать тариф</div>
+                            </div>
+                            <div class="glass-action-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
