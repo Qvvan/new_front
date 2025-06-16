@@ -9,13 +9,11 @@ window.PaymentsScreen = {
      * Инициализация экрана платежей
      */
     async init() {
-        Utils.log('info', 'Initializing Payments Screen');
 
-        // Сначала загружаем сервисы, потом платежи
         await this.loadServices();
         await this.loadPayments();
         this.render();
-        this.setupEventListeners(); // ✅ Перенес ПОСЛЕ render
+        this.setupEventListeners();
         this.isLoaded = true;
     },
 
@@ -48,10 +46,7 @@ window.PaymentsScreen = {
             servicesList.forEach(service => {
                 this.services.set(service.id, service);
             });
-
-            Utils.log('info', `Loaded and cached ${servicesList.length} services`);
         } catch (error) {
-            Utils.log('error', 'Failed to load services:', error);
             // Продолжаем работу даже без сервисов
         }
     },
@@ -67,10 +62,7 @@ window.PaymentsScreen = {
             // Обогащаем каждый платеж данными сервиса
             this.enrichPaymentsWithServiceData();
             this.groupPaymentsByDate();
-
-            Utils.log('info', `Loaded ${this.payments.length} payments`);
         } catch (error) {
-            Utils.log('error', 'Failed to load payments:', error);
             this.payments = [];
 
             if (window.Toast) {
@@ -96,7 +88,6 @@ window.PaymentsScreen = {
                 // ✅ ИСПРАВЛЕНО: Если в платеже нет цены, берем из сервиса
                 if (!payment.price || payment.price === 0) {
                     payment.price = service.price;
-                    Utils.log('info', `Set price ${service.price} for payment ${payment.id} from service ${service.name}`);
                 }
             } else {
                 // Fallback данные если сервис не найден
@@ -365,8 +356,6 @@ window.PaymentsScreen = {
             const paymentUrl = payment.payment_url || payment.url;
 
             if (paymentUrl) {
-                Utils.log('info', 'Opening pending payment URL:', paymentUrl);
-
                 if (window.TelegramApp) {
                     window.TelegramApp.openLink(paymentUrl);
                 } else {

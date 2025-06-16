@@ -11,7 +11,6 @@ window.Modal = {
     init() {
         this.createBackdrop();
         this.setupGlobalEvents();
-        Utils.log('info', 'Modal system initialized');
     },
 
     /**
@@ -93,7 +92,6 @@ window.Modal = {
             window.TelegramApp.haptic.light();
         }
 
-        Utils.log('debug', `Modal shown: ${modalConfig.id}`);
         return modalConfig.id;
     },
 
@@ -241,8 +239,6 @@ window.Modal = {
             }
 
         }, 300);
-
-        Utils.log('debug', `Modal closed: ${modalId}`);
     },
 
     /**

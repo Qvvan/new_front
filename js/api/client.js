@@ -32,8 +32,6 @@ window.APIClient = {
         }
 
         try {
-            Utils.log('debug', `API Request: ${method} ${endpoint}`);
-
             const response = await fetch(url, config);
 
             if (!response.ok) {
@@ -46,8 +44,6 @@ window.APIClient = {
             return result;
 
         } catch (error) {
-            Utils.log('error', 'API Error:', error);
-
             if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
                 throw new Error('Нет соединения с сервером. Проверьте интернет подключение.');
             }
@@ -108,7 +104,6 @@ window.APIClient = {
      * Обработка неавторизованного доступа
      */
     handleUnauthorized() {
-        Utils.log('warn', 'Unauthorized access detected');
 
         // Очищаем локальные данные
         if (window.Storage) {
@@ -243,7 +238,6 @@ window.APIClient = {
 
             return await response.json();
         } catch (error) {
-            Utils.log('error', 'Upload Error:', error);
             throw error;
         }
     },
@@ -288,7 +282,6 @@ window.APIClient = {
 
             return true;
         } catch (error) {
-            Utils.log('error', 'Download Error:', error);
             throw error;
         }
     },
@@ -302,7 +295,6 @@ window.APIClient = {
             await this.get('/health', {}, { timeout: 5000 });
             return true;
         } catch (error) {
-            Utils.log('warn', 'Health check failed:', error);
             return false;
         }
     },
@@ -330,7 +322,6 @@ window.APIClient = {
 
                 if (attempt < maxRetries) {
                     const delay = baseDelay * Math.pow(2, attempt);
-                    Utils.log('warn', `Request failed, retrying in ${delay}ms`, error);
                     await new Promise(resolve => setTimeout(resolve, delay));
                 }
             }
@@ -395,7 +386,6 @@ window.APIClient = {
      */
     setBaseURL(url) {
         this.baseURL = url.replace(/\/$/, ''); // Убираем слеш в конце
-        Utils.log('info', `API base URL set to: ${this.baseURL}`);
     },
 
     /**
@@ -404,6 +394,5 @@ window.APIClient = {
      */
     setTimeout(timeout) {
         this.defaultTimeout = timeout;
-        Utils.log('info', `API timeout set to: ${timeout}ms`);
     }
 };

@@ -24,12 +24,10 @@ window.TelegramApp = {
             // Парсим данные пользователя
             if (this.webApp.initDataUnsafe && this.webApp.initDataUnsafe.user) {
                 this.user = this.webApp.initDataUnsafe.user;
-                Utils.log('info', 'Telegram user data loaded', this.user);
 
                 if (this.webApp.initDataUnsafe.start_param) {
                     const referrerId = this.webApp.initDataUnsafe.start_param;
                     this.referrerId = referrerId;
-                    Utils.log('info', `Referrer detected: ${referrerId}`);
                 }
             }
 
@@ -49,7 +47,6 @@ window.TelegramApp = {
             this.webApp.expand();
 
             this.isInitialized = true;
-            Utils.log('info', 'Telegram WebApp initialized successfully');
 
         } catch (error) {
             Utils.log('error', 'Failed to initialize Telegram WebApp', error);
@@ -127,11 +124,6 @@ window.TelegramApp = {
         if (!this.webApp) return;
 
         try {
-            Utils.log('info', 'Setting up semi-fullscreen interface');
-
-            // 🔥 КРИТИЧЕСКИ ВАЖНО: правильная последовательность вызовов
-
-            // 1. Сначала готовим приложение
             this.webApp.ready();
 
             // 2. Расширяем до максимума
@@ -161,8 +153,6 @@ window.TelegramApp = {
             // 8. 🔥 БЛОКИРУЕМ возможность закрытия через скролл
             this.preventSwipeToClose();
 
-            Utils.log('info', 'Semi-fullscreen interface configured');
-
         } catch (error) {
             Utils.log('error', 'Failed to setup interface', error);
         }
@@ -173,13 +163,10 @@ window.TelegramApp = {
 
         // Отслеживаем изменения viewport
         this.webApp.onEvent('viewportChanged', (eventData) => {
-            Utils.log('debug', 'Viewport changed:', eventData);
-
             // Если приложение стало меньше - принудительно расширяем
             if (eventData && !eventData.isExpanded) {
                 setTimeout(() => {
                     this.webApp.expand();
-                    Utils.log('info', 'Force expanded app back');
                 }, 50);
             }
         });
@@ -249,7 +236,6 @@ window.TelegramApp = {
 
         // Обработка изменения viewport
         this.webApp.onEvent('viewportChanged', (eventData) => {
-            Utils.log('debug', 'Viewport changed', eventData);
             this.handleViewportChange(eventData);
         });
 
@@ -319,7 +305,6 @@ window.TelegramApp = {
                     navigator.vibrate(50);
                 }
             } catch (error) {
-                Utils.log('debug', 'Haptic feedback not available');
             }
         },
 
@@ -334,7 +319,6 @@ window.TelegramApp = {
                     navigator.vibrate(100);
                 }
             } catch (error) {
-                Utils.log('debug', 'Haptic feedback not available');
             }
         },
 
@@ -349,7 +333,6 @@ window.TelegramApp = {
                     navigator.vibrate(200);
                 }
             } catch (error) {
-                Utils.log('debug', 'Haptic feedback not available');
             }
         },
 
@@ -364,7 +347,6 @@ window.TelegramApp = {
                     navigator.vibrate([100, 50, 100]);
                 }
             } catch (error) {
-                Utils.log('debug', 'Haptic feedback not available');
             }
         },
 
@@ -379,7 +361,6 @@ window.TelegramApp = {
                     navigator.vibrate([200, 100, 200]);
                 }
             } catch (error) {
-                Utils.log('debug', 'Haptic feedback not available');
             }
         },
 
@@ -394,7 +375,6 @@ window.TelegramApp = {
                     navigator.vibrate([150, 75, 150]);
                 }
             } catch (error) {
-                Utils.log('debug', 'Haptic feedback not available');
             }
         },
 
@@ -409,7 +389,6 @@ window.TelegramApp = {
                     navigator.vibrate(30);
                 }
             } catch (error) {
-                Utils.log('debug', 'Haptic feedback not available');
             }
         }
     },
@@ -428,7 +407,6 @@ window.TelegramApp = {
                 this.webApp.MainButton.onClick(onClick);
             }
         } catch (error) {
-            Utils.log('error', 'Failed to show main button', error);
         }
     },
 
@@ -441,7 +419,6 @@ window.TelegramApp = {
         try {
             this.webApp.MainButton.hide();
         } catch (error) {
-            Utils.log('error', 'Failed to hide main button', error);
         }
     },
 
@@ -454,7 +431,6 @@ window.TelegramApp = {
         try {
             this.webApp.BackButton.show();
         } catch (error) {
-            Utils.log('error', 'Failed to show back button', error);
         }
     },
 
@@ -467,7 +443,6 @@ window.TelegramApp = {
         try {
             this.webApp.BackButton.hide();
         } catch (error) {
-            Utils.log('error', 'Failed to hide back button', error);
         }
     },
 
@@ -483,7 +458,6 @@ window.TelegramApp = {
         try {
             this.webApp.openLink(url, options);
         } catch (error) {
-            Utils.log('error', 'Failed to open link', error);
             window.open(url, '_blank');
         }
     },
@@ -500,7 +474,6 @@ window.TelegramApp = {
         try {
             this.webApp.openTelegramLink(url);
         } catch (error) {
-            Utils.log('error', 'Failed to open Telegram link', error);
             window.open(url, '_blank');
         }
     },
@@ -522,7 +495,6 @@ window.TelegramApp = {
                     resolve(buttonId);
                 });
             } catch (error) {
-                Utils.log('error', 'Failed to show popup', error);
                 resolve(null);
             }
         });
@@ -542,7 +514,6 @@ window.TelegramApp = {
             try {
                 this.webApp.showAlert(message, resolve);
             } catch (error) {
-                Utils.log('error', 'Failed to show alert', error);
                 alert(message);
                 resolve();
             }
@@ -562,7 +533,6 @@ window.TelegramApp = {
             try {
                 this.webApp.showConfirm(message, resolve);
             } catch (error) {
-                Utils.log('error', 'Failed to show confirm', error);
                 resolve(confirm(message));
             }
         });
@@ -582,7 +552,6 @@ window.TelegramApp = {
                 });
                 return true;
             } catch (error) {
-                Utils.log('debug', 'Web Share API failed', error);
             }
         }
 
@@ -605,7 +574,6 @@ window.TelegramApp = {
      */
     getAuthData() {
         if (!this.isInitialized) {
-            Utils.log('warn', 'Telegram WebApp not initialized');
             return null;
         }
 

@@ -226,8 +226,6 @@ window.InstructionsScreen = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to activate profile:', error);
-
             if (window.Toast) {
                 window.Toast.error('Ошибка активации профиля. Попробуйте получить ключи вручную.');
             }
@@ -253,14 +251,12 @@ window.InstructionsScreen = {
             });
 
             if (activeSubscription) {
-                Utils.log('info', 'Found active subscription with config:', activeSubscription.config_link);
                 return activeSubscription.config_link;
             }
 
             throw new Error('No active subscription with config found');
 
         } catch (error) {
-            Utils.log('error', 'Failed to get active subscription config:', error);
             throw error;
         }
     },

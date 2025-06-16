@@ -18,7 +18,6 @@ window.UserAPI = {
         // Добавляем referrer_id если есть
         if (referrerId) {
             requestData.referrer_id = referrerId;
-            Utils.log('info', `Sending referrer: ${referrerId}`);
         }
 
         // ✅ ИСПОЛЬЗУЕМ window.APIClient вместо callApi

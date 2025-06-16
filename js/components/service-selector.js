@@ -16,7 +16,6 @@ window.ServiceSelector = {
         this.mode = mode;
         this.subscriptionId = subscriptionId;
 
-        Utils.log('info', `Showing service selector in ${mode} mode`, { subscriptionId });
 
         try {
             await this.loadServices();
@@ -90,7 +89,6 @@ window.ServiceSelector = {
             // ⚠️ НОВОЕ: Загружаем данные пользователя для пробного периода
             await this.loadUserData();
 
-            Utils.log('info', 'Services loaded:', this.services);
 
         } catch (error) {
             Utils.log('error', 'Failed to load services:', error);
@@ -104,7 +102,6 @@ window.ServiceSelector = {
             if (window.UserAPI) {
                 const response = await window.UserAPI.getCurrentUser();
                 this.userData = response.user || response;
-                Utils.log('info', 'User data loaded:', this.userData);
             } else {
                 this.userData = { trial_activated: false }; // Fallback
             }
@@ -434,7 +431,6 @@ window.ServiceSelector = {
             continueBtn.disabled = false;
         }
 
-        Utils.log('info', 'Service selected:', this.selectedService);
     },
 
     /**
@@ -444,13 +440,7 @@ window.ServiceSelector = {
         if (!this.selectedService) return;
 
         try {
-            Utils.log('info', 'Processing service selection:', {
-                service: this.selectedService,
-                mode: this.mode,
-                subscriptionId: this.subscriptionId
-            });
 
-            // ✅ ИСПРАВЛЕНИЕ: Для пробного периода используем отдельный метод
             if (this.selectedService.id === 'trial') {
                 await this.activateTrial();
             } else {
@@ -537,8 +527,6 @@ window.ServiceSelector = {
             if (paymentUrl && window.TelegramApp) {
                 window.TelegramApp.openLink(paymentUrl);
             }
-
-            Utils.log('info', 'Payment created and monitoring started:', payment.id);
 
         } catch (error) {
             Utils.log('error', 'Failed to create payment:', error);

@@ -11,7 +11,6 @@ window.Toast = {
      */
     init() {
         this.createContainer();
-        Utils.log('info', 'Toast system initialized');
     },
 
     /**
@@ -68,7 +67,6 @@ window.Toast = {
             }, config.duration);
         }
 
-        Utils.log('debug', `Toast shown: ${type} - ${message}`);
         return toastId;
     },
 
@@ -161,7 +159,6 @@ window.Toast = {
             this.toasts.delete(toastId);
         }, 300);
 
-        Utils.log('debug', `Toast hidden: ${toastId}`);
     },
 
     /**

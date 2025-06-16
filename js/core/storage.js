@@ -16,15 +16,11 @@ window.Storage = {
      * Инициализация системы хранения
      */
     async init() {
-        Utils.log('info', 'Initializing minimal storage system');
 
-        // Агрессивно очищаем весь localStorage кроме критического минимума
         await this.cleanupStaleCache();
 
         // Полностью очищаем сессионный кеш
         this.session.clear();
-
-        Utils.log('info', 'Storage initialized - session cache cleared');
     },
 
     /**
@@ -34,7 +30,6 @@ window.Storage = {
         // 1. Сначала проверяем сессионный кеш
         if (useSession && this.session.has(key)) {
             const cached = this.session.get(key);
-            Utils.log('debug', `Using session cache for: ${key}`);
             return cached;
         }
 
@@ -88,12 +83,8 @@ window.Storage = {
             // Удаляем все найденные ключи
             keysToRemove.forEach(key => {
                 localStorage.removeItem(key);
-                Utils.log('debug', `Removed stale cache: ${key}`);
             });
-
-            Utils.log('info', `Cleaned up ${keysToRemove.length} stale cache entries`);
         } catch (error) {
-            Utils.log('error', 'Failed to cleanup stale cache:', error);
         }
     },
 
@@ -105,7 +96,6 @@ window.Storage = {
             const stored = localStorage.getItem(key);
             return stored ? JSON.parse(stored) : defaultValue;
         } catch (error) {
-            Utils.log('error', `Failed to get from localStorage: ${key}`, error);
             return defaultValue;
         }
     },
@@ -115,7 +105,6 @@ window.Storage = {
             localStorage.setItem(key, JSON.stringify(value));
             return true;
         } catch (error) {
-            Utils.log('error', `Failed to set to localStorage: ${key}`, error);
             return false;
         }
     },
@@ -131,7 +120,6 @@ window.Storage = {
 
     async setSubscriptions(subscriptions) {
         this.session.set('subscriptions', subscriptions);
-        Utils.log('debug', `Cached ${subscriptions.length} subscriptions in session`);
     },
 
     // Данные пользователя - НЕ персистентные
@@ -141,7 +129,6 @@ window.Storage = {
 
     async setUserData(userData) {
         this.session.set('user_data', userData);
-        Utils.log('debug', 'Cached user data in session');
     },
 
     /**
@@ -151,14 +138,12 @@ window.Storage = {
     // Получение pending платежей - ТОЛЬКО из сессионного кеша
     async getPendingPayments() {
         const pending = this.session.get('pending_payments') || [];
-        Utils.log('debug', `Retrieved ${pending.length} pending payments from session`);
         return pending;
     },
 
     // Добавление pending платежа - ТОЛЬКО в сессию
     async addPendingPayment(payment) {
         if (!payment || !payment.id) {
-            Utils.log('warn', 'Invalid payment data for adding to pending');
             return;
         }
 
@@ -170,7 +155,6 @@ window.Storage = {
         );
 
         if (exists) {
-            Utils.log('debug', `Payment ${payment.id} already in pending list`);
             return;
         }
 
@@ -191,7 +175,6 @@ window.Storage = {
         pending.push(paymentData);
         this.session.set('pending_payments', pending);
 
-        Utils.log('info', `Added pending payment to SESSION: ${payment.id}`);
     },
 
     // Удаление pending платежа
@@ -206,15 +189,12 @@ window.Storage = {
         this.session.set('pending_payments', filtered);
 
         const removedCount = pending.length - filtered.length;
-        Utils.log('info', `Removed ${removedCount} pending payment(s): ${paymentId}`);
-
         return filtered.length;
     },
 
     // ПОЛНАЯ очистка pending платежей
     async clearPendingPayments() {
         this.session.set('pending_payments', []);
-        Utils.log('info', 'CLEARED all pending payments from session');
     },
 
     /**
@@ -258,7 +238,6 @@ window.Storage = {
     // Полная очистка сессии (при logout/ошибке)
     clearSession() {
         this.session.clear();
-        Utils.log('info', 'Session cache completely cleared');
     },
 
     // Удаление конкретного ключа
@@ -302,8 +281,6 @@ window.Storage = {
         keysToRemove.forEach(key => {
             localStorage.removeItem(key);
         });
-
-        Utils.log('warn', `Cleared ALL storage data: ${keysToRemove.length} localStorage keys + session`);
     },
 
     /**

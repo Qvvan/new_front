@@ -9,8 +9,6 @@ window.SubscriptionScreen = {
      * Инициализация экрана подписки
      */
     async init() {
-        Utils.log('info', 'Initializing Subscription Screen');
-
         await this.loadUserData();
         await this.loadServices();
         await this.loadSubscriptions();
@@ -25,10 +23,8 @@ window.SubscriptionScreen = {
             if (window.UserAPI) {
                 const response = await window.UserAPI.getCurrentUser();
                 this.userData = response.user || response;
-                Utils.log('info', 'User data loaded for subscription screen:', this.userData);
             }
         } catch (error) {
-            Utils.log('error', 'Failed to load user data:', error);
             this.userData = { trial_activated: false }; // Fallback
         }
     },
@@ -45,11 +41,8 @@ window.SubscriptionScreen = {
                 services.forEach(service => {
                     this.servicesCache.set(service.id, service);
                 });
-
-                Utils.log('info', `Cached ${services.length} services`);
             }
         } catch (error) {
-            Utils.log('error', 'Failed to load services for caching:', error);
         }
     },
 
@@ -64,12 +57,7 @@ window.SubscriptionScreen = {
             if (window.Storage) {
                 window.Storage.setSubscriptions(this.currentSubscriptions);
             }
-
-            Utils.log('info', `Loaded ${this.currentSubscriptions.length} subscriptions`);
-
         } catch (error) {
-            Utils.log('error', 'Failed to load subscriptions:', error);
-
             if (window.Storage) {
                 this.currentSubscriptions = await window.Storage.getSubscriptions();
             }
@@ -139,8 +127,6 @@ window.SubscriptionScreen = {
      * Обработка действий
      */
     async handleAction(action, subscriptionId = null) {
-        Utils.log('info', 'Subscription action:', { action, subscriptionId });
-
         try {
             switch (action) {
                 case 'buy':
@@ -189,11 +175,8 @@ window.SubscriptionScreen = {
                     break;
 
                 default:
-                    Utils.log('warn', 'Unknown subscription action:', action);
             }
         } catch (error) {
-            Utils.log('error', 'Failed to handle subscription action:', error);
-
             if (window.Toast) {
                 window.Toast.error('Произошла ошибка при выполнении действия');
             }
@@ -209,8 +192,6 @@ window.SubscriptionScreen = {
      * Продление подписки
      */
     async handleRenewSubscription(subscriptionId) {
-        Utils.log('info', 'Renewing subscription:', subscriptionId);
-
         if (window.ServiceSelector) {
             await window.ServiceSelector.show('renew', subscriptionId);
         }
@@ -220,8 +201,6 @@ window.SubscriptionScreen = {
      * Покупка новой подписки
      */
     async handleBuyNewSubscription() {
-        Utils.log('info', 'Buying new subscription');
-
         if (window.ServiceSelector) {
             await window.ServiceSelector.show('buy');
         }
@@ -247,13 +226,7 @@ window.SubscriptionScreen = {
                 // Fallback для веб-версии (разработка)
                 window.open(channelUrl, '_blank');
             }
-
-            // Логируем для аналитики
-            Utils.log('info', 'User opened news channel', { url: channelUrl });
-
         } catch (error) {
-            Utils.log('error', 'Failed to open news channel:', error);
-
             if (window.Toast) {
                 window.Toast.error('Не удалось открыть канал');
             }
@@ -265,9 +238,7 @@ window.SubscriptionScreen = {
      */
     async handleActivateTrial() {
         try {
-            Utils.log('info', 'Requesting trial activation');
 
-            // Показываем красивое модальное окно подтверждения
             const confirmed = await this.showTrialConfirmationModal();
             if (!confirmed) return;
 
@@ -302,7 +273,6 @@ window.SubscriptionScreen = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to activate trial:', error);
 
             if (window.Loading) {
                 window.Loading.hide();
@@ -412,8 +382,6 @@ window.SubscriptionScreen = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to update auto renewal:', error);
-
             if (window.Toast) {
                 const message = error.message || 'Ошибка изменения автопродления';
                 window.Toast.error(message);
@@ -494,7 +462,6 @@ window.SubscriptionScreen = {
         if (window.TGSLoader) {
             window.TGSLoader.initializeScreen('subscription');
         } else {
-            Utils.log('error', 'TGSLoader not available');
         }
     },
 

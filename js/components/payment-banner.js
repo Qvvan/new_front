@@ -11,7 +11,6 @@ window.PaymentBanner = {
             Utils.log('error', 'Payment banner element not found');
             return;
         }
-        Utils.log('info', 'Payment banner initialized');
     },
 
     /**
@@ -22,13 +21,11 @@ window.PaymentBanner = {
 
         // ✅ КРИТИЧЕСКИ ВАЖНО: Не показываем баннер для успешных платежей
         if (payment.status === 'succeeded') {
-            Utils.log('info', `Payment ${payment.id} already succeeded, not showing banner`);
             return;
         }
 
         // ✅ Показываем только для pending
         if (payment.status !== 'pending') {
-            Utils.log('info', `Payment ${payment.id} status is ${payment.status}, not showing banner`);
             return;
         }
 
@@ -45,7 +42,6 @@ window.PaymentBanner = {
             if (storedPayment && (storedPayment.payment_url || storedPayment.receipt_link)) {
                 payment.payment_url = storedPayment.payment_url || storedPayment.receipt_link;
                 payment.url = storedPayment.url || storedPayment.receipt_link;
-                Utils.log('info', 'Restored payment URL from storage');
             }
         }
 
@@ -91,8 +87,6 @@ window.PaymentBanner = {
 
         // Показываем баннер
         this.element.classList.remove('hidden');
-
-        Utils.log('info', 'Payment banner shown for:', payment.id);
     },
 
     async enrichPaymentWithServiceData(payment) {
@@ -166,8 +160,6 @@ window.PaymentBanner = {
 
         // Скрываем баннер
         this.element.classList.add('hidden');
-
-        Utils.log('info', 'Payment banner hidden');
     },
 
     /**
@@ -271,7 +263,6 @@ window.PaymentBanner = {
                           this.currentPayment.receipt_link; // ← Добавить receipt_link как fallback
 
         if (paymentUrl) {
-            Utils.log('info', 'Opening payment URL:', paymentUrl);
 
             if (window.TelegramApp) {
                 window.TelegramApp.openLink(paymentUrl);

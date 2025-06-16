@@ -14,7 +14,6 @@ window.PaymentAPI = {
                 const user = await window.UserAPI.getUserByTelegramId(telegramUser.id);
                 data.user_id = user.user.telegram_id;
             } catch (error) {
-                Utils.log('error', 'Could not get user_id for payment');
                 throw new Error('Пользователь не найден');
             }
         }
@@ -72,12 +71,8 @@ window.PaymentAPI = {
 
                 return isActuallyPending && isRecent;
             });
-
-            Utils.log('info', `Filtered ${pendingPayments.length} pending payments from ${allPayments.length} total`);
-
             return pendingPayments;
         } catch (error) {
-            Utils.log('error', 'Failed to get pending payments:', error);
             return [];
         }
     },
@@ -117,7 +112,6 @@ window.PaymentAPI = {
 
             return response;
         } catch (error) {
-            Utils.log('error', 'Failed to create payment with monitoring:', error);
             throw error;
         }
     }

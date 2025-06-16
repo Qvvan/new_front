@@ -35,7 +35,6 @@ window.KeysAPI = {
 
                 allKeys.push(...keys);
             } catch (error) {
-                Utils.log('error', `Failed to get keys for subscription ${subscription.id}:`, error);
             }
         }
 

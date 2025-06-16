@@ -8,7 +8,6 @@ window.Loading = {
      */
     init() {
         this.createOverlay();
-        Utils.log('info', 'Loading system initialized');
     },
 
     /**
@@ -53,8 +52,6 @@ window.Loading = {
                 this.hide();
             }, timeout);
         }
-
-        Utils.log('debug', `Loading shown: ${text}`);
     },
 
     /**
@@ -71,8 +68,6 @@ window.Loading = {
             clearTimeout(this.currentTimeout);
             this.currentTimeout = null;
         }
-
-        Utils.log('debug', 'Loading hidden');
     },
 
     /**

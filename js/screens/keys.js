@@ -6,8 +6,6 @@ window.KeysScreen = {
     isLoaded: false,
 
     async init() {
-        Utils.log('info', 'Initializing Keys Screen');
-
         await this.loadData();
         this.render();
         this.setupEventListeners();
@@ -33,12 +31,10 @@ window.KeysScreen = {
                     this.allKeys.push(...keys);
 
                 } catch (error) {
-                    Utils.log('error', `Failed to get keys for subscription ${subscription.id}:`, error);
                 }
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to load data:', error);
             this.subscriptions = [];
             this.allKeys = [];
 

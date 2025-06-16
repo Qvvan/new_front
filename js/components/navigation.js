@@ -17,7 +17,6 @@ window.Navigation = {
         this.setupEventListeners();
         this.updateActiveState();
         this.isInitialized = true;
-        Utils.log('info', 'Navigation initialized');
     },
 
     /**
@@ -71,9 +70,6 @@ window.Navigation = {
                 await window.Router.navigate(screen);
             }
 
-            // ✅ НЕ вызываем updateActiveState здесь - Router сам обновит
-
-            Utils.log('info', `Navigation: ${this.currentScreen} -> ${screen}`);
 
         } catch (error) {
             Utils.log('error', 'Navigation failed:', error);
