@@ -127,98 +127,9 @@ html {
     overflow-x: hidden;
 }
 
-/* 🎨 ХАОТИЧНЫЙ БЕЛО-ЧЕРНЫЙ ФОН */
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-
-    /* 🎨 НОВЫЙ ХАОТИЧНЫЙ ФОН вместо var(--bg-primary) */
-    background:
-        /* Основной радиальный градиент из центра */
-        radial-gradient(
-            ellipse 120% 80% at 50% 45%,
-            rgba(255, 255, 255, 0.025) 0%,
-            rgba(255, 255, 255, 0.015) 25%,
-            transparent 45%
-        ),
-
-        /* Левая сторона - верхняя часть (хаотично) - ЯРЧЕ */
-        radial-gradient(
-            ellipse 80% 60% at -10% 20%,
-            rgba(255, 255, 255, 0.055) 0%,
-            rgba(255, 255, 255, 0.028) 30%,
-            transparent 50%
-        ),
-
-        /* Правая сторона - нижняя часть */
-        radial-gradient(
-            ellipse 70% 85% at 115% 75%,
-            rgba(255, 255, 255, 0.03) 0%,
-            rgba(255, 255, 255, 0.012) 35%,
-            transparent 55%
-        ),
-
-        /* Левая сторона - нижняя часть (хаотично) - ЯРЧЕ */
-        radial-gradient(
-            ellipse 65% 50% at -5% 85%,
-            rgba(255, 255, 255, 0.045) 0%,
-            rgba(255, 255, 255, 0.018) 40%,
-            transparent 60%
-        ),
-
-        /* Правая сторона - верхняя часть */
-        radial-gradient(
-            ellipse 75% 70% at 110% 15%,
-            rgba(255, 255, 255, 0.032) 0%,
-            rgba(255, 255, 255, 0.015) 45%,
-            transparent 65%
-        ),
-
-        /* Дополнительные хаотичные пятна - левое ЯРЧЕ */
-        radial-gradient(
-            ellipse 40% 35% at 25% 30%,
-            rgba(255, 255, 255, 0.025) 0%,
-            transparent 50%
-        ),
-
-        radial-gradient(
-            ellipse 50% 45% at 75% 65%,
-            rgba(255, 255, 255, 0.02) 0%,
-            transparent 55%
-        ),
-
-        /* Базовый темный фон с легкими вариациями */
-        linear-gradient(
-            135deg,
-            #0a0a0a 0%,
-            #0d0d0d 25%,
-            #0f0f0f 50%,
-            #0d0d0d 75%,
-            #0a0a0a 100%
-        );
-
-    /* Фиксированный фон */
-    background-attachment: fixed;
-    background-size:
-        120% 100%,  /* центральный */
-        150% 120%,  /* левый верх */
-        140% 130%,  /* правый низ */
-        130% 100%,  /* левый низ */
-        145% 115%,  /* правый верх */
-        80% 70%,    /* доп пятно 1 */
-        90% 85%,    /* доп пятно 2 */
-        100% 100%;  /* базовый фон */
-
-    background-repeat: no-repeat;
-    background-position:
-        center center,     /* центральный */
-        left 20% top 25%,  /* левый верх */
-        right 15% bottom 25%, /* правый низ */
-        left 5% bottom 15%,   /* левый низ */
-        right 10% top 20%,    /* правый верх */
-        25% 30%,             /* доп пятно 1 */
-        75% 65%,             /* доп пятно 2 */
-        center center;        /* базовый фон */
-
+    background: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.5;
     user-select: none;
@@ -291,7 +202,7 @@ p {
     height: 100vh;
     height: calc(var(--vh, 1vh) * 100);
 
-    /* 🎨 НЕ устанавливаем background - используем фон от body */
+    background: var(--bg-primary);
     overflow: hidden;
 
     /* 🔥 Учитываем safe area но НЕ заходим в системную панель */
@@ -389,16 +300,15 @@ p {
     padding-right: max(var(--spacing-md), var(--safe-area-right));
 }
 
-/* Background Effects - дополнительный слой анимации */
+/* Background Effects */
 .background-glow {
     position: fixed;
     top: -50%;
     left: -50%;
     width: 200%;
     height: 200%;
-    background:
-        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.008) 0%, transparent 50%),
-        radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.012) 0%, transparent 50%);
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
     z-index: var(--z-background);
     animation: float 20s ease-in-out infinite;
     pointer-events: none;
@@ -408,41 +318,6 @@ p {
     0%, 100% { transform: translate(0, 0) rotate(0deg); }
     33% { transform: translate(-20px, -20px) rotate(1deg); }
     66% { transform: translate(20px, -10px) rotate(-1deg); }
-}
-
-/* 🎨 Дополнительный overlay для более мягкого эффекта */
-.app-container::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    z-index: var(--z-background);
-
-    background:
-        /* Тонкий шум для текстуры */
-        radial-gradient(
-            circle at 30% 20%,
-            rgba(255, 255, 255, 0.005) 0%,
-            transparent 25%
-        ),
-        radial-gradient(
-            circle at 70% 80%,
-            rgba(255, 255, 255, 0.007) 0%,
-            transparent 30%
-        ),
-        radial-gradient(
-            circle at 15% 60%,
-            rgba(255, 255, 255, 0.003) 0%,
-            transparent 20%
-        ),
-        radial-gradient(
-            circle at 85% 40%,
-            rgba(255, 255, 255, 0.008) 0%,
-            transparent 35%
-        );
 }
 
 /* Utility Classes */
@@ -466,17 +341,26 @@ p {
     border: 0;
 }
 
-/* Display */
-.block { display: block; }
-.inline-block { display: inline-block; }
-.flex { display: flex; }
-.inline-flex { display: inline-flex; }
-.grid { display: grid; }
+/* Text Utilities */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
 
-/* Flexbox */
-.flex-row { flex-direction: row; }
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-white { color: var(--accent-white); }
+.text-red { color: var(--accent-red); }
+.text-green { color: var(--accent-green); }
+
+.font-bold { font-weight: var(--font-weight-bold); }
+.font-semibold { font-weight: var(--font-weight-semibold); }
+.font-medium { font-weight: var(--font-weight-medium); }
+
+/* Flexbox Utilities */
+.flex { display: flex; }
 .flex-col { flex-direction: column; }
-.flex-wrap { flex-wrap: wrap; }
+.flex-row { flex-direction: row; }
 .items-center { align-items: center; }
 .items-start { align-items: flex-start; }
 .items-end { align-items: flex-end; }
@@ -485,23 +369,36 @@ p {
 .justify-around { justify-content: space-around; }
 .justify-start { justify-content: flex-start; }
 .justify-end { justify-content: flex-end; }
+.flex-1 { flex: 1; }
+.flex-grow { flex-grow: 1; }
+.flex-shrink-0 { flex-shrink: 0; }
 
-/* Text */
-.text-left { text-align: left; }
-.text-center { text-align: center; }
-.text-right { text-align: right; }
-.text-primary { color: var(--text-primary); }
-.text-secondary { color: var(--text-secondary); }
-.text-muted { color: var(--text-muted); }
+/* Spacing Utilities */
+.gap-xs { gap: var(--spacing-xs); }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+.gap-xl { gap: var(--spacing-xl); }
+.gap-2xl { gap: var(--spacing-2xl); }
 
-/* Spacing */
 .m-0 { margin: 0; }
-.mt-auto { margin-top: auto; }
-.mb-auto { margin-bottom: auto; }
-.mx-auto { margin-left: auto; margin-right: auto; }
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+.mt-xl { margin-top: var(--spacing-xl); }
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+.mb-xl { margin-bottom: var(--spacing-xl); }
 
-/* Border Radius */
-.rounded { border-radius: var(--border-radius-sm); }
+.p-0 { padding: 0; }
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
+.p-xl { padding: var(--spacing-xl); }
+
+/* Border Radius Utilities */
+.rounded-sm { border-radius: var(--border-radius-sm); }
 .rounded-md { border-radius: var(--border-radius-md); }
 .rounded-lg { border-radius: var(--border-radius-lg); }
 .rounded-xl { border-radius: var(--border-radius-xl); }
@@ -526,37 +423,6 @@ p {
 :focus-visible {
     outline: 2px solid var(--accent-white);
     outline-offset: 2px;
-}
-
-/* 🎨 АДАПТИВНОСТЬ ФОНА для разных экранов */
-
-/* Мобильные устройства */
-@media (max-width: 768px) {
-    body {
-        background-size:
-            140% 120%,  /* увеличиваем для мобильных */
-            170% 140%,
-            160% 150%,
-            150% 120%,
-            165% 135%,
-            100% 90%,
-            110% 105%,
-            100% 100%;
-    }
-}
-
-@media (max-width: 480px) {
-    body {
-        background-size:
-            160% 140%,  /* еще больше для маленьких экранов */
-            190% 160%,
-            180% 170%,
-            170% 140%,
-            185% 155%,
-            120% 110%,
-            130% 125%,
-            100% 100%;
-    }
 }
 
 /* 🔥 Responsive Design для полуполноэкранного режима */
@@ -617,116 +483,6 @@ p {
     }
 }
 
-/* 🎨 Для устройств с высоким DPI - более четкие градиенты */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    body {
-        background-image:
-            radial-gradient(
-                ellipse 120% 80% at 50% 45%,
-                rgba(255, 255, 255, 0.03) 0%,
-                rgba(255, 255, 255, 0.018) 25%,
-                transparent 45%
-            ),
-            radial-gradient(
-                ellipse 80% 60% at -10% 20%,
-                rgba(255, 255, 255, 0.065) 0%,
-                rgba(255, 255, 255, 0.035) 30%,
-                transparent 50%
-            ),
-            radial-gradient(
-                ellipse 70% 85% at 115% 75%,
-                rgba(255, 255, 255, 0.035) 0%,
-                rgba(255, 255, 255, 0.015) 35%,
-                transparent 55%
-            ),
-            radial-gradient(
-                ellipse 65% 50% at -5% 85%,
-                rgba(255, 255, 255, 0.055) 0%,
-                rgba(255, 255, 255, 0.022) 40%,
-                transparent 60%
-            ),
-            radial-gradient(
-                ellipse 75% 70% at 110% 15%,
-                rgba(255, 255, 255, 0.038) 0%,
-                rgba(255, 255, 255, 0.018) 45%,
-                transparent 65%
-            ),
-            radial-gradient(
-                ellipse 40% 35% at 25% 30%,
-                rgba(255, 255, 255, 0.03) 0%,
-                transparent 50%
-            ),
-            radial-gradient(
-                ellipse 50% 45% at 75% 65%,
-                rgba(255, 255, 255, 0.025) 0%,
-                transparent 55%
-            ),
-            linear-gradient(
-                135deg,
-                #0a0a0a 0%,
-                #0d0d0d 25%,
-                #0f0f0f 50%,
-                #0d0d0d 75%,
-                #0a0a0a 100%
-            );
-    }
-}
-
-/* 🎨 Dark mode предпочтения - усиливаем контраст */
-@media (prefers-color-scheme: dark) {
-    body {
-        background-image:
-            radial-gradient(
-                ellipse 120% 80% at 50% 45%,
-                rgba(255, 255, 255, 0.035) 0%,
-                rgba(255, 255, 255, 0.02) 25%,
-                transparent 45%
-            ),
-            radial-gradient(
-                ellipse 80% 60% at -10% 20%,
-                rgba(255, 255, 255, 0.075) 0%,
-                rgba(255, 255, 255, 0.038) 30%,
-                transparent 50%
-            ),
-            radial-gradient(
-                ellipse 70% 85% at 115% 75%,
-                rgba(255, 255, 255, 0.04) 0%,
-                rgba(255, 255, 255, 0.018) 35%,
-                transparent 55%
-            ),
-            radial-gradient(
-                ellipse 65% 50% at -5% 85%,
-                rgba(255, 255, 255, 0.062) 0%,
-                rgba(255, 255, 255, 0.025) 40%,
-                transparent 60%
-            ),
-            radial-gradient(
-                ellipse 75% 70% at 110% 15%,
-                rgba(255, 255, 255, 0.042) 0%,
-                rgba(255, 255, 255, 0.02) 45%,
-                transparent 65%
-            ),
-            radial-gradient(
-                ellipse 40% 35% at 25% 30%,
-                rgba(255, 255, 255, 0.035) 0%,
-                transparent 50%
-            ),
-            radial-gradient(
-                ellipse 50% 45% at 75% 65%,
-                rgba(255, 255, 255, 0.028) 0%,
-                transparent 55%
-            ),
-            linear-gradient(
-                135deg,
-                #080808 0%,
-                #0b0b0b 25%,
-                #0e0e0e 50%,
-                #0b0b0b 75%,
-                #080808 100%
-            );
-    }
-}
-
 /* 🔥 Ландшафтная ориентация */
 @media (orientation: landscape) and (max-height: 500px) {
     .content-wrapper {
@@ -741,5 +497,94 @@ p {
 
     .main-content.with-payment-banner {
         height: calc(100vh - var(--nav-height) - var(--payment-banner-height));
+    }
+}
+
+/* 🔥 Устройства с вырезами (notch) */
+@supports (padding: max(0px)) {
+    .app-container {
+        /* Используем max() для корректного отображения на устройствах с вырезами */
+        padding-top: max(var(--safe-area-top), 0px);
+        padding-bottom: max(var(--safe-area-bottom), 0px);
+        padding-left: max(var(--safe-area-left), 0px);
+        padding-right: max(var(--safe-area-right), 0px);
+    }
+
+    .content-wrapper {
+        /* Дополнительная защита от заезда под вырез */
+        padding-left: max(var(--spacing-md), var(--safe-area-left));
+        padding-right: max(var(--spacing-md), var(--safe-area-right));
+    }
+}
+
+/* 🔥 Модальные окна тоже без скроллбаров */
+.modal {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.modal::-webkit-scrollbar {
+    display: none;
+}
+
+/* 🔥 Центрированный контент для пустых состояний */
+.empty-state-centered {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    overflow: hidden;
+}
+
+.empty-state-centered .empty-state-content {
+    max-width: 320px;
+    width: 100%;
+    text-align: center;
+}
+
+/* 🔥 Специальные utility классы для полуполноэкранного режима */
+.fullscreen-safe {
+    /* Учитывает safe area для полноэкранного контента */
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
+}
+
+.no-safe-area {
+    /* Убирает safe area отступы */
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* 🔥 Производительность и анимации */
+.screen {
+    /* Аппаратное ускорение для плавных переходов */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000;
+}
+
+.screen.active {
+    animation: screenEnter 0.2s ease-out forwards;
+}
+
+@keyframes screenEnter {
+    from {
+        opacity: 0;
+        transform: translateY(10px) translateZ(0);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) translateZ(0);
     }
 }
