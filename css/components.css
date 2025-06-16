@@ -3926,3 +3926,210 @@
     }
 }
 
+/* css/components.css - обновить блок glass-actions */
+
+/* ==========================================
+   UNIFIED GLASS PANEL - COMPACT SPACING
+   ========================================== */
+
+.glass-actions-row {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: var(--border-radius-lg);
+    padding: 0;
+    margin-bottom: var(--spacing-2xl);
+    overflow: hidden;
+    box-shadow: none;
+}
+
+.glass-action-card {
+    width: 100%;
+    background: transparent;
+    backdrop-filter: none;
+    border: none;
+    border-radius: 0;
+    padding: var(--spacing-sm); /* ✅ Уменьшили с var(--spacing-md) до var(--spacing-sm) */
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-action-card:active {
+    /* Никаких эффектов */
+}
+
+.glass-action-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-md);
+    position: relative;
+    z-index: 2;
+    min-height: 50px; /* ✅ Уменьшили с 60px до 50px */
+}
+
+.glass-action-icon {
+    width: 44px; /* ✅ Уменьшили с 48px до 44px */
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px; /* ✅ Уменьшили с 20px до 18px */
+    color: var(--text-primary);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    box-shadow: none;
+}
+
+.glass-action-icon img {
+    width: 26px; /* ✅ Уменьшили с 28px до 26px */
+    height: 26px;
+    object-fit: cover;
+    border-radius: 4px;
+    opacity: 0.9;
+}
+
+.glass-action-icon.has-image i {
+    display: none;
+}
+
+.glass-action-text {
+    flex: 1;
+    text-align: left;
+}
+
+.glass-action-title {
+    font-size: var(--font-size-base); /* ✅ Уменьшили с var(--font-size-lg) */
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: 2px; /* ✅ Уменьшили отступ */
+    line-height: 1.2;
+}
+
+.glass-action-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.3;
+    opacity: 0.8;
+}
+
+.glass-action-arrow {
+    width: 20px; /* ✅ Уменьшили с 24px до 20px */
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 12px; /* ✅ Уменьшили с 14px до 12px */
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+    .glass-action-card {
+        padding: var(--spacing-xs); /* ✅ Еще меньше padding на мобильных */
+    }
+
+    .glass-action-content {
+        min-height: 46px; /* ✅ Уменьшили */
+        gap: var(--spacing-sm);
+    }
+
+    .glass-action-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .glass-action-icon img {
+        width: 24px;
+        height: 24px;
+    }
+
+    .glass-action-title {
+        font-size: var(--font-size-sm);
+        margin-bottom: 1px;
+    }
+
+    .glass-action-subtitle {
+        font-size: var(--font-size-xs);
+    }
+
+    .glass-action-arrow {
+        width: 18px;
+        height: 18px;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 400px) {
+    .glass-action-card {
+        padding: var(--spacing-xs);
+    }
+
+    .glass-action-content {
+        min-height: 44px; /* ✅ Еще компактнее */
+    }
+
+    .glass-action-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 15px;
+    }
+
+    .glass-action-icon img {
+        width: 22px;
+        height: 22px;
+    }
+
+    .glass-action-title {
+        font-size: var(--font-size-sm);
+    }
+
+    .glass-action-subtitle {
+        font-size: var(--font-size-xs);
+    }
+}
+
+@media (max-width: 360px) {
+    .glass-action-card {
+        padding: 8px; /* ✅ Минимальный padding */
+    }
+
+    .glass-action-content {
+        gap: var(--spacing-xs);
+        min-height: 42px; /* ✅ Максимально компактно */
+    }
+
+    .glass-action-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+    }
+
+    .glass-action-icon img {
+        width: 20px;
+        height: 20px;
+    }
+
+    .glass-action-title {
+        font-size: var(--font-size-xs);
+    }
+
+    .glass-action-subtitle {
+        font-size: 11px;
+    }
+
+    .glass-action-arrow {
+        width: 16px;
+        height: 16px;
+        font-size: 10px;
+    }
+}

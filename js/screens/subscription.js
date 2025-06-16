@@ -139,37 +139,69 @@ window.SubscriptionScreen = {
      * Обработка действий
      */
     async handleAction(action, subscriptionId = null) {
-        if (this.isProcessingAction) return;
-        this.isProcessingAction = true;
+        Utils.log('info', 'Subscription action:', { action, subscriptionId });
 
         try {
-            if (window.TelegramApp) {
-                window.TelegramApp.haptic.light();
-            }
-
             switch (action) {
-                case 'renew':
-                    await this.handleRenewSubscription(subscriptionId);
-                    break;
                 case 'buy':
+                    // ✅ Используем правильный метод
                     await this.handleBuyNewSubscription();
                     break;
+
+                case 'renew':
+                    if (subscriptionId) {
+                        // ✅ Используем правильный метод
+                        await this.handleRenewSubscription(subscriptionId);
+                    }
+                    break;
+
                 case 'activate-trial':
+                    // ✅ Этот метод уже существует
                     await this.handleActivateTrial();
                     break;
+
                 case 'instructions':
-                    this.handleViewInstructions();
+                    // ✅ Используем InstructionsScreen напрямую
+                    if (window.InstructionsScreen) {
+                        window.InstructionsScreen.show();
+                    } else {
+                        // Fallback - переход через роутер
+                        if (window.Router) {
+                            window.Router.navigate('instructions');
+                        }
+                    }
                     break;
+
                 case 'support':
-                    this.handleContactSupport();
+                    // ✅ Используем SupportScreen напрямую
+                    if (window.SupportScreen) {
+                        window.SupportScreen.show();
+                    } else {
+                        // Fallback - переход через роутер
+                        if (window.Router) {
+                            window.Router.navigate('support');
+                        }
+                    }
                     break;
+
+                case 'news-channel':
+                    this.openNewsChannel();
+                    break;
+
                 default:
-                    Utils.log('warn', 'Unknown action:', action);
+                    Utils.log('warn', 'Unknown subscription action:', action);
             }
-        } finally {
-            setTimeout(() => {
-                this.isProcessingAction = false;
-            }, 500);
+        } catch (error) {
+            Utils.log('error', 'Failed to handle subscription action:', error);
+
+            if (window.Toast) {
+                window.Toast.error('Произошла ошибка при выполнении действия');
+            }
+        }
+
+        // Вибрация для всех действий
+        if (window.TelegramApp) {
+            window.TelegramApp.haptic.light();
         }
     },
 
@@ -192,6 +224,39 @@ window.SubscriptionScreen = {
 
         if (window.ServiceSelector) {
             await window.ServiceSelector.show('buy');
+        }
+    },
+
+    /**
+     * Открытие канала с новостями
+     */
+    openNewsChannel() {
+        // URL вашего канала - замените на настоящий
+        const channelUrl = 'https://t.me/dragon_vpn_news';
+
+        try {
+            if (window.TelegramApp) {
+                // Используем встроенный метод Telegram для открытия ссылок
+                window.TelegramApp.openTelegramLink(channelUrl);
+
+                // Показываем уведомление пользователю
+                if (window.Toast) {
+                    window.Toast.success('Переход в канал новостей');
+                }
+            } else {
+                // Fallback для веб-версии (разработка)
+                window.open(channelUrl, '_blank');
+            }
+
+            // Логируем для аналитики
+            Utils.log('info', 'User opened news channel', { url: channelUrl });
+
+        } catch (error) {
+            Utils.log('error', 'Failed to open news channel:', error);
+
+            if (window.Toast) {
+                window.Toast.error('Не удалось открыть канал');
+            }
         }
     },
 
@@ -642,40 +707,92 @@ window.SubscriptionScreen = {
     /**
      * Рендеринг быстрых действий
      */
-    renderQuickActions() {
+   renderQuickActions() {
+        // Проверяем есть ли активная подписка
+        const hasActiveSubscription = this.currentSubscriptions.some(sub => {
+            const daysLeft = Utils.daysBetween(sub.end_date);
+            return daysLeft > 0;
+        });
+
         return `
             <div class="section">
                 <h2 class="section-title">
                     <div id="management-animation" style="width: 32px; height: 32px; display: inline-block; margin-right: 8px;"></div>
                     Управление
                 </h2>
-                <div class="notcoin-actions-grid">
-                    <div class="notcoin-action-card" data-action="instructions">
-                        <div class="notcoin-action-content">
-                            <div class="notcoin-action-text">
-                                <div class="notcoin-action-title">Инструкции</div>
-                                <div class="notcoin-action-subtitle">Как настроить VPN</div>
+                <div class="glass-actions-row">
+                    ${hasActiveSubscription ? `
+                        <div class="glass-action-card" data-action="instructions">
+                            <div class="glass-action-content">
+                                <div class="glass-action-icon">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                                <div class="glass-action-text">
+                                    <div class="glass-action-title">Инструкции</div>
+                                    <div class="glass-action-subtitle">Настройка VPN</div>
+                                </div>
+                                <div class="glass-action-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
                             </div>
-                            <div class="notcoin-decorative-icon">
-                                <i class="fas fa-book"></i>
+                        </div>
+                    ` : ''}
+
+                    <div class="glass-action-card" data-action="support">
+                        <div class="glass-action-content">
+                            <div class="glass-action-icon">
+                                <i class="fas fa-headset"></i>
+                            </div>
+                            <div class="glass-action-text">
+                                <div class="glass-action-title">Поддержка</div>
+                                <div class="glass-action-subtitle">Помощь 24/7</div>
+                            </div>
+                            <div class="glass-action-arrow">
+                                <i class="fas fa-chevron-right"></i>
                             </div>
                         </div>
                     </div>
 
-                    <div class="notcoin-action-card" data-action="support">
-                        <div class="notcoin-action-content">
-                            <div class="notcoin-action-text">
-                                <div class="notcoin-action-title">Поддержка</div>
-                                <div class="notcoin-action-subtitle">Помощь 24/7</div>
+                    <div class="glass-action-card" data-action="news-channel">
+                        <div class="glass-action-content">
+                            <div class="glass-action-icon">
+                                <i class="fas fa-newspaper"></i>
                             </div>
-                            <div class="notcoin-decorative-icon">
-                                <i class="fas fa-headset"></i>
+                            <div class="glass-action-text">
+                                <div class="glass-action-title">Новости</div>
+                                <div class="glass-action-subtitle">Наш канал</div>
+                            </div>
+                            <div class="glass-action-arrow">
+                                <i class="fas fa-chevron-right"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         `;
+    },
+
+    /**
+     * Создание HTML для иконки действия
+     * @param {string} type - Тип действия (icon|image)
+     * @param {string} source - Класс иконки или путь к картинке
+     * @param {string} fallbackIcon - Fallback иконка
+     */
+    renderActionIcon(type, source, fallbackIcon = 'fas fa-circle') {
+        if (type === 'image') {
+            return `
+                <div class="glass-action-icon has-image">
+                    <img src="${source}" alt="Иконка" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <i class="${fallbackIcon}"></i>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="glass-action-icon">
+                    <i class="${source}"></i>
+                </div>
+            `;
+        }
     },
 
     /**
