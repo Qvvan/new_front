@@ -328,7 +328,7 @@ window.SubscriptionScreen = {
                             </div>
 
                             <div class="trial-confirmation-details">
-                                <h3>Бесплатный пробный период на 5 дней</h3>
+                                <h3>Пробный период на 5 дней</h3>
 
                                 <div class="trial-note">
                                     <i class="fas fa-info-circle"></i>
