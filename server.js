@@ -5,7 +5,6 @@ const path = require('path');
 const url = require('url');
 
 const server = http.createServer((req, res) => {
-  console.log(`📥 Запрос: ${req.url}`);
 
   // Парсим URL и параметры
   const parsedUrl = url.parse(req.url, true);
@@ -14,10 +13,8 @@ const server = http.createServer((req, res) => {
 
   // Логируем важные параметры для Telegram WebApp
   if (queryParams.tgWebAppStartParam) {
-    console.log(`🔗 Получен параметр startapp: ${queryParams.tgWebAppStartParam}`);
   }
   if (queryParams.start) {
-    console.log(`🎯 Получен параметр start: ${queryParams.start}`);
   }
 
   // Обработка статических файлов
@@ -99,7 +96,6 @@ const server = http.createServer((req, res) => {
   if (filePath) {
     serveFile(res, filePath, getContentType(filePath));
   } else {
-    console.log(`❌ Файл не найден: ${pathname}`);
     res.writeHead(404, {
       'Content-Type': 'text/html',
       'Cache-Control': 'no-cache'
@@ -142,7 +138,6 @@ function serveFile(res, filename, contentType) {
 
   fs.readFile(filePath, (err, content) => {
     if (err) {
-      console.log(`❌ Ошибка чтения файла ${filename}:`, err.message);
       if (err.code === 'ENOENT') {
         res.writeHead(404);
         res.end('File not found');
@@ -152,8 +147,6 @@ function serveFile(res, filename, contentType) {
       }
       return;
     }
-
-    console.log(`✅ Отдан файл: ${filename} (${content.length} bytes)`);
 
     res.writeHead(200, {
       'Content-Type': contentType,
@@ -170,16 +163,9 @@ function serveFile(res, filename, contentType) {
 
 // Graceful shutdown
 process.on('SIGINT', () => {
-  console.log('\n🔄 Остановка сервера...');
   server.close(() => {
-    console.log('✅ Сервер остановлен');
     process.exit(0);
   });
 });
 
-server.listen(8080, () => {
-  console.log('🚀 Dragon VPN Dev Server запущен на http://localhost:8080');
-  console.log('📁 Структура файлов готова к разработке');
-  console.log('🔄 Кеширование отключено для разработки');
-  console.log('\nДля остановки нажмите Ctrl+C');
-});
+server.listen(8080, () => {});

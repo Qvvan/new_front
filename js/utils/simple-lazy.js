@@ -11,8 +11,6 @@ window.SimpleLazy = {
 
         // Создаем observer для новых изображений
         this.createObserver();
-
-        console.log('✅ Simple lazy loading initialized');
     },
 
     // Конвертируем обычные img в ленивые
@@ -31,8 +29,6 @@ window.SimpleLazy = {
             }
             img.classList.add('lazy-img');
         });
-
-        console.log(`🔄 Converted ${images.length} images to lazy loading`);
     },
 
     // Создаем Intersection Observer

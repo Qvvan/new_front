@@ -104,10 +104,6 @@ window.ReferralsScreen = {
                 window.TelegramApp.openLink(shareUrl);
             }
 
-            if (window.Toast) {
-                window.Toast.success('Выберите контакты для отправки');
-            }
-
         } catch (error) {
             if (window.Toast) {
                 window.Toast.error('Ошибка отправки приглашения');

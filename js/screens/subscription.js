@@ -217,11 +217,6 @@ window.SubscriptionScreen = {
             if (window.TelegramApp) {
                 // Используем встроенный метод Telegram для открытия ссылок
                 window.TelegramApp.openTelegramLink(channelUrl);
-
-                // Показываем уведомление пользователю
-                if (window.Toast) {
-                    window.Toast.success('Переход в канал новостей');
-                }
             } else {
                 // Fallback для веб-версии (разработка)
                 window.open(channelUrl, '_blank');
