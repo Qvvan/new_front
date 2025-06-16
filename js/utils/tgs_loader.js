@@ -125,7 +125,7 @@ window.TGSLoader = {
         payments: [
             {
                 containerId: 'payments-empty-animation',
-                tgsPath: 'assets/images/gifs/empty-payments.tgs',
+                tgsPath: 'assets/images/gifs/empty-profiles.tgs',
                 fallbackIcon: 'fas fa-receipt'
             },
             {
