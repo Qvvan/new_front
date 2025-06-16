@@ -4403,3 +4403,36 @@
     color: var(--text-primary);
     opacity: 0.9;
 }
+
+.glass-section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+}
+
+.glass-section-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: var(--border-radius-sm);
+    flex-shrink: 0;
+}
+
+.glass-section-icon i {
+    font-size: 16px;
+    color: var(--text-primary);
+    opacity: 0.8;
+}
+
+.glass-section-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+}

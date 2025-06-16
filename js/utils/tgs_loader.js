@@ -48,6 +48,12 @@ window.TGSLoader = {
                 preload: true
             },
             {
+                containerId: 'buy-subscription',
+                tgsPath: 'assets/images/gifs/buy-subscription.tgs',
+                fallbackIcon: 'fas fa-cog',
+                preload: true
+            },
+            {
                 containerId: /^auto-renewal-animation-.+$/,
                 tgsPath: 'assets/images/gifs/auto-renewal.tgs',
                 fallbackIcon: 'fas fa-sync-alt',

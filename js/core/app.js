@@ -28,10 +28,6 @@ window.DragonVPNApp = {
 
             this.showInitialLoading();
 
-            if (window.Assets) {
-                window.Assets.preloadAssets();
-            }
-
             await this.initializeTelegram();
 
             await this.initializeStorage();

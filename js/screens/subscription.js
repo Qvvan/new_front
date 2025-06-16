@@ -530,13 +530,20 @@ window.SubscriptionScreen = {
                     <h3 class="empty-state-title">Нет активных подписок</h3>
                 </div>
 
-                <!-- НОВЫЕ ШИРОКИЕ КНОПКИ С КАСТОМНЫМИ ИКОНКАМИ -->
+                <!-- ПОДПИСКИ В СТЕКЛЕ С ЗАГОЛОВКОМ -->
                 <div class="glass-actions-row">
+                    <!-- ЗАГОЛОВОК С TGS АНИМАЦИЕЙ БЕЗ БОКСА -->
+                    <div class="glass-section-header">
+                        <div id="buy-subscription" style="width: 28px; height: 28px;"></div>
+                        <h3 class="glass-section-title">Выберите подписку</h3>
+                    </div>
+
+                    <!-- СУЩЕСТВУЮЩИЕ КНОПКИ БЕЗ ИЗМЕНЕНИЙ -->
                     ${isTrialAvailable ? `
                         <div class="glass-action-card" data-action="activate-trial">
                             <div class="glass-action-content">
                                 <div class="glass-action-icon">
-                                    <div id="trial-gift-tgs" style="width: 40px; height: 40px;" data-tgs="${trialTgs}"></div>
+                                    ${this.renderActionIcon('image', 'assets/images/icons/gift.png', 'fas fa-headset')}
                                 </div>
                                 <div class="glass-action-text">
                                     <div class="glass-action-title">Пробный период</div>
@@ -722,11 +729,13 @@ window.SubscriptionScreen = {
 
         return `
             <div class="section">
-                <h2 class="section-title">
-                    <div id="management-animation" style="width: 32px; height: 32px; display: inline-block; margin-right: 8px;"></div>
-                    Управление
-                </h2>
                 <div class="glass-actions-row">
+                    <div class="glass-section-header">
+                        <div id="management-animation" style="width: 28px; height: 28px;"></div>
+                        <h3 class="glass-section-title">Управление</h3>
+                    </div>
+
+                    <!-- СУЩЕСТВУЮЩИЕ КНОПКИ БЕЗ ИЗМЕНЕНИЙ -->
                     ${hasActiveSubscription ? `
                         <div class="glass-action-card" data-action="instructions">
                             <div class="glass-action-content">
