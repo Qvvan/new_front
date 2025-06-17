@@ -587,7 +587,7 @@ window.SubscriptionScreen = {
                         <div class="auto-renewal" data-subscription-id="${subscription.id}">
                             <div class="auto-renewal-info">
                                 <div class="auto-renewal-icon">
-                                    <div id="auto-renewal-animation-${subscription.id}" style="width: 32px; height: 32px;"></div>
+                                    <div id="auto-renewal-animation" style="width: 32px; height: 32px;"></div>
                                 </div>
                                 <div class="auto-renewal-text">
                                     <h4>Автопродление</h4>
