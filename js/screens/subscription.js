@@ -442,6 +442,11 @@ window.SubscriptionScreen = {
 
         container.innerHTML = Utils.wrapContent(content);
 
+        // ✅ ИСПРАВЛЕНИЕ: Всегда инициализируем анимации после рендера
+        setTimeout(() => {
+            this.initializeTGSAnimations();
+        }, 100);
+
         requestAnimationFrame(() => {
             container.style.transition = 'all 0.2s ease-out';
             container.style.opacity = '1';
@@ -478,10 +483,6 @@ window.SubscriptionScreen = {
         const trialTgs = isTrialAvailable ?
             'assets/images/gifs/gift-animate.tgs' :
             'assets/images/gifs/gift-opened.png';
-
-        setTimeout(() => {
-            this.initializeTGSAnimations();
-        }, 100);
 
         return `
             <div class="section">

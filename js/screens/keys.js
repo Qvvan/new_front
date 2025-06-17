@@ -83,6 +83,11 @@ window.KeysScreen = {
         const container = document.getElementById('tabContentContainer');
         if (container) {
             container.innerHTML = this.renderTabContent();
+
+            // ✅ ИСПРАВЛЕНИЕ: Инициализируем анимации при смене вкладки
+            setTimeout(() => {
+                this.initializeTGSAnimations();
+            }, 100);
         }
 
         document.querySelectorAll('.tab-button').forEach(btn => {
@@ -130,6 +135,12 @@ window.KeysScreen = {
         `;
 
         container.innerHTML = Utils.wrapContent(content);
+
+        // ✅ ИСПРАВЛЕНИЕ: Всегда инициализируем анимации
+        setTimeout(() => {
+            this.initializeTGSAnimations();
+        }, 100);
+
         this.animateElements();
     },
 
@@ -186,11 +197,6 @@ window.KeysScreen = {
      */
     renderProfilesTab() {
         if (this.subscriptions.length === 0) {
-            // ✅ Планируем инициализацию анимаций ПОСЛЕ рендера DOM
-            setTimeout(() => {
-                this.initializeTGSAnimations();
-            }, 100);
-
             return `
                 <div class="empty-state-card">
                     <div class="empty-state-content">
