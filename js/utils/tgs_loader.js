@@ -141,25 +141,31 @@ window.TGSLoader = {
      * 🚀 ИНИЦИАЛИЗАЦИЯ: Предзагрузка критичных TGS в blob URLs
      */
     async initialize() {
+        Utils.log('info', '🚀 Initializing TGS Loader with blob caching...');
+
+        // Собираем только TGS файлы для предзагрузки
         const preloadFiles = new Set();
 
         Object.values(this.presets).forEach(preset => {
             preset.forEach(config => {
-                if (config.preload) {
+                if (config.preload && config.tgsPath.endsWith('.tgs')) {
                     preloadFiles.add(config.tgsPath);
                 }
             });
         });
 
-        // Предзагружаем в фоне
+        // Предзагружаем только TGS в фоне
         const preloadPromises = Array.from(preloadFiles).map(tgsPath =>
-            this.preloadTGSToBlob(tgsPath)
+            this.preloadTGSToBlob(tgsPath).catch(error => {
+                Utils.log('warn', `Failed to preload ${tgsPath}:`, error.message);
+            })
         );
 
         try {
             await Promise.allSettled(preloadPromises);
+            Utils.log('info', `✅ Preloaded ${preloadFiles.size} TGS files as blob URLs`);
         } catch (error) {
-            Utils.log('error', 'Failed to preload some TGS files:', error);
+            Utils.log('error', 'Failed to preload TGS files:', error);
         }
     },
 
@@ -169,10 +175,17 @@ window.TGSLoader = {
     async preloadTGSToBlob(tgsPath) {
         // Проверяем кэш
         if (this.blobCache.has(tgsPath)) {
+            Utils.log('debug', `TGS already cached: ${tgsPath}`);
             return this.blobCache.get(tgsPath);
         }
 
+        // 🚨 Только для TGS файлов
+        if (!tgsPath.endsWith('.tgs')) {
+            throw new Error(`❌ preloadTGSToBlob работает только с .tgs файлами: ${tgsPath}`);
+        }
+
         try {
+            Utils.log('debug', `📥 Preloading TGS: ${tgsPath}`);
 
             const response = await fetch(tgsPath);
             if (!response.ok) {
@@ -181,33 +194,38 @@ window.TGSLoader = {
 
             const arrayBuffer = await response.arrayBuffer();
 
-            // Декомпрессия TGS
+            if (arrayBuffer.byteLength === 0) {
+                throw new Error(`❌ Empty TGS file: ${tgsPath}`);
+            }
+
+            // Декомпрессия TGS (это gzip архив с JSON)
             const uint8Array = new Uint8Array(arrayBuffer);
             const decompressed = pako.ungzip(uint8Array, { to: 'string' });
             const lottieData = JSON.parse(decompressed);
 
-            // Создаем blob URL из Lottie JSON
+            // Создаем blob URL
             const blob = new Blob([JSON.stringify(lottieData)], {
                 type: 'application/json'
             });
             const blobUrl = URL.createObjectURL(blob);
 
-            // Кэшируем и blob URL и Lottie данные
-            this.blobCache.set(tgsPath, {
+            const cacheEntry = {
                 blobUrl,
                 blob,
                 lottieData,
                 size: blob.size,
                 loadTime: Date.now()
-            });
+            };
 
+            this.blobCache.set(tgsPath, cacheEntry);
             this.lottieDataCache.set(tgsPath, lottieData);
 
-            return this.blobCache.get(tgsPath);
+            Utils.log('debug', `✅ Cached TGS: ${tgsPath} (${blob.size} bytes)`);
+            return cacheEntry;
 
         } catch (error) {
-            Utils.log('error', `❌ Failed to preload ${tgsPath}:`, error);
-            throw error;
+            Utils.log('error', `❌ Failed to preload TGS ${tgsPath}:`, error.message);
+            throw error; // Пробрасываем ошибку выше
         }
     },
 
@@ -217,11 +235,24 @@ window.TGSLoader = {
     async loadTGSAnimation(containerId, tgsPath, fallbackIcon = 'fas fa-gift') {
         const container = document.getElementById(containerId);
         if (!container) {
-            Utils.log('warn', `TGS Container not found: ${containerId}`);
+            Utils.log('warn', `Container not found: ${containerId}`);
             return;
         }
 
-        // Проверяем доступность библиотек
+        // 🎯 Проверяем тип файла
+        if (tgsPath.endsWith('.png') || tgsPath.endsWith('.jpg') || tgsPath.endsWith('.jpeg')) {
+            // Это обычное изображение - загружаем как картинку
+            await this.loadStaticImage(container, tgsPath, fallbackIcon);
+            return;
+        }
+
+        if (!tgsPath.endsWith('.tgs')) {
+            Utils.log('warn', `Unsupported file type: ${tgsPath}`);
+            this.setFallbackIcon(container, fallbackIcon);
+            return;
+        }
+
+        // Проверяем доступность библиотек для TGS
         if (!this.isLibrariesAvailable()) {
             this.setFallbackIcon(container, fallbackIcon);
             return;
@@ -230,32 +261,78 @@ window.TGSLoader = {
         try {
             let cachedData = this.blobCache.get(tgsPath);
 
-            // Если нет в кэше - загружаем и создаем blob URL
+            // Если нет в кэше - загружаем TGS
             if (!cachedData) {
+                Utils.log('debug', `Loading TGS on demand: ${tgsPath}`);
                 cachedData = await this.preloadTGSToBlob(tgsPath);
             }
 
-            // Используем кэшированные Lottie данные (мгновенно!)
             const { lottieData } = cachedData;
 
             // Очищаем контейнер
             container.innerHTML = '';
 
-            // Загружаем анимацию напрямую из данных (без сетевых запросов)
+            // Загружаем TGS анимацию
             const animation = lottie.loadAnimation({
                 container: container,
                 renderer: 'svg',
                 loop: true,
                 autoplay: true,
-                animationData: lottieData // ← Используем кэшированные данные
+                animationData: lottieData
             });
 
-            // Сохраняем ссылку для cleanup
             container.lottieAnimation = animation;
-
+            Utils.log('debug', `✅ TGS animation loaded: ${containerId}`);
 
         } catch (error) {
             Utils.log('error', `Failed to load TGS ${tgsPath}:`, error);
+            this.setFallbackIcon(container, fallbackIcon);
+        }
+    },
+
+
+    /**
+     * 🖼️ Загрузка статичных изображений (PNG, JPG)
+     */
+    async loadStaticImage(container, imagePath, fallbackIcon) {
+        try {
+            Utils.log('debug', `📷 Loading static image: ${imagePath}`);
+
+            // Используем существующий MediaCache если доступен
+            if (window.MediaCache) {
+                const img = document.createElement('img');
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'contain';
+
+                container.innerHTML = '';
+                container.appendChild(img);
+
+                // Загружаем через MediaCache
+                await window.MediaCache.setSrc(img, imagePath);
+
+            } else {
+                // Fallback - прямая загрузка
+                const img = document.createElement('img');
+                img.src = imagePath;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'contain';
+
+                container.innerHTML = '';
+                container.appendChild(img);
+
+                // Ждем загрузки
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                });
+            }
+
+            Utils.log('debug', `✅ Static image loaded: ${imagePath}`);
+
+        } catch (error) {
+            Utils.log('error', `Failed to load static image ${imagePath}:`, error);
             this.setFallbackIcon(container, fallbackIcon);
         }
     },
