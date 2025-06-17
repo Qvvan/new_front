@@ -109,6 +109,36 @@ window.Storage = {
         }
     },
 
+    async getReferralData() {
+        try {
+            const cached = this.session.get('referral_data');
+            if (cached) {
+                Utils.log('debug', 'Using cached referral data from session');
+                return cached;
+            }
+
+            // Возвращаем структуру по умолчанию если нет данных
+            const defaultData = {
+                referrals: [],
+                stats: {
+                    total_count: 0,
+                    invited: 0,
+                    partners: 0
+                },
+                last_updated: null
+            };
+
+            Utils.log('debug', 'Using default referral data structure');
+            return defaultData;
+        } catch (error) {
+            Utils.log('error', 'Failed to get referral data:', error);
+            return {
+                referrals: [],
+                stats: { total_count: 0, invited: 0, partners: 0 }
+            };
+        }
+    },
+
     /**
      * АКТУАЛЬНЫЕ ДАННЫЕ - только в сессионном кеше
      */
@@ -139,6 +169,85 @@ window.Storage = {
     async getPendingPayments() {
         const pending = this.session.get('pending_payments') || [];
         return pending;
+    },
+
+    async setReferralData(data) {
+        try {
+            if (!data) {
+                Utils.log('warn', 'Attempted to set null referral data');
+                return false;
+            }
+
+            // Добавляем timestamp для отслеживания актуальности
+            const dataWithTimestamp = {
+                ...data,
+                last_updated: Date.now(),
+                _timestamp: Date.now()
+            };
+
+            this.session.set('referral_data', dataWithTimestamp);
+            Utils.log('debug', `Cached referral data: ${data.referrals?.length || 0} referrals`);
+            return true;
+        } catch (error) {
+            Utils.log('error', 'Failed to set referral data:', error);
+            return false;
+        }
+    },
+
+    async markReferralsAsViewed() {
+        try {
+            const data = await this.getReferralData();
+            if (data.referrals && data.referrals.length > 0) {
+                // Убираем флаг is_new у всех рефералов
+                data.referrals = data.referrals.map(ref => ({
+                    ...ref,
+                    is_new: false
+                }));
+
+                await this.setReferralData(data);
+                Utils.log('debug', 'Marked all referrals as viewed');
+                return true;
+            }
+            return false;
+        } catch (error) {
+            Utils.log('error', 'Failed to mark referrals as viewed:', error);
+            return false;
+        }
+    },
+
+    async sync() {
+        try {
+            Utils.log('debug', 'Syncing storage data');
+
+            // Можно добавить логику синхронизации с API
+            // Например, периодическое обновление данных
+
+            // Очистка старых данных сессии
+            this.cleanupSessionData();
+
+            Utils.log('debug', 'Storage sync completed');
+            return true;
+        } catch (error) {
+            Utils.log('error', 'Storage sync failed:', error);
+            return false;
+        }
+    },
+
+    /**
+     * Очистка старых данных из сессионного кеша
+     */
+    cleanupSessionData() {
+        const maxAge = 30 * 60 * 1000; // 30 минут
+        const now = Date.now();
+
+        for (const [key, value] of this.session.entries()) {
+            if (value && typeof value === 'object' && value._timestamp) {
+                if ((now - value._timestamp) > maxAge) {
+                    this.session.delete(key);
+                    Utils.log('debug', `Cleaned up expired session data: ${key}`);
+                }
+            }
+        }
     },
 
     // Добавление pending платежа - ТОЛЬКО в сессию
