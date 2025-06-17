@@ -701,7 +701,7 @@ window.SubscriptionScreen = {
                             <div class="glass-action-content">
                                 ${this.renderActionIcon('image', 'assets/images/icons/settings.png', 'fas fa-headset')}
                                 <div class="glass-action-text">
-                                    <div class="glass-action-title">Инструкции</div>
+                                    <div class="glass-action-title">Инструкция</div>
                                     <div class="glass-action-subtitle">Настройка VPN</div>
                                 </div>
                                 <div class="glass-action-arrow">
