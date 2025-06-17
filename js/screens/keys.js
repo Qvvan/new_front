@@ -159,13 +159,13 @@ window.KeysScreen = {
                     <button class="tab-button ${this.activeTab === 'profiles' ? 'active' : ''}"
                             data-action="switch-tab"
                             data-tab="profiles">
-                        <div id="profile-tab-animation" style="width: 24px; height: 24px; display: inline-block; margin-right: 8px;"></div>
+                        <div id="profile-tab-animation" style="width: 24px; height: 24px;"></div>
                         Профили
                     </button>
                     <button class="tab-button ${this.activeTab === 'keys' ? 'active' : ''}"
                             data-action="switch-tab"
                             data-tab="keys">
-                        <div id="keys-tab-animation" style="width: 24px; height: 24px; display: inline-block; margin-right: 8px;"></div>
+                        <div id="keys-tab-animation" style="width: 24px; height: 24px;"></div>
                         Ключи
                     </button>
                 </div>

@@ -295,6 +295,12 @@
     font-weight: var(--font-weight-medium);
     cursor: pointer;
     transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    position: relative;
+    min-height: 44px; /* Фиксированная высота */
 }
 
 .tab-button.active {
