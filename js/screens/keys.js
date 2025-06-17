@@ -201,8 +201,8 @@ window.KeysScreen = {
                         <p class="empty-state-text">Оформите подписку чтобы получить VPN профили для подключения</p>
                         <button class="btn-empty-action" data-action="go-to-subscription">
                             <div class="btn-empty-bg"></div>
-                            <div class="btn-empty-content">
-                                <i class="fas fa-plus"></i>
+                            <div class="btn btn-primary">
+                                <i class="fas fa-shopping-cart"></i>
                                 <span>Оформить подписку</span>
                             </div>
                         </button>
@@ -278,12 +278,11 @@ window.KeysScreen = {
                             <div id="keys-empty-animation" style="width: 80px; height: 80px; margin: 0 auto;"></div>
                         </div>
                         <h3 class="empty-state-title">Нет ключей</h3>
-                        <p class="empty-state-text">Получите доступ к VPN серверам оформив подписку</p>
+                        <p class="empty-state-text">Оформите подписку чтобы получить VPN профили для подключения</p>
                         <button class="btn-empty-action" data-action="go-to-subscription">
-                            <div class="btn-empty-bg"></div>
-                            <div class="btn-empty-content">
-                                <i class="fas fa-rocket"></i>
-                                <span>Начать использовать VPN</span>
+                            <div class="btn btn-primary">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Оформить подписку</span>
                             </div>
                         </button>
                     </div>

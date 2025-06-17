@@ -3933,7 +3933,7 @@
    ========================================== */
 
 .glass-actions-row {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(25px);
     border: 1px solid rgba(255, 255, 255, 0.04);
     border-radius: var(--border-radius-lg);
@@ -3949,7 +3949,6 @@
     backdrop-filter: none;
     border: none;
     border-radius: 0;
-    padding: var(--spacing-sm); /* ✅ Уменьшили с var(--spacing-md) до var(--spacing-sm) */
     cursor: pointer;
     position: relative;
     overflow: hidden;
@@ -4023,7 +4022,7 @@
 }
 
 .glass-action-arrow {
-    width: 20px; /* ✅ Уменьшили с 24px до 20px */
+    width: 40px; /* ✅ Уменьшили с 24px до 20px */
     height: 20px;
     display: flex;
     align-items: center;
@@ -4409,7 +4408,6 @@
     align-items: center;
     gap: var(--spacing-sm);
     padding: var(--spacing-md) var(--spacing-sm);
-    margin-bottom: var(--spacing-xs);
 }
 
 .glass-section-icon {
@@ -4430,10 +4428,9 @@
 }
 
 .glass-section-title {
-    font-size: var(--font-size-xl);       /* ✅ Увеличили заголовок секции */
+    font-size: 17px;       /* ✅ Увеличили заголовок секции */
     font-weight: var(--font-weight-semibold);
     color: var(--text-primary);
-    margin-bottom: var(--spacing-md);
 }
 
 @media (max-width: 480px) {

@@ -496,7 +496,6 @@ window.SubscriptionScreen = {
                 <div class="glass-actions-row">
                     <!-- ЗАГОЛОВОК С TGS АНИМАЦИЕЙ БЕЗ БОКСА -->
                     <div class="glass-section-header">
-                        <div id="buy-subscription" style="width: 28px; height: 28px;"></div>
                         <h3 class="glass-section-title">Выберите подписку</h3>
                     </div>
 
@@ -693,7 +692,6 @@ window.SubscriptionScreen = {
             <div class="section">
                 <div class="glass-actions-row">
                     <div class="glass-section-header">
-                        <div id="management-animation" style="width: 28px; height: 28px;"></div>
                         <h3 class="glass-section-title">Управление</h3>
                     </div>
 
