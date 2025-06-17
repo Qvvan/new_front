@@ -1234,7 +1234,7 @@
 /* Компактная сетка услуг 2x2 */
 .services-grid-compact {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr !important; /* ← Принудительно две колонки */
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-xl);
 }
@@ -1747,17 +1747,19 @@
 
 @media (max-width: 400px) {
     .services-grid-compact {
-        grid-template-columns: 1fr; /* ← Одна колонка вместо 2x2 */
-        gap: var(--spacing-sm);
+        grid-template-columns: 1fr 1fr !important; /* ← Все равно две колонки */
+        gap: var(--spacing-sm); /* ← Только уменьшаем отступы */
     }
 
     .service-card-compact {
-        min-height: 60px;         /* ← Делаем карточки ниже */
-        padding: var(--spacing-sm);
+        min-height: 60px;
+        padding: var(--spacing-sm); /* ← Уменьшаем внутренние отступы */
+        font-size: var(--font-size-sm); /* ← Можно уменьшить шрифт */
     }
 
     .trial-service {
         padding: var(--spacing-sm);
+        font-size: var(--font-size-sm);
     }
 }
 
@@ -3673,6 +3675,19 @@
     .action-card {
         aspect-ratio: 1/1;          /* ← НИКОГДА не ломается! */
         padding: var(--spacing-xs); /* ← Крохотный padding */
+    }
+}
+
+@media (max-width: 320px) {
+    .services-grid-compact {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 4px; /* ← Минимальный зазор */
+    }
+
+    .service-card-compact {
+        min-height: 50px;
+        padding: var(--spacing-xs);
+        font-size: var(--font-size-xs);
     }
 }
 
