@@ -210,7 +210,7 @@ window.ServiceSelector = {
         setTimeout(() => {
             if (window.TGSLoader) {
                 const tgsPath = isActivated ?
-                    'assets/images/gifs/gift-opened.tgs' :
+                    'assets/images/gifs/gift-opened.png' :
                     'assets/images/gifs/gift-animate.tgs';
 
                 window.TGSLoader.loadTGSAnimation(
