@@ -50,3 +50,8 @@ htmlcov/
 # Системный кеш
 .cache/
 *.log
+
+# Переменные окружения
+.env
+.env.local
+.env.*.local

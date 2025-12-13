@@ -19,17 +19,14 @@ window.PaymentBanner = {
     async show(payment) {
         if (!this.element || !payment) return;
 
-        // ✅ КРИТИЧЕСКИ ВАЖНО: Не показываем баннер для успешных платежей
         if (payment.status === 'succeeded') {
             return;
         }
 
-        // ✅ Показываем только для pending
         if (payment.status !== 'pending') {
             return;
         }
 
-        // ✅ ИСПРАВЛЕНИЕ: Проверяем наличие URL для pending платежей
         if (!payment.payment_url && !payment.url && !payment.receipt_link) {
             Utils.log('warn', 'Payment URL missing, trying to get from storage');
 

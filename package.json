@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.dev.js",
+    "dev:watch": "node server.dev.js",
+    "tunnel": "node scripts/ngrok-tunnel.js"
   },
   "engines": {
     "node": ">=16.0.0"

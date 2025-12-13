@@ -99,14 +99,14 @@
 
 /* Card Components */
 .card {
-    background: var(--gradient-card);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--border-radius-xl);
-    padding: var(--spacing-2xl);
-    box-shadow: var(--shadow-md);
-    position: relative;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: var(--border-radius-lg);
+    padding: 0;
+    margin-bottom: var(--spacing-2xl);
     overflow: hidden;
+    box-shadow: none;
 }
 
 .card::before {
