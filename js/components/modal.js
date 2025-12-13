@@ -213,6 +213,7 @@ window.Modal = {
         // Анимация скрытия
         element.classList.remove('active');
 
+        // Уменьшаем задержку для быстрого закрытия
         setTimeout(() => {
             // Удаляем из DOM
             if (element.parentNode) {
@@ -238,7 +239,7 @@ window.Modal = {
                 config.onHide(modalId);
             }
 
-        }, 300);
+        }, 150); // Уменьшено с 300ms до 150ms для быстрого закрытия
     },
 
     /**

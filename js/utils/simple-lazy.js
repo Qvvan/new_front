@@ -25,8 +25,13 @@ window.SimpleLazy = {
             const originalSrc = img.src || img.getAttribute('src');
             if (!originalSrc) return;
 
-            // Проверяем, что это изображение (не data URI и не blob URL)
-            if (originalSrc.startsWith('data:') || originalSrc.startsWith('blob:')) {
+            // Пропускаем если уже обработано (есть blob URL или data-src уже установлен)
+            if (originalSrc.startsWith('data:') || originalSrc.startsWith('blob:') || img.dataset.src) {
+                return;
+            }
+
+            // Пропускаем если уже загружено
+            if (img.classList.contains('loaded')) {
                 return;
             }
 
@@ -101,6 +106,11 @@ window.SimpleLazy = {
                         // Обрабатываем новые изображения с data-src
                         const images = node.querySelectorAll ? node.querySelectorAll('img[data-src]') : [];
                         images.forEach(img => {
+                            // Пропускаем если уже загружено
+                            if (img.classList.contains('loaded') || !img.dataset.src) {
+                                return;
+                            }
+                            
                             if (this.observer) {
                                 this.observer.observe(img);
                             } else {
@@ -109,7 +119,7 @@ window.SimpleLazy = {
                         });
 
                         // Если сам узел - изображение с data-src
-                        if (node.tagName === 'IMG' && node.dataset.src) {
+                        if (node.tagName === 'IMG' && node.dataset.src && !node.classList.contains('loaded')) {
                             if (this.observer) {
                                 this.observer.observe(node);
                             } else {
@@ -132,6 +142,11 @@ window.SimpleLazy = {
     processNewImages(container = document) {
         const images = container.querySelectorAll('img[data-src]');
         images.forEach(img => {
+            // Пропускаем если уже загружено или обрабатывается
+            if (img.classList.contains('loaded') || !img.dataset.src) {
+                return;
+            }
+
             // Если есть observer - добавляем к наблюдению
             if (this.observer) {
                 this.observer.observe(img);

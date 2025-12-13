@@ -190,6 +190,10 @@ window.PaymentsScreen = {
         }
 
         container.innerHTML = Utils.wrapContent(content);
+        
+        // Инициализируем TGS анимации после рендеринга
+        this.initializeTGSAnimations();
+        
         this.animateElements();
     },
 
@@ -205,11 +209,6 @@ window.PaymentsScreen = {
      * Рендеринг пустого состояния
      */
     renderEmptyState() {
-        // ✅ Планируем инициализацию анимаций ПОСЛЕ рендера DOM
-        setTimeout(() => {
-            this.initializeTGSAnimations();
-        }, 100);
-
         return `
             <div class="empty-state">
                 <div class="empty-state-icon">

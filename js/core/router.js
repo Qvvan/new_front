@@ -186,10 +186,16 @@ window.Router = {
         const handler = this.screenHandlers[screenName]?.();
 
         if (handler) {
-            if (typeof handler.init === 'function' && !handler.isLoaded) {
+            // Если экран уже загружен - показываем его сразу без повторного рендеринга
+            if (handler.isLoaded) {
+                // Не вызываем refresh чтобы избежать двойного рендеринга
+                // Данные обновятся при следующем явном обновлении
+                return; // Показываем экран сразу
+            }
+
+            // Только для первого раза делаем полную инициализацию
+            if (typeof handler.init === 'function') {
                 await handler.init(params);
-            } else if (typeof handler.refresh === 'function') {
-                await handler.refresh(params);
             }
         }
     },

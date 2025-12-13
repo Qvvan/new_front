@@ -442,21 +442,17 @@ window.SubscriptionScreen = {
 
         container.innerHTML = Utils.wrapContent(content);
 
-        // ✅ ИСПРАВЛЕНИЕ: Всегда инициализируем анимации после рендера
-        setTimeout(() => {
-            this.initializeTGSAnimations();
-        }, 100);
+        // Инициализируем анимации сразу без задержки
+        this.initializeTGSAnimations();
 
         // Обрабатываем новые изображения с data-src через MediaCache
         if (window.SimpleLazy) {
             window.SimpleLazy.processNewImages(container);
         }
 
-        requestAnimationFrame(() => {
-            container.style.transition = 'all 0.2s ease-out';
-            container.style.opacity = '1';
-            container.style.transform = 'translateY(0)';
-        });
+        // Показываем экран мгновенно без анимации
+        container.style.opacity = '1';
+        container.style.transform = 'translateY(0)';
     },
 
     /**

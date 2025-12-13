@@ -136,10 +136,8 @@ window.KeysScreen = {
 
         container.innerHTML = Utils.wrapContent(content);
 
-        // ✅ ИСПРАВЛЕНИЕ: Всегда инициализируем анимации
-        setTimeout(() => {
-            this.initializeTGSAnimations();
-        }, 100);
+        // Инициализируем анимации сразу без задержки
+        this.initializeTGSAnimations();
 
         this.animateElements();
     },

@@ -220,10 +220,8 @@ ${this.referralLink.link}`;
 
         container.innerHTML = Utils.wrapContent(content);
 
-        // ✅ Инициализируем анимации после рендера
-        setTimeout(() => {
-            this.initializeTGSAnimations();
-        }, 100);
+        // Инициализируем анимации сразу без задержки
+        this.initializeTGSAnimations();
 
         this.animateElements();
     },
