@@ -11,20 +11,35 @@ window.SimpleLazy = {
 
         // Создаем observer для новых изображений
         this.createObserver();
+
+        // Наблюдаем за новыми изображениями через MutationObserver
+        this.setupMutationObserver();
     },
 
     // Конвертируем обычные img в ленивые
     convertImages() {
-        const images = document.querySelectorAll('img[src*=".gif"], img[src*="/assets/images/"]');
+        // Находим все изображения: PNG, GIF, JPG и из папки assets/images
+        const images = document.querySelectorAll('img[src*=".png"], img[src*=".PNG"], img[src*=".gif"], img[src*=".jpg"], img[src*=".jpeg"], img[src*="/assets/images/"]');
 
         images.forEach(img => {
-            if (img.src.includes('.gif')) {
-                const originalSrc = img.src;
+            const originalSrc = img.src || img.getAttribute('src');
+            if (!originalSrc) return;
+
+            // Проверяем, что это изображение (не data URI и не blob URL)
+            if (originalSrc.startsWith('data:') || originalSrc.startsWith('blob:')) {
+                return;
+            }
+
+            // Загружаем через MediaCache для кеширования
+            if (window.MediaCache && (originalSrc.includes('.png') || originalSrc.includes('.PNG') || 
+                originalSrc.includes('.gif') || originalSrc.includes('.jpg') || originalSrc.includes('.jpeg'))) {
                 window.MediaCache.setSrc(img, originalSrc).then(() => {
+                    img.classList.add('loaded');
+                }).catch(() => {
+                    // Fallback если загрузка не удалась
                     img.classList.add('loaded');
                 });
             } else {
-                img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
                 img.classList.add('loaded');
             }
             img.classList.add('lazy-img');
@@ -73,6 +88,58 @@ window.SimpleLazy = {
         img.style.transition = 'opacity 0.3s';
         img.style.opacity = '1';
         img.removeAttribute('data-src');
+    },
+
+    // Настройка MutationObserver для автоматической обработки новых изображений
+    setupMutationObserver() {
+        if (!('MutationObserver' in window)) return;
+
+        const mutationObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1) { // Element node
+                        // Обрабатываем новые изображения с data-src
+                        const images = node.querySelectorAll ? node.querySelectorAll('img[data-src]') : [];
+                        images.forEach(img => {
+                            if (this.observer) {
+                                this.observer.observe(img);
+                            } else {
+                                this.loadImage(img);
+                            }
+                        });
+
+                        // Если сам узел - изображение с data-src
+                        if (node.tagName === 'IMG' && node.dataset.src) {
+                            if (this.observer) {
+                                this.observer.observe(node);
+                            } else {
+                                this.loadImage(node);
+                            }
+                        }
+                    }
+                });
+            });
+        });
+
+        // Наблюдаем за изменениями в document.body
+        mutationObserver.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    },
+
+    // Обработка новых изображений после динамического рендеринга
+    processNewImages(container = document) {
+        const images = container.querySelectorAll('img[data-src]');
+        images.forEach(img => {
+            // Если есть observer - добавляем к наблюдению
+            if (this.observer) {
+                this.observer.observe(img);
+            } else {
+                // Если observer недоступен - загружаем сразу
+                this.loadImage(img);
+            }
+        });
     }
 };
 

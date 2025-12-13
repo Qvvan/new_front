@@ -447,6 +447,11 @@ window.SubscriptionScreen = {
             this.initializeTGSAnimations();
         }, 100);
 
+        // Обрабатываем новые изображения с data-src через MediaCache
+        if (window.SimpleLazy) {
+            window.SimpleLazy.processNewImages(container);
+        }
+
         requestAnimationFrame(() => {
             container.style.transition = 'all 0.2s ease-out';
             container.style.opacity = '1';
@@ -750,9 +755,10 @@ window.SubscriptionScreen = {
      */
     renderActionIcon(type, source, fallbackIcon = 'fas fa-circle') {
         if (type === 'image') {
+            // Используем data-src для ленивой загрузки через MediaCache
             return `
                 <div class="glass-action-icon has-image">
-                    <img src="${source}" alt="Иконка"
+                    <img data-src="${source}" alt="Иконка"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <i class="${fallbackIcon}"></i>
                 </div>

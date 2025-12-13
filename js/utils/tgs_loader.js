@@ -297,31 +297,20 @@ window.TGSLoader = {
         try {
             Utils.log('debug', `📷 Loading static image: ${imagePath}`);
 
-            // Используем существующий MediaCache если доступен
+            const img = document.createElement('img');
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'contain';
+
+            container.innerHTML = '';
+            container.appendChild(img);
+
+            // Всегда используем MediaCache для кеширования PNG изображений
             if (window.MediaCache) {
-                const img = document.createElement('img');
-                img.style.width = '100%';
-                img.style.height = '100%';
-                img.style.objectFit = 'contain';
-
-                container.innerHTML = '';
-                container.appendChild(img);
-
-                // Загружаем через MediaCache
                 await window.MediaCache.setSrc(img, imagePath);
-
             } else {
-                // Fallback - прямая загрузка
-                const img = document.createElement('img');
+                // Fallback - прямая загрузка только если MediaCache недоступен
                 img.src = imagePath;
-                img.style.width = '100%';
-                img.style.height = '100%';
-                img.style.objectFit = 'contain';
-
-                container.innerHTML = '';
-                container.appendChild(img);
-
-                // Ждем загрузки
                 await new Promise((resolve, reject) => {
                     img.onload = resolve;
                     img.onerror = reject;

@@ -57,6 +57,16 @@ window.MediaCache = {
         if (element) element.src = blobUrl;
     },
 
+    // Безопасная загрузка изображения (для предзагрузки)
+    async loadImageSafely(url) {
+        try {
+            return await this.load(url);
+        } catch (error) {
+            console.warn('Failed to load image safely:', url, error);
+            return url; // Fallback к оригинальному URL
+        }
+    },
+
     // Очистка при выгрузке страницы
     cleanup() {
         this.cache.forEach(blobUrl => URL.revokeObjectURL(blobUrl));
