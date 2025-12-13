@@ -33,15 +33,31 @@ window.Modal = {
     setupGlobalEvents() {
         // Закрытие по клику на фон
         this.backdrop.addEventListener('click', (e) => {
-            if (e.target === this.backdrop) {
-                this.closeTop();
+            if (e.target === this.backdrop && this.modalStack.length > 0) {
+                const topModalId = this.modalStack[this.modalStack.length - 1];
+                const modalData = this.activeModals.get(topModalId);
+                if (modalData) {
+                    // Вызываем onCancel если есть, чтобы Promise резолвился
+                    if (modalData.config.onCancel) {
+                        modalData.config.onCancel(topModalId);
+                    }
+                    this.close(topModalId);
+                }
             }
         });
 
         // Закрытие по Escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.hasActiveModals()) {
-                this.closeTop();
+                const topModalId = this.modalStack[this.modalStack.length - 1];
+                const modalData = this.activeModals.get(topModalId);
+                if (modalData) {
+                    // Вызываем onCancel если есть, чтобы Promise резолвился
+                    if (modalData.config.onCancel) {
+                        modalData.config.onCancel(topModalId);
+                    }
+                    this.close(topModalId);
+                }
             }
         });
     },
@@ -73,6 +89,10 @@ window.Modal = {
         this.backdrop.appendChild(modal);
         this.activeModals.set(modalConfig.id, { element: modal, config: modalConfig });
         this.modalStack.push(modalConfig.id);
+
+        // Сбрасываем стили backdrop перед показом
+        this.backdrop.style.transition = '';
+        this.backdrop.style.opacity = '';
 
         // Показываем фон
         this.backdrop.classList.add('active');
@@ -210,36 +230,50 @@ window.Modal = {
 
         const { element, config } = modalData;
 
-        // Анимация скрытия
+        // Мгновенно скрываем модальное окно и backdrop
         element.classList.remove('active');
+        element.style.transition = 'none'; // Отключаем анимацию для мгновенного закрытия
+        element.style.opacity = '0';
+        element.style.transform = 'scale(0.95)';
 
-        // Уменьшаем задержку для быстрого закрытия
+        // Скрываем backdrop сразу если это последнее модальное окно
+        const stackIndex = this.modalStack.indexOf(modalId);
+        if (stackIndex !== -1) {
+            this.modalStack.splice(stackIndex, 1);
+        }
+
+        if (this.modalStack.length === 0) {
+            this.backdrop.classList.remove('active');
+            this.backdrop.style.transition = 'none';
+            this.backdrop.style.opacity = '0';
+            // Сбрасываем стили backdrop после закрытия
+            setTimeout(() => {
+                this.backdrop.style.transition = '';
+                this.backdrop.style.opacity = '';
+            }, 20);
+        }
+
+        // Удаляем из активных сразу
+        this.activeModals.delete(modalId);
+
+        // Минимальная задержка только для очистки DOM
         setTimeout(() => {
             // Удаляем из DOM
             if (element.parentNode) {
                 element.parentNode.removeChild(element);
             }
 
-            // Удаляем из активных
-            this.activeModals.delete(modalId);
-
-            // Удаляем из стека
-            const stackIndex = this.modalStack.indexOf(modalId);
-            if (stackIndex !== -1) {
-                this.modalStack.splice(stackIndex, 1);
-            }
-
-            // Скрываем фон если нет активных модалок
-            if (this.modalStack.length === 0) {
-                this.backdrop.classList.remove('active');
-            }
+            // Сбрасываем стили элемента после удаления
+            element.style.transition = '';
+            element.style.opacity = '';
+            element.style.transform = '';
 
             // Вызываем callback
             if (typeof config.onHide === 'function') {
                 config.onHide(modalId);
             }
 
-        }, 150); // Уменьшено с 300ms до 150ms для быстрого закрытия
+        }, 10); // Минимальная задержка для быстрого закрытия
     },
 
     /**
