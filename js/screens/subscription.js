@@ -690,50 +690,80 @@ window.SubscriptionScreen = {
 
         // Обычная подписка
         return `
-            <div class="card subscription-card" data-subscription-id="${subscription.id}">
-                <div class="subscription-header">
-                    <h2 class="subscription-title">
-                        <i class="fas fa-shield-alt"></i>
-                        ${serviceName}
-                    </h2>
-                    <div class="subscription-status ${statusClass}">${statusText}</div>
+            <div class="card subscription-card subscription-card-regular" data-subscription-id="${subscription.id}">
+                <div class="trial-card-header">
+                    <div class="trial-card-badge">${serviceName}</div>
+                    <div class="trial-card-status ${isExpired ? 'expired' : 'active'}">
+                        ${isExpired ? 'Истекла' : 'Активна'}
+                    </div>
                 </div>
 
-                <div class="subscription-info">
-                    <div class="time-remaining">
-                        <div class="days-left ${isExpired ? 'text-red' : ''}">${Math.abs(daysLeft)}</div>
-                        <div class="days-label">
-                            ${isExpired ? 'дней назад истекла' : Utils.pluralize(daysLeft, ['день остался', 'дня осталось', 'дней осталось'])}
+                <div class="trial-card-content">
+                    <div class="trial-card-days">
+                        <div class="trial-days-number ${isExpired ? 'expired' : ''}">${Math.abs(daysLeft)}</div>
+                        <div class="trial-days-label">
+                            ${isExpired ? 'дней назад' : Utils.pluralize(daysLeft, ['день остался', 'дня осталось', 'дней осталось'])}
                         </div>
                     </div>
                 </div>
 
-                    ${!isExpired ? `
-                        <div class="auto-renewal" data-subscription-id="${subscription.id}">
-                            <div class="auto-renewal-info">
-                                <div class="auto-renewal-icon">
-                                    <div id="auto-renewal-animation" style="width: 32px; height: 32px;"></div>
-                                </div>
-                                <div class="auto-renewal-text">
-                                    <h4>Автопродление</h4>
-                                    <p class="auto-renewal-status">${autoRenewalText}</p>
-                                </div>
+                ${!isExpired ? `
+                    <div class="auto-renewal" data-subscription-id="${subscription.id}">
+                        <div class="auto-renewal-info">
+                            <div class="auto-renewal-icon">
+                                <div id="auto-renewal-animation" style="width: 32px; height: 32px;"></div>
                             </div>
-                            <div class="toggle-switch ${subscription.auto_renewal ? 'active' : ''}">
-                                <div class="toggle-slider"></div>
+                            <div class="auto-renewal-text">
+                                <h4>Автопродление</h4>
+                                <p class="auto-renewal-status">${autoRenewalText}</p>
                             </div>
                         </div>
-                    ` : ''}
+                        <div class="toggle-switch ${subscription.auto_renewal ? 'active' : ''}">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                ` : ''}
 
-                <div class="subscription-actions">
-                    <button class="btn btn-primary" data-action="renew" data-subscription-id="${subscription.id}">
-                        <i class="fas fa-credit-card"></i>
-                        ${isExpired ? 'Возобновить' : 'Продлить сейчас'}
-                    </button>
-                    <button class="btn btn-secondary" data-action="buy">
-                        <i class="fas fa-plus"></i>
-                        Новая подписка
-                    </button>
+                <div class="trial-card-actions">
+                    ${!isExpired ? `
+                        <div class="trial-action-item" data-action="renew" data-subscription-id="${subscription.id}">
+                            <div class="trial-action-icon">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div class="trial-action-content">
+                                <div class="trial-action-title">Продлить подписку</div>
+                                <div class="trial-action-subtitle">Оформить платную подписку</div>
+                            </div>
+                            <div class="trial-action-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                        <div class="trial-action-item" data-action="buy">
+                            <div class="trial-action-icon secondary">
+                                <i class="fas fa-plus-circle"></i>
+                            </div>
+                            <div class="trial-action-content">
+                                <div class="trial-action-title">Новая подписка</div>
+                                <div class="trial-action-subtitle">Выбрать тариф</div>
+                            </div>
+                            <div class="trial-action-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="trial-action-item" data-action="buy">
+                            <div class="trial-action-icon secondary">
+                                <i class="fas fa-plus-circle"></i>
+                            </div>
+                            <div class="trial-action-content">
+                                <div class="trial-action-title">Новая подписка</div>
+                                <div class="trial-action-subtitle">Выбрать тариф</div>
+                            </div>
+                            <div class="trial-action-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    `}
                 </div>
             </div>
         `;

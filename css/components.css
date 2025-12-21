@@ -213,6 +213,11 @@
     color: var(--text-muted);
 }
 
+/* Regular subscription card - использует те же стили что и trial */
+.subscription-card-regular {
+    padding: var(--spacing-lg) var(--spacing-xl);
+}
+
 .trial-card-content {
     text-align: center;
     margin-bottom: var(--spacing-2xl);
@@ -500,11 +505,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-sm);
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-dark);
-    border-radius: var(--border-radius-lg);
-    margin-bottom: var(--spacing-2xl);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--border-radius-md);
+    margin-top: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
     transition: all var(--transition-normal);
     cursor: pointer;
 }
@@ -542,10 +548,10 @@
     color: var(--text-secondary);
 }
 
-/* Toggle Switch */
+/* Toggle Switch - Профессиональные пропорции */
 .toggle-switch {
     position: relative;
-    width: 52px;
+    width: 50px;
     height: 28px;
     background: var(--bg-tertiary);
     border-radius: 14px;
@@ -553,6 +559,12 @@
     transition: all var(--transition-normal);
     flex-shrink: 0;
     border: 1px solid var(--border-dark);
+    box-sizing: border-box;
+    /* Переопределяем стили из responsive.css */
+    min-width: 50px !important;
+    min-height: 28px !important;
+    max-width: 50px !important;
+    max-height: 28px !important;
 }
 
 .toggle-switch.active {
@@ -563,20 +575,56 @@
 
 .toggle-slider {
     position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 20px;
-    height: 20px;
+    top: 2px;
+    left: 2px;
+    width: 22px;
+    height: 22px;
     background: white;
     border-radius: 50%;
     transition: all var(--transition-normal);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
 }
 
 .toggle-switch.active .toggle-slider {
-    transform: translateX(22px);
+    transform: translateX(24px);
     background: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Фиксированные размеры для всех устройств */
+@media (max-width: 768px) {
+    .toggle-switch {
+        width: 50px !important;
+        height: 28px !important;
+        border-radius: 14px !important;
+        min-width: 50px !important;
+        min-height: 28px !important;
+        max-width: 50px !important;
+        max-height: 28px !important;
+    }
+    
+    .toggle-slider {
+        width: 22px !important;
+        height: 22px !important;
+        top: 2px !important;
+        left: 2px !important;
+    }
+    
+    .toggle-switch.active .toggle-slider {
+        transform: translateX(24px) !important;
+    }
+}
+
+@media (hover: none) {
+    .toggle-switch {
+        width: 50px !important;
+        height: 28px !important;
+        min-width: 50px !important;
+        min-height: 28px !important;
+        max-width: 50px !important;
+        max-height: 28px !important;
+    }
 }
 
 /* Action Grid */

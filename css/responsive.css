@@ -292,8 +292,12 @@
     }
 
     .toggle-switch {
-        min-width: 60px;
-        min-height: 36px;
+        min-width: 50px !important;
+        min-height: 28px !important;
+        max-width: 50px !important;
+        max-height: 28px !important;
+        width: 50px !important;
+        height: 28px !important;
     }
 
     .modal-close {
