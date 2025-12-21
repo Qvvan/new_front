@@ -846,10 +846,10 @@ window.SubscriptionScreen = {
             }, `
                 <div class="trial-activation-content">
                     <div class="trial-activation-icon">
-                        <i class="fas fa-gift"></i>
+                        <i class="fas fa-check"></i>
                     </div>
-                    <h2 class="trial-activation-title">Пробный период активирован!</h2>
-                    <p class="trial-activation-subtitle">Вы получили 5 дней бесплатного доступа</p>
+                    <h2 class="trial-activation-title">Пробный период активирован</h2>
+                    <p class="trial-activation-subtitle">5 дней бесплатного доступа</p>
                     <ul class="trial-activation-features">
                         <li>Безлимитный трафик</li>
                         <li>Все серверы доступны</li>
