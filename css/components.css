@@ -101,12 +101,15 @@
 .card {
     background: rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
     border: 1px solid rgba(255, 255, 255, 0.04);
     border-radius: var(--border-radius-lg);
     padding: 0;
     margin-bottom: var(--spacing-2xl);
     overflow: hidden;
     box-shadow: none;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .card::before {
@@ -137,7 +140,7 @@
 
 /* Subscription Card Components */
 .subscription-card {
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-2xl);
     position: relative;
     overflow: hidden;
 }
@@ -166,19 +169,12 @@
 
 /* Trial Card - Минималистичный дизайн в стиле iPhone */
 .subscription-card-trial {
-    background: rgba(17, 17, 17, 0.6);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: var(--spacing-2xl);
+    /* Наследуем все стили от .card, переопределяем только padding */
+    padding: var(--spacing-lg) var(--spacing-xl);
 }
 
 .subscription-card-trial::after {
-    background: linear-gradient(135deg,
-        rgba(255, 255, 255, 0.05) 0%,
-        rgba(255, 255, 255, 0.02) 50%,
-        transparent 100%
-    );
+    display: none;
 }
 
 .trial-card-header {
@@ -207,8 +203,9 @@
 }
 
 .trial-card-status.active {
-    background: rgba(255, 255, 255, 0.15);
-    color: var(--accent-white);
+    background: rgba(73, 170, 77, 0.2);
+    color: rgba(115, 200, 120, 0.9);
+    border: 1px solid rgba(73, 170, 77, 0.3);
 }
 
 .trial-card-status.expired {
@@ -255,11 +252,145 @@
 
 .trial-card-actions {
     margin-top: var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
 }
 
-.trial-card-actions .btn {
-    width: 100%;
+.trial-action-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: transparent;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.trial-action-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.03);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.trial-action-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(4px);
+}
+
+.trial-action-item:hover::before {
+    opacity: 1;
+}
+
+.trial-action-item:active {
+    transform: translateX(2px);
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.trial-action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius-md);
+    background: transparent;
+    border: 1px solid rgba(55, 66, 250, 0.25);
+    display: flex;
+    align-items: center;
     justify-content: center;
+    color: rgba(95, 110, 253, 0.8);
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.trial-action-icon.secondary {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-secondary);
+}
+
+.trial-action-item:hover .trial-action-icon {
+    background: rgba(55, 66, 250, 0.08);
+    border-color: rgba(55, 66, 250, 0.35);
+    color: rgba(124, 138, 255, 0.9);
+    transform: scale(1.05);
+}
+
+.trial-action-item:hover .trial-action-icon.secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: var(--text-primary);
+}
+
+.trial-action-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.trial-action-title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+
+.trial-action-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.3;
+    opacity: 0.8;
+}
+
+.trial-action-arrow {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 12px;
+    opacity: 0.6;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.trial-action-item:hover .trial-action-arrow {
+    transform: translateX(3px);
+    opacity: 1;
+    color: var(--text-primary);
+}
+
+@media (max-width: 360px) {
+    .trial-action-item {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .trial-action-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+    
+    .trial-action-title {
+        font-size: var(--font-size-sm);
+    }
+    
+    .trial-action-subtitle {
+        font-size: var(--font-size-xs);
+    }
 }
 
 .action-card::after {
@@ -810,6 +941,7 @@
     padding-top: 0;
     display: flex;
     gap: var(--spacing-md);
+    justify-content: flex-end;
 }
 
 /* Toast Components */
@@ -4080,14 +4212,8 @@
    ========================================== */
 
 .glass-actions-row {
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    border-radius: var(--border-radius-lg);
-    padding: 0;
-    margin-bottom: var(--spacing-2xl);
-    overflow: hidden;
-    box-shadow: none;
+    /* Наследуем стили от .card, переопределяем только padding */
+    padding: var(--spacing-lg) var(--spacing-xl);
 }
 
 .glass-action-card {
@@ -4099,6 +4225,7 @@
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    padding: 0;
 }
 
 .glass-action-card:active {
@@ -4554,7 +4681,8 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    padding: var(--spacing-md) var(--spacing-sm);
+    padding: 0;
+    margin-bottom: var(--spacing-md);
 }
 
 .glass-section-icon {

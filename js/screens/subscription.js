@@ -237,15 +237,11 @@ window.SubscriptionScreen = {
                             </div>
                         </div>
                     `,
+                    closable: true,
                     buttons: [
                         {
-                            id: 'cancel',
-                            text: 'Назад',
-                            action: 'cancel'
-                        },
-                        {
                             id: 'confirm',
-                            text: 'ОК',
+                            text: 'Соглашаюсь',
                             type: 'primary',
                             action: 'confirm'
                         }
@@ -649,17 +645,43 @@ window.SubscriptionScreen = {
 
                     <div class="trial-card-actions">
                         ${!isExpired ? `
-                            <button class="btn btn-primary btn-full" data-action="renew" data-subscription-id="${subscription.id}">
-                                <i class="fas fa-credit-card"></i>
-                                Продлить подписку
-                            </button>
-                            <button class="btn btn-secondary btn-full" data-action="buy" style="margin-top: 12px;">
-                                Новая подписка
-                            </button>
+                            <div class="trial-action-item" data-action="renew" data-subscription-id="${subscription.id}">
+                                <div class="trial-action-icon">
+                                    <i class="fas fa-credit-card"></i>
+                                </div>
+                                <div class="trial-action-content">
+                                    <div class="trial-action-title">Продлить подписку</div>
+                                    <div class="trial-action-subtitle">Оформить платную подписку</div>
+                                </div>
+                                <div class="trial-action-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </div>
+                            <div class="trial-action-item" data-action="buy">
+                                <div class="trial-action-icon secondary">
+                                    <i class="fas fa-plus-circle"></i>
+                                </div>
+                                <div class="trial-action-content">
+                                    <div class="trial-action-title">Новая подписка</div>
+                                    <div class="trial-action-subtitle">Выбрать тариф</div>
+                                </div>
+                                <div class="trial-action-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </div>
                         ` : `
-                            <button class="btn btn-primary btn-full" data-action="buy">
-                                Новая подписка
-                            </button>
+                            <div class="trial-action-item" data-action="buy">
+                                <div class="trial-action-icon secondary">
+                                    <i class="fas fa-plus-circle"></i>
+                                </div>
+                                <div class="trial-action-content">
+                                    <div class="trial-action-title">Новая подписка</div>
+                                    <div class="trial-action-subtitle">Выбрать тариф</div>
+                                </div>
+                                <div class="trial-action-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </div>
                         `}
                     </div>
                 </div>
@@ -792,11 +814,10 @@ window.SubscriptionScreen = {
         });
 
         return `
-            <div class="section">
-                <div class="glass-actions-row">
-                    <div class="glass-section-header">
-                        <h3 class="glass-section-title">Управление</h3>
-                    </div>
+            <div class="card glass-actions-row">
+                <div class="glass-section-header">
+                    <h3 class="glass-section-title">Управление</h3>
+                </div>
 
                     <!-- СУЩЕСТВУЮЩИЕ КНОПКИ БЕЗ ИЗМЕНЕНИЙ -->
                     ${hasActiveSubscription ? `
