@@ -164,6 +164,104 @@
     z-index: 2;
 }
 
+/* Trial Card - Минималистичный дизайн в стиле iPhone */
+.subscription-card-trial {
+    background: rgba(17, 17, 17, 0.6);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: var(--spacing-2xl);
+}
+
+.subscription-card-trial::after {
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.05) 0%,
+        rgba(255, 255, 255, 0.02) 50%,
+        transparent 100%
+    );
+}
+
+.trial-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-2xl);
+}
+
+.trial-card-badge {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-secondary);
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.trial-card-status {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    letter-spacing: 0.3px;
+}
+
+.trial-card-status.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--accent-white);
+}
+
+.trial-card-status.expired {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+}
+
+.trial-card-content {
+    text-align: center;
+    margin-bottom: var(--spacing-2xl);
+}
+
+.trial-card-days {
+    margin-bottom: var(--spacing-md);
+}
+
+.trial-days-number {
+    font-size: 64px;
+    font-weight: var(--font-weight-bold);
+    color: var(--accent-white);
+    line-height: 1;
+    margin-bottom: var(--spacing-sm);
+    letter-spacing: -2px;
+}
+
+.trial-days-number.expired {
+    color: var(--text-muted);
+    font-size: 48px;
+}
+
+.trial-days-label {
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    font-weight: var(--font-weight-medium);
+}
+
+.trial-card-note {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.trial-card-actions {
+    margin-top: var(--spacing-xl);
+}
+
+.trial-card-actions .btn {
+    width: 100%;
+    justify-content: center;
+}
+
 .action-card::after {
     content: '';
     position: absolute;
@@ -1003,10 +1101,9 @@
 
 .subscription-compact.trial::before {
     background: linear-gradient(135deg,
-        rgba(255, 255, 255, 0.10) 0%,
-        rgba(0, 0, 0, 0.05) 40%,  /* Заменили синий на черный */
-        rgba(0, 0, 0, 0.08) 70%,  /* Заменили синий на черный */
-        rgba(0, 0, 0, 0.08) 100%
+        rgba(255, 255, 255, 0.05) 0%,
+        rgba(255, 255, 255, 0.02) 50%,
+        transparent 100%
     );
 }
 
@@ -1068,8 +1165,10 @@
 }
 
 .subscription-compact.trial {
-    border-color: var(--accent-blue);
-    background: rgba(58, 66, 250, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(17, 17, 17, 0.6);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
 .subscription-compact-info {
@@ -3602,6 +3701,39 @@
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
     line-height: 1.4;
+}
+
+/* New Subscription Warning Modal */
+.new-subscription-warning-content {
+    text-align: center;
+    padding: var(--spacing-lg) 0;
+}
+
+.warning-icon {
+    margin-bottom: var(--spacing-xl);
+    display: flex;
+    justify-content: center;
+}
+
+.warning-icon i {
+    font-size: 48px;
+    color: var(--accent-orange);
+    filter: drop-shadow(0 4px 12px rgba(255, 159, 67, 0.3));
+}
+
+.warning-message {
+    text-align: left;
+    padding: var(--spacing-lg);
+    background: rgba(255, 159, 67, 0.1);
+    border: 1px solid rgba(255, 159, 67, 0.3);
+    border-radius: var(--border-radius-md);
+}
+
+.warning-message p {
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    line-height: 1.5;
+    margin: 0;
 }
 
 /* Responsive */

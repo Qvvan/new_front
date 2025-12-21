@@ -201,9 +201,70 @@ window.SubscriptionScreen = {
      * Покупка новой подписки
      */
     async handleBuyNewSubscription() {
+        // Проверяем, есть ли активная подписка
+        const hasActiveSubscription = this.currentSubscriptions.some(sub => {
+            const daysLeft = Utils.daysBetween(sub.end_date);
+            return daysLeft > 0;
+        });
+
+        if (hasActiveSubscription) {
+            // Показываем модальное окно с предупреждением
+            const confirmed = await this.showNewSubscriptionWarning();
+            if (!confirmed) return;
+        }
+
         if (window.ServiceSelector) {
             await window.ServiceSelector.show('buy');
         }
+    },
+
+    /**
+     * Показ предупреждения о новой подписке
+     */
+    async showNewSubscriptionWarning() {
+        return new Promise((resolve) => {
+            if (window.Modal) {
+                window.Modal.show({
+                    title: 'Новая подписка',
+                    size: 'medium',
+                    content: `
+                        <div class="new-subscription-warning-content">
+                            <div class="warning-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="warning-message">
+                                <p>У вас уже есть активная подписка. При оформлении новой подписки вам потребуется пройти инструкцию заново для текущей подписки.</p>
+                            </div>
+                        </div>
+                    `,
+                    buttons: [
+                        {
+                            id: 'cancel',
+                            text: 'Назад',
+                            action: 'cancel'
+                        },
+                        {
+                            id: 'confirm',
+                            text: 'ОК',
+                            type: 'primary',
+                            action: 'confirm'
+                        }
+                    ],
+                    onConfirm: () => {
+                        resolve(true);
+                    },
+                    onCancel: () => {
+                        resolve(false);
+                    }
+                });
+            } else {
+                // Fallback для Telegram
+                const confirmed = window.TelegramApp?.showConfirm(
+                    'У вас уже есть активная подписка. При оформлении новой подписки вам потребуется пройти инструкцию заново для текущей подписки.\n\nПродолжить?'
+                );
+                resolve(confirmed || false);
+            }
+        });
     },
 
     /**
@@ -533,9 +594,9 @@ window.SubscriptionScreen = {
 
                     <div class="glass-action-card" data-action="buy">
                         <div class="glass-action-content">
-                            ${this.renderActionIcon('image', 'assets/images/icons/crown.png', 'fas fa-crown')}
+                            ${this.renderActionIcon('image', 'assets/images/icons/settings.png', 'fas fa-shield-alt')}
                             <div class="glass-action-text">
-                                <div class="glass-action-title">Оформить подписку</div>
+                                <div class="glass-action-title">Новая подписка</div>
                                 <div class="glass-action-subtitle">Выбрать тариф</div>
                             </div>
                             <div class="glass-action-arrow">
@@ -566,11 +627,51 @@ window.SubscriptionScreen = {
 
         const serviceName = this.getServiceName(subscription);
 
+        // Специальный рендеринг для пробного периода
+        if (isTrial) {
+            return `
+                <div class="card subscription-card subscription-card-trial" data-subscription-id="${subscription.id}">
+                    <div class="trial-card-header">
+                        <div class="trial-card-badge">Пробный период</div>
+                        <div class="trial-card-status ${isExpired ? 'expired' : 'active'}">
+                            ${isExpired ? 'Завершен' : 'Активен'}
+                        </div>
+                    </div>
+                    
+                    <div class="trial-card-content">
+                        <div class="trial-card-days">
+                            <div class="trial-days-number ${isExpired ? 'expired' : ''}">${Math.abs(daysLeft)}</div>
+                            <div class="trial-days-label">
+                                ${isExpired ? 'дней назад' : Utils.pluralize(daysLeft, ['день', 'дня', 'дней'])}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="trial-card-actions">
+                        ${!isExpired ? `
+                            <button class="btn btn-primary btn-full" data-action="renew" data-subscription-id="${subscription.id}">
+                                <i class="fas fa-credit-card"></i>
+                                Продлить подписку
+                            </button>
+                            <button class="btn btn-secondary btn-full" data-action="buy" style="margin-top: 12px;">
+                                Новая подписка
+                            </button>
+                        ` : `
+                            <button class="btn btn-primary btn-full" data-action="buy">
+                                Новая подписка
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Обычная подписка
         return `
             <div class="card subscription-card" data-subscription-id="${subscription.id}">
                 <div class="subscription-header">
                     <h2 class="subscription-title">
-                        <i class="fas ${isTrial ? 'fa-gift' : 'fa-shield-alt'}"></i>
+                        <i class="fas fa-shield-alt"></i>
                         ${serviceName}
                     </h2>
                     <div class="subscription-status ${statusClass}">${statusText}</div>
@@ -585,7 +686,7 @@ window.SubscriptionScreen = {
                     </div>
                 </div>
 
-                    ${!isExpired && !isTrial ? `
+                    ${!isExpired ? `
                         <div class="auto-renewal" data-subscription-id="${subscription.id}">
                             <div class="auto-renewal-info">
                                 <div class="auto-renewal-icon">
