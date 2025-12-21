@@ -193,8 +193,10 @@
     }
 
     .payment-banner {
-        border-left: 1px solid var(--border-dark);
-        border-right: 1px solid var(--border-dark);
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: none;
     }
 }
 
@@ -389,7 +391,7 @@
     }
 
     .payment-banner {
-        top: max(0, env(safe-area-inset-top));
+        bottom: var(--nav-height);
     }
 }
 

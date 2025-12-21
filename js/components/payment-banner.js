@@ -183,10 +183,11 @@ window.PaymentBanner = {
                 <div class="payment-info">
                     <div class="payment-timer">
                         <div class="timer-circle">
-                            <svg class="timer-progress" width="32" height="32">
-                                <circle cx="16" cy="16" r="14"
-                                       stroke-width="2"
-                                       stroke-dashoffset="${88 - (88 * progressPercent / 100)}"
+                            <svg class="timer-progress" width="44" height="44">
+                                <circle cx="22" cy="22" r="20"
+                                       stroke-width="3"
+                                       stroke-dasharray="125.6"
+                                       stroke-dashoffset="${125.6 - (125.6 * progressPercent / 100)}"
                                        class="${timeLeft > 0 ? 'active' : ''}"></circle>
                             </svg>
                             <span class="timer-text">${isSucceeded ? '✓' : formattedTime}</span>
@@ -324,7 +325,7 @@ window.PaymentBanner = {
         }
 
         if (progressCircle) {
-            const offset = 88 - (88 * progressPercent / 100);
+            const offset = 125.6 - (125.6 * progressPercent / 100);
             progressCircle.style.strokeDashoffset = offset;
         }
     },
