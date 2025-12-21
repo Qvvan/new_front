@@ -13,17 +13,25 @@ window.APIClient = {
      * @returns {Promise} Результат запроса
      */
     async request(endpoint, method = 'GET', data = null, options = {}) {
-        const url = `${this.baseURL}${endpoint}`;
+        let url = `${this.baseURL}${endpoint}`;
+
+        // Для GET запросов добавляем timestamp чтобы предотвратить кеширование
+        if (method.toUpperCase() === 'GET') {
+            const separator = url.includes('?') ? '&' : '?';
+            url += `${separator}_t=${Date.now()}`;
+        }
 
         const config = {
             method: method.toUpperCase(),
             headers: {
                 'Content-Type': 'application/json',
-                'Cache-Control': 'no-cache', // ⚠️ Принудительно отключаем кеш
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
                 'Pragma': 'no-cache',
+                'Expires': '0',
                 ...this.getAuthHeaders(),
                 ...options.headers
             },
+            cache: 'no-store', // Принудительно отключаем кеш браузера
             ...options
         };
 
@@ -160,7 +168,11 @@ window.APIClient = {
             url += `?${searchParams.toString()}`;
         }
 
-        return this.request(url, 'GET', null, options);
+        // Принудительно отключаем кеширование для GET запросов
+        return this.request(url, 'GET', null, {
+            ...options,
+            cache: 'no-store'
+        });
     },
 
     /**
