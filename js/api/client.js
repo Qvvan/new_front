@@ -1,7 +1,7 @@
 // API Client for Dragon VPN Mini App
 
 window.APIClient = {
-    baseURL: '/api',
+    baseURL: '/api/v1',
     defaultTimeout: 10000,
 
     /**
