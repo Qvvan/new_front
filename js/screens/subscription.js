@@ -9,6 +9,8 @@ window.SubscriptionScreen = {
      * Инициализация экрана подписки
      */
     async init() {
+        Utils.log('info', 'Initializing Subscription Screen');
+
         await this.loadUserData();
         await this.loadServices();
         await this.loadSubscriptions();
@@ -23,8 +25,10 @@ window.SubscriptionScreen = {
             if (window.UserAPI) {
                 const response = await window.UserAPI.getCurrentUser();
                 this.userData = response.user || response;
+                Utils.log('info', 'User data loaded for subscription screen:', this.userData);
             }
         } catch (error) {
+            Utils.log('error', 'Failed to load user data:', error);
             this.userData = { trial_activated: false }; // Fallback
         }
     },
@@ -41,8 +45,11 @@ window.SubscriptionScreen = {
                 services.forEach(service => {
                     this.servicesCache.set(service.id, service);
                 });
+
+                Utils.log('info', `Cached ${services.length} services`);
             }
         } catch (error) {
+            Utils.log('error', 'Failed to load services for caching:', error);
         }
     },
 
@@ -57,7 +64,12 @@ window.SubscriptionScreen = {
             if (window.Storage) {
                 window.Storage.setSubscriptions(this.currentSubscriptions);
             }
+
+            Utils.log('info', `Loaded ${this.currentSubscriptions.length} subscriptions`);
+
         } catch (error) {
+            Utils.log('error', 'Failed to load subscriptions:', error);
+
             if (window.Storage) {
                 this.currentSubscriptions = await window.Storage.getSubscriptions();
             }
@@ -127,64 +139,37 @@ window.SubscriptionScreen = {
      * Обработка действий
      */
     async handleAction(action, subscriptionId = null) {
+        if (this.isProcessingAction) return;
+        this.isProcessingAction = true;
+
         try {
+            if (window.TelegramApp) {
+                window.TelegramApp.haptic.light();
+            }
+
             switch (action) {
+                case 'renew':
+                    await this.handleRenewSubscription(subscriptionId);
+                    break;
                 case 'buy':
-                    // ✅ Используем правильный метод
                     await this.handleBuyNewSubscription();
                     break;
-
-                case 'renew':
-                    if (subscriptionId) {
-                        // ✅ Используем правильный метод
-                        await this.handleRenewSubscription(subscriptionId);
-                    }
-                    break;
-
                 case 'activate-trial':
-                    // ✅ Этот метод уже существует
                     await this.handleActivateTrial();
                     break;
-
                 case 'instructions':
-                    // ✅ Используем InstructionsScreen напрямую
-                    if (window.InstructionsScreen) {
-                        window.InstructionsScreen.show();
-                    } else {
-                        // Fallback - переход через роутер
-                        if (window.Router) {
-                            window.Router.navigate('instructions');
-                        }
-                    }
+                    this.handleViewInstructions();
                     break;
-
                 case 'support':
-                    // ✅ Используем SupportScreen напрямую
-                    if (window.SupportScreen) {
-                        window.SupportScreen.show();
-                    } else {
-                        // Fallback - переход через роутер
-                        if (window.Router) {
-                            window.Router.navigate('support');
-                        }
-                    }
+                    this.handleContactSupport();
                     break;
-
-                case 'news-channel':
-                    this.openNewsChannel();
-                    break;
-
                 default:
+                    Utils.log('warn', 'Unknown action:', action);
             }
-        } catch (error) {
-            if (window.Toast) {
-                window.Toast.error('Произошла ошибка при выполнении действия');
-            }
-        }
-
-        // Вибрация для всех действий
-        if (window.TelegramApp) {
-            window.TelegramApp.haptic.light();
+        } finally {
+            setTimeout(() => {
+                this.isProcessingAction = false;
+            }, 500);
         }
     },
 
@@ -192,6 +177,8 @@ window.SubscriptionScreen = {
      * Продление подписки
      */
     async handleRenewSubscription(subscriptionId) {
+        Utils.log('info', 'Renewing subscription:', subscriptionId);
+
         if (window.ServiceSelector) {
             await window.ServiceSelector.show('renew', subscriptionId);
         }
@@ -201,87 +188,10 @@ window.SubscriptionScreen = {
      * Покупка новой подписки
      */
     async handleBuyNewSubscription() {
-        // Проверяем, есть ли активная подписка
-        const hasActiveSubscription = this.currentSubscriptions.some(sub => {
-            const daysLeft = Utils.daysBetween(sub.end_date);
-            return daysLeft > 0;
-        });
-
-        if (hasActiveSubscription) {
-            // Показываем модальное окно с предупреждением
-            const confirmed = await this.showNewSubscriptionWarning();
-            if (!confirmed) return;
-        }
+        Utils.log('info', 'Buying new subscription');
 
         if (window.ServiceSelector) {
             await window.ServiceSelector.show('buy');
-        }
-    },
-
-    /**
-     * Показ предупреждения о новой подписке
-     */
-    async showNewSubscriptionWarning() {
-        return new Promise((resolve) => {
-            if (window.Modal) {
-                window.Modal.show({
-                    title: 'Новая подписка',
-                    size: 'medium',
-                    content: `
-                        <div class="new-subscription-warning-content">
-                            <div class="warning-icon">
-                                <i class="fas fa-info-circle"></i>
-                            </div>
-                            <div class="warning-message">
-                                <p>У вас уже есть активная подписка. При оформлении новой подписки вам потребуется пройти инструкцию заново для текущей подписки.</p>
-                            </div>
-                        </div>
-                    `,
-                    closable: true,
-                    buttons: [
-                        {
-                            id: 'confirm',
-                            text: 'Соглашаюсь',
-                            type: 'primary',
-                            action: 'confirm'
-                        }
-                    ],
-                    onConfirm: () => {
-                        resolve(true);
-                    },
-                    onCancel: () => {
-                        resolve(false);
-                    }
-                });
-            } else {
-                // Fallback для Telegram
-                const confirmed = window.TelegramApp?.showConfirm(
-                    'У вас уже есть активная подписка. При оформлении новой подписки вам потребуется пройти инструкцию заново для текущей подписки.\n\nПродолжить?'
-                );
-                resolve(confirmed || false);
-            }
-        });
-    },
-
-    /**
-     * Открытие канала с новостями
-     */
-    openNewsChannel() {
-        // URL вашего канала - замените на настоящий
-        const channelUrl = 'https://t.me/SkyDragonVPN';
-
-        try {
-            if (window.TelegramApp) {
-                // Используем встроенный метод Telegram для открытия ссылок
-                window.TelegramApp.openTelegramLink(channelUrl);
-            } else {
-                // Fallback для веб-версии (разработка)
-                window.open(channelUrl, '_blank');
-            }
-        } catch (error) {
-            if (window.Toast) {
-                window.Toast.error('Не удалось открыть канал');
-            }
         }
     },
 
@@ -290,7 +200,9 @@ window.SubscriptionScreen = {
      */
     async handleActivateTrial() {
         try {
+            Utils.log('info', 'Requesting trial activation');
 
+            // Показываем красивое модальное окно подтверждения
             const confirmed = await this.showTrialConfirmationModal();
             if (!confirmed) return;
 
@@ -325,6 +237,7 @@ window.SubscriptionScreen = {
             }
 
         } catch (error) {
+            Utils.log('error', 'Failed to activate trial:', error);
 
             if (window.Loading) {
                 window.Loading.hide();
@@ -350,7 +263,7 @@ window.SubscriptionScreen = {
                             </div>
 
                             <div class="trial-confirmation-details">
-                                <h3>Пробный период на 5 дней</h3>
+                                <h3>Бесплатный пробный период на 5 дней</h3>
 
                                 <div class="trial-note">
                                     <i class="fas fa-info-circle"></i>
@@ -434,6 +347,8 @@ window.SubscriptionScreen = {
             }
 
         } catch (error) {
+            Utils.log('error', 'Failed to update auto renewal:', error);
+
             if (window.Toast) {
                 const message = error.message || 'Ошибка изменения автопродления';
                 window.Toast.error(message);
@@ -499,17 +414,11 @@ window.SubscriptionScreen = {
 
         container.innerHTML = Utils.wrapContent(content);
 
-        // Инициализируем анимации сразу без задержки
-        this.initializeTGSAnimations();
-
-        // Обрабатываем новые изображения с data-src через MediaCache
-        if (window.SimpleLazy) {
-            window.SimpleLazy.processNewImages(container);
-        }
-
-        // Показываем экран мгновенно без анимации
-        container.style.opacity = '1';
-        container.style.transform = 'translateY(0)';
+        requestAnimationFrame(() => {
+            container.style.transition = 'all 0.2s ease-out';
+            container.style.opacity = '1';
+            container.style.transform = 'translateY(0)';
+        });
     },
 
     /**
@@ -520,6 +429,7 @@ window.SubscriptionScreen = {
         if (window.TGSLoader) {
             window.TGSLoader.initializeScreen('subscription');
         } else {
+            Utils.log('error', 'TGSLoader not available');
         }
     },
 
@@ -537,68 +447,59 @@ window.SubscriptionScreen = {
      * Рендеринг пустого состояния
      */
     renderEmptyState() {
+        // ✅ ПРАВИЛЬНАЯ проверка доступности пробного периода
         const isTrialAvailable = !this.userData?.trial_activated;
         const trialTgs = isTrialAvailable ?
             'assets/images/gifs/gift-animate.tgs' :
             'assets/images/gifs/gift-opened.png';
 
+        // ⚠️ Планируем инициализацию анимаций ПОСЛЕ рендера DOM
+        setTimeout(() => {
+            this.initializeTGSAnimations();
+        }, 100);
+
         return `
-            <div class="section">
+            <div class="empty-state-card">
                 <div class="empty-state-content">
                     <div class="empty-state-icon-gif">
                         <div id="tgs-animation-container" style="width: 80px; height: 80px; margin: 0 auto;"></div>
                     </div>
                     <h3 class="empty-state-title">Нет активных подписок</h3>
-                </div>
+                    <div class="empty-state-actions">
+                        ${isTrialAvailable ? `
+                            <button class="btn-trial-activation" data-action="activate-trial">
+                                <div class="btn-trial-bg">
+                                    <div class="btn-trial-shine"></div>
+                                </div>
+                                <div class="btn-trial-content">
+                                    <div class="trial-gift-icon">
+                                        <div id="trial-gift-tgs" style="width: 24px; height: 24px;" data-tgs="${trialTgs}"></div>
+                                    </div>
+                                    <div class="trial-text">
+                                        <span class="trial-main">Пробный период</span>
+                                        <span class="trial-sub">5 дней бесплатно</span>
+                                    </div>
+                                    <div class="trial-arrow">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </div>
+                                </div>
+                            </button>
+                        ` : `
+                            <div class="trial-used-notice">
+                                <div class="trial-used-icon">
+                                    <div id="trial-used-tgs" style="width: 24px; height: 24px;" data-tgs="${trialTgs}"></div>
+                                </div>
+                                <span>Пробный период использован</span>
+                            </div>
+                        `}
 
-                <!-- ПОДПИСКИ В СТЕКЛЕ С ЗАГОЛОВКОМ -->
-                <div class="glass-actions-row">
-                    <!-- ЗАГОЛОВОК С TGS АНИМАЦИЕЙ БЕЗ БОКСА -->
-                    <div class="glass-section-header">
-                        <h3 class="glass-section-title">Выберите подписку</h3>
-                    </div>
-
-                    <!-- СУЩЕСТВУЮЩИЕ КНОПКИ БЕЗ ИЗМЕНЕНИЙ -->
-                    ${isTrialAvailable ? `
-                        <div class="glass-action-card" data-action="activate-trial">
-                            <div class="glass-action-content">
-                                <div class="glass-action-icon">
-                                    ${this.renderActionIcon('image', 'assets/images/icons/gift.png', 'fas fa-headset')}
-                                </div>
-                                <div class="glass-action-text">
-                                    <div class="glass-action-title">Пробный период</div>
-                                    <div class="glass-action-subtitle">5 дней бесплатно</div>
-                                </div>
-                                <div class="glass-action-arrow">
-                                    <i class="fas fa-chevron-right"></i>
-                                </div>
+                        <button class="btn-subscription-purchase" data-action="buy">
+                            <div class="btn-purchase-bg"></div>
+                            <div class="btn-purchase-content">
+                                <i class="fas fa-bolt"></i>
+                                <span>Оформить подписку</span>
                             </div>
-                        </div>
-                    ` : `
-                        <div class="glass-action-card trial-used-notice">
-                            <div class="glass-action-content">
-                                <div class="glass-action-icon" style="opacity: 0.4;">
-                                    <div id="trial-used-tgs" style="width: 40px; height: 40px;" data-tgs="${trialTgs}"></div>
-                                </div>
-                                <div class="glass-action-text">
-                                    <div class="glass-action-title" style="opacity: 0.6;">Пробный период</div>
-                                    <div class="glass-action-subtitle" style="opacity: 0.6;">Уже использован</div>
-                                </div>
-                            </div>
-                        </div>
-                    `}
-
-                    <div class="glass-action-card" data-action="buy">
-                        <div class="glass-action-content">
-                            ${this.renderActionIcon('image', 'assets/images/icons/settings.png', 'fas fa-shield-alt')}
-                            <div class="glass-action-text">
-                                <div class="glass-action-title">Новая подписка</div>
-                                <div class="glass-action-subtitle">Выбрать тариф</div>
-                            </div>
-                            <div class="glass-action-arrow">
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
-                        </div>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -623,147 +524,51 @@ window.SubscriptionScreen = {
 
         const serviceName = this.getServiceName(subscription);
 
-        // Специальный рендеринг для пробного периода
-        if (isTrial) {
-            return `
-                <div class="card subscription-card subscription-card-trial" data-subscription-id="${subscription.id}">
-                    <div class="trial-card-header">
-                        <div class="trial-card-badge">Пробный период</div>
-                        <div class="trial-card-status ${isExpired ? 'expired' : 'active'}">
-                            ${isExpired ? 'Завершен' : 'Активен'}
-                        </div>
-                    </div>
-                    
-                    <div class="trial-card-content">
-                        <div class="trial-card-days">
-                            <div class="trial-days-number ${isExpired ? 'expired' : ''}">${Math.abs(daysLeft)}</div>
-                            <div class="trial-days-label">
-                                ${isExpired ? 'дней назад' : Utils.pluralize(daysLeft, ['день', 'дня', 'дней'])}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="trial-card-actions">
-                        ${!isExpired ? `
-                            <div class="trial-action-item" data-action="renew" data-subscription-id="${subscription.id}">
-                                <div class="trial-action-icon">
-                                    <i class="fas fa-credit-card"></i>
-                                </div>
-                                <div class="trial-action-content">
-                                    <div class="trial-action-title">Продлить подписку</div>
-                                    <div class="trial-action-subtitle">Оформить платную подписку</div>
-                                </div>
-                                <div class="trial-action-arrow">
-                                    <i class="fas fa-chevron-right"></i>
-                                </div>
-                            </div>
-                            <div class="trial-action-item" data-action="buy">
-                                <div class="trial-action-icon secondary">
-                                    <i class="fas fa-plus-circle"></i>
-                                </div>
-                                <div class="trial-action-content">
-                                    <div class="trial-action-title">Новая подписка</div>
-                                    <div class="trial-action-subtitle">Выбрать тариф</div>
-                                </div>
-                                <div class="trial-action-arrow">
-                                    <i class="fas fa-chevron-right"></i>
-                                </div>
-                            </div>
-                        ` : `
-                            <div class="trial-action-item" data-action="buy">
-                                <div class="trial-action-icon secondary">
-                                    <i class="fas fa-plus-circle"></i>
-                                </div>
-                                <div class="trial-action-content">
-                                    <div class="trial-action-title">Новая подписка</div>
-                                    <div class="trial-action-subtitle">Выбрать тариф</div>
-                                </div>
-                                <div class="trial-action-arrow">
-                                    <i class="fas fa-chevron-right"></i>
-                                </div>
-                            </div>
-                        `}
-                    </div>
-                </div>
-            `;
-        }
-
-        // Обычная подписка
         return `
-            <div class="card subscription-card subscription-card-regular" data-subscription-id="${subscription.id}">
-                <div class="trial-card-header">
-                    <div class="trial-card-badge">${serviceName}</div>
-                    <div class="trial-card-status ${isExpired ? 'expired' : 'active'}">
-                        ${isExpired ? 'Истекла' : 'Активна'}
+            <div class="card subscription-card" data-subscription-id="${subscription.id}">
+                <div class="subscription-header">
+                    <h2 class="subscription-title">
+                        <i class="fas ${isTrial ? 'fa-gift' : 'fa-shield-alt'}"></i>
+                        ${serviceName}
+                    </h2>
+                    <div class="subscription-status ${statusClass}">${statusText}</div>
+                </div>
+
+                <div class="subscription-info">
+                    <div class="time-remaining">
+                        <div class="days-left ${isExpired ? 'text-red' : ''}">${Math.abs(daysLeft)}</div>
+                        <div class="days-label">
+                            ${isExpired ? 'дней назад истекла' : Utils.pluralize(daysLeft, ['день остался', 'дня осталось', 'дней осталось'])}
+                        </div>
                     </div>
                 </div>
 
-                <div class="trial-card-content">
-                    <div class="trial-card-days">
-                        <div class="trial-days-number ${isExpired ? 'expired' : ''}">${Math.abs(daysLeft)}</div>
-                        <div class="trial-days-label">
-                            ${isExpired ? 'дней назад' : Utils.pluralize(daysLeft, ['день остался', 'дня осталось', 'дней осталось'])}
+                    ${!isExpired && !isTrial ? `
+                        <div class="auto-renewal" data-subscription-id="${subscription.id}">
+                            <div class="auto-renewal-info">
+                                <div class="auto-renewal-icon">
+                                    <div id="auto-renewal-animation-${subscription.id}" style="width: 32px; height: 32px;"></div>
+                                </div>
+                                <div class="auto-renewal-text">
+                                    <h4>Автопродление</h4>
+                                    <p class="auto-renewal-status">${autoRenewalText}</p>
+                                </div>
+                            </div>
+                            <div class="toggle-switch ${subscription.auto_renewal ? 'active' : ''}">
+                                <div class="toggle-slider"></div>
+                            </div>
                         </div>
-                    </div>
-                </div>
+                    ` : ''}
 
-                ${!isExpired ? `
-                    <div class="auto-renewal" data-subscription-id="${subscription.id}">
-                        <div class="auto-renewal-info">
-                            <div class="auto-renewal-icon">
-                                <div id="auto-renewal-animation" style="width: 32px; height: 32px;"></div>
-                            </div>
-                            <div class="auto-renewal-text">
-                                <h4>Автопродление</h4>
-                                <p class="auto-renewal-status">${autoRenewalText}</p>
-                            </div>
-                        </div>
-                        <div class="toggle-switch ${subscription.auto_renewal ? 'active' : ''}">
-                            <div class="toggle-slider"></div>
-                        </div>
-                    </div>
-                ` : ''}
-
-                <div class="trial-card-actions">
-                    ${!isExpired ? `
-                        <div class="trial-action-item" data-action="renew" data-subscription-id="${subscription.id}">
-                            <div class="trial-action-icon">
-                                <i class="fas fa-credit-card"></i>
-                            </div>
-                            <div class="trial-action-content">
-                                <div class="trial-action-title">Продлить подписку</div>
-                                <div class="trial-action-subtitle">Оформить платную подписку</div>
-                            </div>
-                            <div class="trial-action-arrow">
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
-                        </div>
-                        <div class="trial-action-item" data-action="buy">
-                            <div class="trial-action-icon secondary">
-                                <i class="fas fa-plus-circle"></i>
-                            </div>
-                            <div class="trial-action-content">
-                                <div class="trial-action-title">Новая подписка</div>
-                                <div class="trial-action-subtitle">Выбрать тариф</div>
-                            </div>
-                            <div class="trial-action-arrow">
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
-                        </div>
-                    ` : `
-                        <div class="trial-action-item" data-action="buy">
-                            <div class="trial-action-icon secondary">
-                                <i class="fas fa-plus-circle"></i>
-                            </div>
-                            <div class="trial-action-content">
-                                <div class="trial-action-title">Новая подписка</div>
-                                <div class="trial-action-subtitle">Выбрать тариф</div>
-                            </div>
-                            <div class="trial-action-arrow">
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
-                        </div>
-                    `}
+                <div class="subscription-actions">
+                    <button class="btn btn-primary" data-action="renew" data-subscription-id="${subscription.id}">
+                        <i class="fas fa-credit-card"></i>
+                        ${isExpired ? 'Возобновить' : 'Продлить сейчас'}
+                    </button>
+                    <button class="btn btn-secondary" data-action="buy">
+                        <i class="fas fa-plus"></i>
+                        Новая подписка
+                    </button>
                 </div>
             </div>
         `;
@@ -837,87 +642,40 @@ window.SubscriptionScreen = {
     /**
      * Рендеринг быстрых действий
      */
-   renderQuickActions() {
-        const hasActiveSubscription = this.currentSubscriptions.some(sub => {
-            const daysLeft = Utils.daysBetween(sub.end_date);
-            return daysLeft > 0;
-        });
-
+    renderQuickActions() {
         return `
-            <div class="card glass-actions-row">
-                <div class="glass-section-header">
-                    <h3 class="glass-section-title">Управление</h3>
-                </div>
-
-                    <!-- СУЩЕСТВУЮЩИЕ КНОПКИ БЕЗ ИЗМЕНЕНИЙ -->
-                    ${hasActiveSubscription ? `
-                        <div class="glass-action-card" data-action="instructions">
-                            <div class="glass-action-content">
-                                ${this.renderActionIcon('image', 'assets/images/icons/settings.png', 'fas fa-headset')}
-                                <div class="glass-action-text">
-                                    <div class="glass-action-title">Инструкция</div>
-                                    <div class="glass-action-subtitle">Настройка VPN</div>
-                                </div>
-                                <div class="glass-action-arrow">
-                                    <i class="fas fa-chevron-right"></i>
-                                </div>
+            <div class="section">
+                <h2 class="section-title">
+                    <div id="management-animation" style="width: 32px; height: 32px; display: inline-block; margin-right: 8px;"></div>
+                    Управление
+                </h2>
+                <div class="notcoin-actions-grid">
+                    <div class="notcoin-action-card" data-action="instructions">
+                        <div class="notcoin-action-content">
+                            <div class="notcoin-action-text">
+                                <div class="notcoin-action-title">Инструкции</div>
+                                <div class="notcoin-action-subtitle">Как настроить VPN</div>
                             </div>
-                        </div>
-                    ` : ''}
-
-                    <div class="glass-action-card" data-action="support">
-                        <div class="glass-action-content">
-                            ${this.renderActionIcon('image', 'assets/images/icons/support.png', 'fas fa-headset')}
-                            <div class="glass-action-text">
-                                <div class="glass-action-title">Поддержка</div>
-                                <div class="glass-action-subtitle">Помощь 24/7</div>
-                            </div>
-                            <div class="glass-action-arrow">
-                                <i class="fas fa-chevron-right"></i>
+                            <div class="notcoin-decorative-icon">
+                                <i class="fas fa-book-open"></i>
                             </div>
                         </div>
                     </div>
 
-                    <div class="glass-action-card" data-action="news-channel">
-                        <div class="glass-action-content">
-                            ${this.renderActionIcon('image', 'assets/images/icons/news.png', 'fas fa-newspaper')}
-                            <div class="glass-action-text">
-                                <div class="glass-action-title">Новости</div>
-                                <div class="glass-action-subtitle">Наш канал</div>
+                    <div class="notcoin-action-card" data-action="support">
+                        <div class="notcoin-action-content">
+                            <div class="notcoin-action-text">
+                                <div class="notcoin-action-title">Поддержка</div>
+                                <div class="notcoin-action-subtitle">Помощь 24/7</div>
                             </div>
-                            <div class="glass-action-arrow">
-                                <i class="fas fa-chevron-right"></i>
+                            <div class="notcoin-decorative-icon">
+                                <i class="fas fa-comment-dots"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         `;
-    },
-
-    /**
-     * Создание HTML для иконки действия
-     * @param {string} type - Тип действия (icon|image)
-     * @param {string} source - Класс иконки или путь к картинке
-     * @param {string} fallbackIcon - Fallback иконка
-     */
-    renderActionIcon(type, source, fallbackIcon = 'fas fa-circle') {
-        if (type === 'image') {
-            // Используем data-src для ленивой загрузки через MediaCache
-            return `
-                <div class="glass-action-icon has-image">
-                    <img data-src="${source}" alt="Иконка"
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <i class="${fallbackIcon}"></i>
-                </div>
-            `;
-        } else {
-            return `
-                <div class="glass-action-icon">
-                    <i class="${source}"></i>
-                </div>
-            `;
-        }
     },
 
     /**
@@ -998,10 +756,10 @@ window.SubscriptionScreen = {
             }, `
                 <div class="trial-activation-content">
                     <div class="trial-activation-icon">
-                        <i class="fas fa-check"></i>
+                        <i class="fas fa-gift"></i>
                     </div>
-                    <h2 class="trial-activation-title">Пробный период активирован</h2>
-                    <p class="trial-activation-subtitle">5 дней бесплатного доступа</p>
+                    <h2 class="trial-activation-title">Пробный период активирован!</h2>
+                    <p class="trial-activation-subtitle">Вы получили 5 дней бесплатного доступа</p>
                     <ul class="trial-activation-features">
                         <li>Безлимитный трафик</li>
                         <li>Все серверы доступны</li>

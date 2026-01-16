@@ -20,11 +20,17 @@ window.DragonVPNApp = {
      */
     async _performInit() {
         try {
+            Utils.log('info', 'Dragon VPN App initialization started');
+
             if (window.Loading) {
                 window.Loading.init();
             }
 
             this.showInitialLoading();
+
+            if (window.Assets) {
+                window.Assets.preloadAssets();
+            }
 
             await this.initializeTelegram();
 
@@ -44,6 +50,8 @@ window.DragonVPNApp = {
 
             this.isInitialized = true;
             this.isReady = true;
+
+            Utils.log('info', 'Dragon VPN App initialized successfully');
 
         } catch (error) {
             Utils.log('error', 'App initialization failed:', error);
@@ -70,6 +78,7 @@ window.DragonVPNApp = {
                 this.createFallbackLoading();
             }
         } catch (error) {
+            Utils.log('error', 'Failed to show initial loading:', error);
         }
     },
 
@@ -101,6 +110,7 @@ window.DragonVPNApp = {
      * Инициализация Telegram WebApp
      */
     async initializeTelegram() {
+        Utils.log('info', 'Initializing Telegram WebApp in semi-fullscreen mode');
 
         if (window.TelegramApp) {
             // Инициализируем базовый функционал
@@ -115,6 +125,7 @@ window.DragonVPNApp = {
                     attempts++;
 
                     if (window.TelegramApp.isInitialized) {
+                        Utils.log('info', 'Telegram WebApp initialized successfully');
                         resolve();
                     } else if (attempts >= maxAttempts) {
                         Utils.log('warn', 'Telegram WebApp initialization timeout');
@@ -135,6 +146,7 @@ window.DragonVPNApp = {
 
                     // Проверяем что настройки применились
                     if (window.TelegramApp.webApp.isExpanded) {
+                        Utils.log('info', 'App successfully expanded');
                     } else {
                         Utils.log('warn', 'App expansion may have failed');
                         // Повторная попытка
@@ -155,6 +167,7 @@ window.DragonVPNApp = {
      * Инициализация системы хранилища
      */
     async initializeStorage() {
+        Utils.log('info', 'Initializing Storage System with cleanup');
 
         if (window.Storage) {
             await window.Storage.init();
@@ -169,6 +182,8 @@ window.DragonVPNApp = {
      * Парсинг реферальных данных
      */
     async parseReferralData() {
+        Utils.log('info', 'Parsing referral data from all sources');
+
         try {
             let referrerId = null;
 
@@ -195,6 +210,7 @@ window.DragonVPNApp = {
             }
 
             if (referrerId) {
+                Utils.log('info', `Referrer detected: ${referrerId}`);
                 this.pendingReferrerId = referrerId;
 
                 // Сохраняем для передачи при регистрации
@@ -239,6 +255,7 @@ window.DragonVPNApp = {
             }
 
             if (referrerId) {
+                Utils.log('info', `Referral detected: ${referrerId}`);
 
                 if (window.Storage) {
                     await window.Storage.set('referrer_id', referrerId);
@@ -256,7 +273,9 @@ window.DragonVPNApp = {
      * Инициализация компонентов
      */
     async initializeComponents() {
+        Utils.log('info', 'Initializing components');
 
+        // ✅ Инициализируем в правильном порядке
         if (window.Toast) window.Toast.init();
         if (window.Modal) window.Modal.init();
         if (window.Loading) window.Loading.init();
@@ -278,6 +297,7 @@ window.DragonVPNApp = {
      * Инициализация экранов
      */
     async initializeScreens() {
+        Utils.log('info', 'Initializing screens');
         if (window.SubscriptionScreen) {
             await window.SubscriptionScreen.init();
         }
@@ -291,6 +311,8 @@ window.DragonVPNApp = {
      * Инициализация роутера
      */
     async initializeRouter() {
+        Utils.log('info', 'Initializing router');
+
         if (window.Router) {
             window.Router.init();
         }
@@ -311,6 +333,8 @@ window.DragonVPNApp = {
                 await window.Storage.clearPendingPayments();
             }
 
+            Utils.log('info', 'Checking for actual pending payments from API...');
+
             const response = await window.PaymentAPI.listPayments();
             const allPayments = response.payments || [];
 
@@ -319,6 +343,7 @@ window.DragonVPNApp = {
                 payment.status === 'pending'
             );
 
+            Utils.log('info', `Found ${actualPendingPayments.length} pending payments`);
 
             if (actualPendingPayments.length > 0) {
                 // Сохраняем в сессионный кеш с правильными полями
@@ -371,6 +396,8 @@ window.DragonVPNApp = {
         await this.ensureUserRegistration();
 
         this.setupPeriodicTasks();
+
+        Utils.log('info', 'App finalization completed');
     },
 
     /**
@@ -420,6 +447,7 @@ window.DragonVPNApp = {
             const telegramUser = window.TelegramApp?.getUserInfo();
 
             if (!userData && telegramUser) {
+                Utils.log('info', 'Registering new user');
 
                 const registrationData = {
                     referrer_id: this.pendingReferrerId || null
@@ -485,6 +513,7 @@ window.DragonVPNApp = {
      */
     async attemptRecovery() {
         try {
+            Utils.log('info', 'Attempting app recovery');
 
             this.isInitialized = false;
             this.isReady = false;
@@ -533,6 +562,7 @@ window.DragonVPNApp = {
      * Приложение стало активным
      */
     async onAppResume() {
+        Utils.log('info', 'App resumed');
 
         try {
             await this.refreshAppData();
@@ -552,6 +582,7 @@ window.DragonVPNApp = {
      * Приложение уходит в фон
      */
     onAppPause() {
+        Utils.log('info', 'App paused');
 
         if (window.Storage) {
             window.Storage.updateLastActivity();
@@ -614,6 +645,8 @@ window.DragonVPNApp = {
      * Перезапуск приложения
      */
     async restart() {
+        Utils.log('info', 'Restarting application');
+
         try {
             this.cleanup();
 
@@ -651,6 +684,8 @@ window.DragonVPNApp = {
             const telegramUser = window.TelegramApp?.getUserInfo();
 
             if (!userData && telegramUser) {
+                Utils.log('info', 'Registering new user');
+
                 if (window.UserAPI) {
                     const referrerId = window.TelegramApp?.getReferrerId();
                     return await window.UserAPI.registerUser(referrerId);
@@ -676,6 +711,7 @@ window.DragonVPNApp = {
                 }
             }
         } catch (error) {
+            Utils.log('error', 'Failed to process referral after registration:', error);
         }
     }
 };

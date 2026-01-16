@@ -219,9 +219,12 @@ window.PaymentsScreen = {
                     История ваших платежей появится здесь
                 </p>
                 <div class="empty-state-actions">
-                    <button class="btn btn-primary" onclick="window.Router.navigate('subscription')">
-                        <i class="fas fa-shopping-cart"></i>
-                        Оформить подписку
+                    <button class="btn-subscription-purchase" onclick="window.Router.navigate('subscription')">
+                        <div class="btn-purchase-bg"></div>
+                        <div class="btn-purchase-content">
+                            <i class="fas fa-bolt"></i>
+                            <span>Оформить подписку</span>
+                        </div>
                     </button>
                 </div>
             </div>
