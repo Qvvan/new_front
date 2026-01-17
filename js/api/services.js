@@ -3,20 +3,19 @@
 window.ServiceAPI = {
     /**
      * Получение списка всех сервисов/тарифов
-     * @param {Object} params - Параметры запроса
-     * @returns {Promise<Object>} Список сервисов
+     * @returns {Promise<Array>} Список сервисов
      */
-    async getServices(params = { page: 1, page_size: 50 }) {
-        return await window.APIClient.get('/services', params);
+    async getServices() {
+        return await window.APIClient.get('/services');
     },
 
     /**
      * Получение сервиса по ID
-     * @param {string} serviceId - UUID сервиса
+     * @param {number} serviceId - ID сервиса
      * @returns {Promise<Object>} Данные сервиса
      */
     async getService(serviceId) {
-        return await window.APIClient.get(`/service/${serviceId}`);
+        return await window.APIClient.get(`/services/${serviceId}`);
     },
 
     /**
@@ -25,16 +24,16 @@ window.ServiceAPI = {
      * @returns {Promise<Object>} Созданный сервис
      */
     async createService(data) {
-        return await window.APIClient.post('/service', data);
+        return await window.APIClient.post('/services', data);
     },
 
     /**
      * Обновление сервиса (админ функция)
-     * @param {string} serviceId - UUID сервиса
+     * @param {number} serviceId - ID сервиса
      * @param {Object} serviceData - Данные для обновления
      * @returns {Promise<Object>} Обновленный сервис
      */
     async updateService(serviceId, serviceData) {
-        return await window.APIClient.patch(`/service/${serviceId}`, { service: serviceData });
+        return await window.APIClient.put(`/services/${serviceId}`, serviceData);
     }
 };

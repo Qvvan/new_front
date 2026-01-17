@@ -2,35 +2,34 @@
 
 window.UserAPI = {
     /**
-     * Регистрация нового пользователя
-     * @param {Object} data - Данные регистрации
-     * @returns {Promise<Object>} Результат регистрации
+     * Создание или получение пользователя (регистрация)
+     * @param {number} referrerId - ID реферера (опционально)
+     * @returns {Promise<Object>} Данные пользователя
      */
     async registerUser(referrerId = null) {
-        const authData = window.TelegramApp?.getAuthData();
-
-        const requestData = {
-            init_data: authData?.initData || '',
-            platform: authData?.platform || 'web',
-            version: authData?.version || '1.0'
-        };
-
-        // Добавляем referrer_id если есть
+        const requestData = {};
         if (referrerId) {
             requestData.referrer_id = referrerId;
         }
 
-        // ✅ ИСПОЛЬЗУЕМ window.APIClient вместо callApi
         return await window.APIClient.post('/user', requestData);
     },
 
     /**
-     * Получение пользователя по ID
-     * @param {string} userId - UUID пользователя
-     * @returns {Promise<Object>} Данные пользователя
+     * Получение текущего пользователя из Telegram контекста
+     * @returns {Promise<Object>} Данные текущего пользователя
      */
-    async getUser(userId) {
-        return await window.APIClient.get(`/user/${userId}`);
+    async getCurrentUser() {
+        return await window.APIClient.get('/user/me');
+    },
+
+    /**
+     * Обновление текущего пользователя
+     * @param {Object} userData - Данные для обновления
+     * @returns {Promise<Object>} Обновленные данные пользователя
+     */
+    async updateCurrentUser(userData) {
+        return await window.APIClient.put('/user/me', userData);
     },
 
     /**
@@ -39,30 +38,51 @@ window.UserAPI = {
      * @returns {Promise<Object>} Данные пользователя
      */
     async getUserByTelegramId(telegramId) {
-        return await window.APIClient.get(`/user/telegram/${telegramId}`);
+        return await window.APIClient.get(`/user/${telegramId}`);
     },
 
     /**
-     * Обновление данных пользователя
-     * @param {string} userId - UUID пользователя
+     * Обновление данных пользователя по Telegram ID
+     * @param {number} telegramId - Telegram user ID
      * @param {Object} userData - Данные для обновления
      * @returns {Promise<Object>} Результат обновления
      */
-    async updateUser(userId, userData) {
-        return await window.APIClient.put(`/user/${userId}`, userData);
+    async updateUser(telegramId, userData) {
+        return await window.APIClient.put(`/user/${telegramId}`, userData);
     },
 
     /**
-     * Получение текущего пользователя из Telegram
-     * @returns {Promise<Object>} Данные текущего пользователя
+     * Обновление времени последнего входа текущего пользователя
+     * @returns {Promise<void>}
      */
-    async getCurrentUser() {
-        const telegramUser = window.TelegramApp?.getUserInfo();
-        if (!telegramUser?.id) {
-            throw new Error('Telegram user not available');
-        }
+    async updateLastSeen() {
+        return await window.APIClient.post('/user/me/last-seen');
+    },
 
-        const referrerId = window.TelegramApp?.getReferrerId();
-        return await window.UserAPI.registerUser(referrerId);
+    /**
+     * Блокировка пользователя (админ функция)
+     * @param {number} telegramId - Telegram user ID
+     * @returns {Promise<Object>} Данные пользователя
+     */
+    async banUser(telegramId) {
+        return await window.APIClient.post(`/user/${telegramId}/ban`);
+    },
+
+    /**
+     * Разблокировка пользователя (админ функция)
+     * @param {number} telegramId - Telegram user ID
+     * @returns {Promise<Object>} Данные пользователя
+     */
+    async unbanUser(telegramId) {
+        return await window.APIClient.post(`/user/${telegramId}/unban`);
+    },
+
+    /**
+     * Активация пробного периода для пользователя (админ функция)
+     * @param {number} telegramId - Telegram user ID
+     * @returns {Promise<Object>} Данные пользователя
+     */
+    async activateTrialForUser(telegramId) {
+        return await window.APIClient.post(`/user/${telegramId}/activate-trial`);
     }
 };

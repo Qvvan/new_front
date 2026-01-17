@@ -14,9 +14,10 @@ window.SubscriptionScreen = {
         await this.loadUserData();
         await this.loadServices();
         await this.loadSubscriptions();
+        await this.loadDailyBonusStatus();
 
         this.render();
-        this.setupEventListeners(); // ✅ Добавить эту строку
+        this.setupEventListeners();
         this.isLoaded = true;
     },
 
@@ -59,7 +60,8 @@ window.SubscriptionScreen = {
     async loadSubscriptions() {
         try {
             const response = await window.SubscriptionAPI.listSubscriptions();
-            this.currentSubscriptions = response.subscriptions || [];
+            // Теперь API возвращает массив напрямую
+            this.currentSubscriptions = Array.isArray(response) ? response : (response.subscriptions || []);
 
             if (window.Storage) {
                 window.Storage.setSubscriptions(this.currentSubscriptions);
@@ -156,6 +158,9 @@ window.SubscriptionScreen = {
                     break;
                 case 'activate-trial':
                     await this.handleActivateTrial();
+                    break;
+                case 'claim-daily-bonus':
+                    await this.handleClaimDailyBonus();
                     break;
                 case 'instructions':
                     this.handleViewInstructions();
@@ -320,7 +325,7 @@ window.SubscriptionScreen = {
      * Переключение автопродления
      */
     async handleAutoRenewalToggle(subscriptionId) {
-        const subscription = this.currentSubscriptions.find(s => s.id === subscriptionId);
+        const subscription = this.currentSubscriptions.find(s => (s.subscription_id || s.id) === subscriptionId);
         if (!subscription) return;
 
         const newAutoRenewal = !subscription.auto_renewal;
@@ -329,7 +334,7 @@ window.SubscriptionScreen = {
         if (!confirmed) return;
 
         try {
-            await window.SubscriptionAPI.updateAutoRenewal(subscriptionId);
+            await window.SubscriptionAPI.updateAutoRenewal(subscriptionId, newAutoRenewal);
 
             subscription.auto_renewal = newAutoRenewal;
 
@@ -525,7 +530,7 @@ window.SubscriptionScreen = {
         const serviceName = this.getServiceName(subscription);
 
         return `
-            <div class="card subscription-card" data-subscription-id="${subscription.id}">
+            <div class="card subscription-card" data-subscription-id="${subscription.subscription_id || subscription.id}">
                 <div class="subscription-header">
                     <h2 class="subscription-title">
                         <i class="fas ${isTrial ? 'fa-gift' : 'fa-shield-alt'}"></i>
@@ -544,10 +549,10 @@ window.SubscriptionScreen = {
                 </div>
 
                     ${!isExpired && !isTrial ? `
-                        <div class="auto-renewal" data-subscription-id="${subscription.id}">
+                        <div class="auto-renewal" data-subscription-id="${subscription.subscription_id || subscription.id}">
                             <div class="auto-renewal-info">
                                 <div class="auto-renewal-icon">
-                                    <div id="auto-renewal-animation-${subscription.id}" style="width: 32px; height: 32px;"></div>
+                                    <div id="auto-renewal-animation-${subscription.subscription_id || subscription.id}" style="width: 32px; height: 32px;"></div>
                                 </div>
                                 <div class="auto-renewal-text">
                                     <h4>Автопродление</h4>
@@ -561,7 +566,7 @@ window.SubscriptionScreen = {
                     ` : ''}
 
                 <div class="subscription-actions">
-                    <button class="btn btn-primary" data-action="renew" data-subscription-id="${subscription.id}">
+                    <button class="btn btn-primary" data-action="renew" data-subscription-id="${subscription.subscription_id || subscription.id}">
                         <i class="fas fa-credit-card"></i>
                         ${isExpired ? 'Возобновить' : 'Продлить сейчас'}
                     </button>
@@ -591,7 +596,7 @@ window.SubscriptionScreen = {
             const serviceName = this.getServiceName(subscription);
 
             content += `
-                <div class="subscription-compact ${statusClass}" data-subscription-id="${subscription.id}">
+                <div class="subscription-compact ${statusClass}" data-subscription-id="${subscription.subscription_id || subscription.id}">
                     <div class="subscription-compact-info">
                         <div class="subscription-compact-icon">
                             <i class="fas ${isTrial ? 'fa-gift' : 'fa-shield-alt'}"></i>
@@ -644,6 +649,7 @@ window.SubscriptionScreen = {
      */
     renderQuickActions() {
         return `
+            ${this.renderDailyBonus()}
             <div class="section">
                 <h2 class="section-title">
                     <div id="management-animation" style="width: 32px; height: 32px; display: inline-block; margin-right: 8px;"></div>
@@ -679,6 +685,121 @@ window.SubscriptionScreen = {
     },
 
     /**
+     * Рендеринг ежедневного бонуса
+     */
+    renderDailyBonus() {
+        if (!this.dailyBonusStatus) {
+            // Загружаем статус асинхронно
+            this.loadDailyBonusStatus();
+            return '';
+        }
+
+        const { can_claim, current_streak, next_streak, bonus_amount, next_claim_available_at } = this.dailyBonusStatus;
+        const streakText = current_streak > 0 ? `День ${current_streak}/7` : 'Начните серию';
+        
+        return `
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-coins" style="margin-right: 8px;"></i>
+                    Ежедневный бонус
+                </h2>
+                <div class="daily-bonus-card ${can_claim ? 'claimable' : ''}" data-action="claim-daily-bonus">
+                    <div class="daily-bonus-content">
+                        <div class="daily-bonus-info">
+                            <div class="daily-bonus-title">${can_claim ? 'Забрать бонус' : 'Бонус скоро доступен'}</div>
+                            <div class="daily-bonus-subtitle">${streakText} • ${bonus_amount} DRG</div>
+                        </div>
+                        <div class="daily-bonus-action">
+                            ${can_claim ? `
+                                <button class="btn btn-primary btn-sm">
+                                    <i class="fas fa-gift"></i>
+                                    Забрать
+                                </button>
+                            ` : `
+                                <div class="daily-bonus-timer">
+                                    <i class="fas fa-clock"></i>
+                                    ${next_claim_available_at ? Utils.formatTimeUntil(next_claim_available_at) : 'Скоро'}
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                    ${current_streak > 0 ? `
+                        <div class="daily-bonus-progress">
+                            ${Array.from({ length: 7 }, (_, i) => `
+                                <div class="bonus-day ${i < current_streak ? 'completed' : ''} ${i === current_streak && can_claim ? 'next' : ''}"></div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Загрузка статуса ежедневного бонуса
+     */
+    async loadDailyBonusStatus() {
+        try {
+            if (window.CurrencyAPI) {
+                this.dailyBonusStatus = await window.CurrencyAPI.getDailyBonusStatus();
+                // Перерендерим если экран уже отрисован
+                if (this.isLoaded) {
+                    this.render();
+                }
+            }
+        } catch (error) {
+            Utils.log('error', 'Failed to load daily bonus status:', error);
+            this.dailyBonusStatus = null;
+        }
+    },
+
+    /**
+     * Получение ежедневного бонуса
+     */
+    async handleClaimDailyBonus() {
+        try {
+            if (window.Loading) {
+                window.Loading.show('Получение бонуса...');
+            }
+
+            const response = await window.CurrencyAPI.claimDailyBonus();
+
+            if (window.Loading) {
+                window.Loading.hide();
+            }
+
+            // Обновляем статус
+            this.dailyBonusStatus = {
+                ...this.dailyBonusStatus,
+                ...response,
+                can_claim: false,
+                current_streak: response.streak_day,
+                next_streak: response.next_streak
+            };
+
+            this.render();
+
+            if (window.Toast) {
+                window.Toast.success(`Получено ${response.bonus_amount} DRG!`);
+            }
+
+            if (window.TelegramApp) {
+                window.TelegramApp.haptic.success();
+            }
+
+        } catch (error) {
+            if (window.Loading) {
+                window.Loading.hide();
+            }
+
+            Utils.log('error', 'Failed to claim daily bonus:', error);
+            if (window.Toast) {
+                window.Toast.error(error.message || 'Ошибка получения бонуса');
+            }
+        }
+    },
+
+    /**
      * Получение имени сервиса
      */
     getServiceName(subscription) {
@@ -694,12 +815,22 @@ window.SubscriptionScreen = {
         return `Подписка ${subscription.service_id.slice(0, 8)}`;
     },
 
-        /**
+    /**
      * Проверка на пробный период
      */
     isTrialSubscription(subscription) {
-        const TRIAL_SERVICE_UUID = "00000000-0000-0000-0000-000000000000";
-        return subscription.service_id === TRIAL_SERVICE_UUID;
+        // Проверяем по source подписки или по service_id через кеш услуг
+        if (subscription.source === 'trial') {
+            return true;
+        }
+        
+        // Проверяем через кеш услуг
+        const service = this.servicesCache.get(subscription.service_id);
+        if (service && service.is_trial) {
+            return true;
+        }
+        
+        return false;
     },
 
         /**

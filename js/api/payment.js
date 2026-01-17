@@ -2,62 +2,104 @@
 
 window.PaymentAPI = {
     /**
-     * Создание нового платежа
-     * @param {Object} data - Данные платежа
-     * @returns {Promise<Object>} Результат создания платежа
+     * Создание нового платежа (для подписки, продления или подарка)
+     * @param {Object} data - Данные платежа (service_id обязателен для subscription/renewal)
+     * @param {number} userId - ID пользователя (берется из query параметра)
+     * @returns {Promise<Object>} Результат создания платежа с confirmation_url
      */
-    async createPayment(data) {
-        // Автоматически добавляем user_id из Telegram
-        const telegramUser = window.TelegramApp?.getUserInfo();
-        if (telegramUser?.id && !data.user_id) {
-            try {
-                const user = await window.UserAPI.getUserByTelegramId(telegramUser.id);
-                data.user_id = user.user.telegram_id;
-            } catch (error) {
-                throw new Error('Пользователь не найден');
-            }
+    async createPayment(data, userId = null) {
+        const params = {};
+        if (userId) {
+            params.user_id = userId;
         }
 
-        return await window.APIClient.post('/payment', data);
+        const endpoint = '/payments';
+        if (params.user_id) {
+            endpoint += `?user_id=${params.user_id}`;
+        }
+
+        return await window.APIClient.post(endpoint, data);
+    },
+
+    /**
+     * Создание платежа за новую подписку
+     * @param {Object} data - Данные платежа (service_id)
+     * @param {number} userId - ID пользователя
+     * @returns {Promise<Object>} Результат создания платежа
+     */
+    async createSubscriptionPayment(data, userId) {
+        const paymentData = {
+            payment_type: 'subscription',
+            ...data
+        };
+        return await this.createPayment(paymentData, userId);
+    },
+
+    /**
+     * Создание платежа за продление подписки
+     * @param {Object} data - Данные платежа (subscription_id, service_id)
+     * @param {number} userId - ID пользователя
+     * @returns {Promise<Object>} Результат создания платежа
+     */
+    async createRenewalPayment(data, userId) {
+        const paymentData = {
+            payment_type: 'renewal',
+            ...data
+        };
+        return await this.createPayment(paymentData, userId);
+    },
+
+    /**
+     * Создание платежа за подарок
+     * @param {Object} data - Данные платежа (service_id, gift_id опционально)
+     * @returns {Promise<Object>} Результат создания платежа
+     */
+    async createGiftPayment(data) {
+        const paymentData = {
+            payment_type: 'gift',
+            ...data
+        };
+        return await this.createPayment(paymentData);
     },
 
     /**
      * Получение платежа по ID
-     * @param {string} paymentId - UUID платежа
+     * @param {number} paymentId - ID платежа
      * @returns {Promise<Object>} Данные платежа
      */
     async getPayment(paymentId) {
-        return await window.APIClient.get(`/payment/${paymentId}`);
+        return await window.APIClient.get(`/payments/${paymentId}`);
     },
 
     /**
-     * Обновление платежа
-     * @param {string} paymentId - UUID платежа
-     * @param {Object} paymentData - Данные для обновления
-     * @returns {Promise<Object>} Обновленный платеж
+     * Получение платежа по YooKassa payment ID
+     * @param {string} yookassaPaymentId - ID платежа в YooKassa
+     * @returns {Promise<Object>} Данные платежа
      */
-    async updatePayment(paymentId, paymentData) {
-        return await window.APIClient.put(`/payment/${paymentId}`, { payment: paymentData });
+    async getPaymentByYookassaId(yookassaPaymentId) {
+        return await window.APIClient.get(`/payments/yookassa/${yookassaPaymentId}`);
     },
 
     /**
      * Получение истории платежей пользователя
-     * @param {Object} params - Параметры фильтрации
-     * @returns {Promise<Object>} Список платежей
+     * @param {number} userId - ID пользователя
+     * @param {Object} params - Параметры (limit, offset)
+     * @returns {Promise<Object>} Список платежей с total
      */
-    async listPayments() {
-        // Убираем добавление user_id в параметры
-        return await window.APIClient.get('/payments');
+    async listPayments(userId, params = {}) {
+        const queryParams = { ...params };
+        return await window.APIClient.get(`/payments/user/${userId}`, queryParams);
     },
 
     /**
      * Получение pending платежей пользователя
+     * @param {number} userId - ID пользователя
      * @returns {Promise<Array>} Список pending платежей
      */
-    async getPendingPayments() {
+    async getPendingPayments(userId) {
         try {
             // ✅ Запрашиваем все платежи и фильтруем только pending
-            const response = await this.listPayments();
+            const response = await this.listPayments(userId);
             const allPayments = response.payments || [];
 
             // ✅ Фильтруем только pending и недавние (последние 24 часа)
@@ -75,6 +117,27 @@ window.PaymentAPI = {
         } catch (error) {
             return [];
         }
+    },
+
+    /**
+     * Возврат средств за платеж
+     * @param {number} paymentId - ID платежа
+     * @param {number} amount - Сумма возврата (если null, возвращается полная сумма)
+     * @returns {Promise<Object>} Обновленный платеж
+     */
+    async refundPayment(paymentId, amount = null) {
+        const params = {};
+        if (amount !== null) {
+            params.amount = amount;
+        }
+
+        const endpoint = `/payments/${paymentId}/refund`;
+        if (Object.keys(params).length > 0) {
+            const queryString = new URLSearchParams(params).toString();
+            return await window.APIClient.post(`${endpoint}?${queryString}`);
+        }
+
+        return await window.APIClient.post(endpoint);
     },
 
     /**

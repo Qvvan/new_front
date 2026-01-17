@@ -73,21 +73,26 @@ window.ServiceSelector = {
             // Загружаем услуги
             if (window.ServiceAPI) {
                 const response = await window.ServiceAPI.getServices();
-                this.services = response.services || [];
+                // Теперь API возвращает массив напрямую
+                const servicesList = Array.isArray(response) ? response : (response.services || []);
 
                 // Нормализуем данные с API
-                this.services = this.services.map(service => ({
+                this.services = servicesList.map(service => ({
                     ...service,
-                    features: service.features || [],
-                    currency: service.currency || 'RUB',
-                    discount: service.discount || 0,
-                    popular: service.popular || false,
                     // Конвертируем duration_days в читаемый формат
-                    duration: this.formatDuration(service.duration_days)
+                    duration: this.formatDuration(service.duration_days),
+                    // Вычисляем discount_percent из price и original_price
+                    discount: service.has_discount && service.discount_percent ? service.discount_percent : 0,
+                    // Используем is_featured как popular
+                    popular: service.is_featured || false
                 }));
+
+                // Отделяем пробный период от обычных услуг
+                this.trialService = this.services.find(s => s.is_trial) || null;
+                this.services = this.services.filter(s => !s.is_trial);
             }
 
-            // ⚠️ НОВОЕ: Загружаем данные пользователя для пробного периода
+            // Загружаем данные пользователя для пробного периода
             await this.loadUserData();
 
             Utils.log('info', 'Services loaded:', this.services);
@@ -190,14 +195,28 @@ window.ServiceSelector = {
     },
 
     renderCompactServices() {
-        const sortedServices = [...this.services].sort((a, b) => a.price - b.price);
+        // Сортируем по sort_order, затем по цене
+        const sortedServices = [...this.services].sort((a, b) => {
+            if (a.sort_order !== b.sort_order) {
+                return (a.sort_order || 0) - (b.sort_order || 0);
+            }
+            return parseFloat(a.price) - parseFloat(b.price);
+        });
 
         return sortedServices.map(service => {
+            const hasDiscount = service.has_discount && service.original_price && parseFloat(service.original_price) > parseFloat(service.price);
+            const originalPrice = service.original_price || service.price;
+            const isBestValue = service.is_featured || hasDiscount;
+            
             return `
-                <div class="service-card-compact" data-service-id="${service.id}">
+                <div class="service-card-compact ${isBestValue ? 'featured' : ''}" data-service-id="${service.service_id}">
+                    ${service.badge ? `<div class="service-badge">${service.badge}</div>` : ''}
+                    ${hasDiscount ? `<div class="service-discount-badge">-${service.discount_percent}%</div>` : ''}
                     <div class="service-compact-content">
-                        <h4 class="service-compact-name">${service.name}</h4>
-                        <div class="service-compact-price">${Utils.formatPrice(service.price)}</div>
+                        <div class="service-compact-pricing">
+                            ${hasDiscount ? `<div class="service-original-price">${Utils.formatPrice(originalPrice)}</div>` : ''}
+                            <div class="service-compact-price ${hasDiscount ? 'has-discount' : ''}">${Utils.formatPrice(service.price)}</div>
+                        </div>
                         <div class="service-compact-period">${this.formatDuration(service.duration_days)}</div>
                     </div>
                 </div>
@@ -205,9 +224,15 @@ window.ServiceSelector = {
         }).join('');
     },
 
-    // ⚠️ НОВЫЙ рендеринг пробного периода
+    // Рендеринг пробного периода (теперь это обычная услуга с is_trial)
     renderTrialService() {
         const isActivated = this.userData?.trial_activated || false;
+        const trialService = this.trialService;
+
+        // Если нет пробной услуги, не показываем
+        if (!trialService) {
+            return '';
+        }
 
         // ✅ Планируем инициализацию анимации ПОСЛЕ рендера DOM
         setTimeout(() => {
@@ -225,14 +250,15 @@ window.ServiceSelector = {
         }, 100);
 
         return `
-            <div class="trial-service ${isActivated ? 'trial-activated' : 'trial-available'}" data-service-id="trial">
+            <div class="trial-service ${isActivated ? 'trial-activated' : 'trial-available'}" data-service-id="${trialService.service_id}">
+                <div class="service-badge trial-badge">Бесплатно</div>
                 <div class="trial-content">
                     <div class="trial-icon">
                         <div id="trial-gift-animation-${isActivated ? 'used' : 'available'}" style="width: 48px; height: 48px;"></div>
                     </div>
                     <div class="trial-info">
-                        <h4 class="trial-title">Бесплатный период</h4>
-                        <div class="trial-duration">5 дней</div>
+                        <h4 class="trial-title">${trialService.name}</h4>
+                        <div class="trial-duration">${this.formatDuration(trialService.duration_days)}</div>
                     </div>
                     <div class="trial-status">
                         ${isActivated ? 'Использован' : 'Доступен'}
@@ -387,24 +413,19 @@ window.ServiceSelector = {
      * Выбор услуги
      */
     selectService(serviceId) {
-        // Проверяем пробный период
-        if (serviceId === 'trial') {
+        // Проверяем, является ли это пробным периодом (по service_id)
+        const isTrialService = this.trialService && this.trialService.service_id === parseInt(serviceId);
+        
+        if (isTrialService) {
             if (this.userData?.trial_activated) {
                 if (window.Toast) {
                     window.Toast.warning('Пробный период уже использован');
                 }
                 return;
             }
-
-            this.selectedService = {
-                id: 'trial',
-                name: 'Пробный период',
-                price: 0,
-                duration_days: 7,
-                type: 'trial'
-            };
+            this.selectedService = this.trialService;
         } else {
-            const service = this.services.find(s => s.id === serviceId);
+            const service = this.services.find(s => s.service_id === parseInt(serviceId));
             if (!service) {
                 Utils.log('error', 'Service not found:', serviceId);
                 return;
@@ -450,8 +471,8 @@ window.ServiceSelector = {
                 subscriptionId: this.subscriptionId
             });
 
-            // ✅ ИСПРАВЛЕНИЕ: Для пробного периода используем отдельный метод
-            if (this.selectedService.id === 'trial') {
+            // ✅ Для пробного периода используем отдельный метод
+            if (this.selectedService.is_trial) {
                 await this.activateTrial();
             } else {
                 await this.createPayment();
@@ -500,29 +521,51 @@ window.ServiceSelector = {
      */
     async createPayment() {
         try {
-            const paymentData = {
-                service_id: this.selectedService.id,
-                service_type: this.mode === 'renew' ? 'old' : 'new',
-                subscription_id: this.subscriptionId || undefined,
-            };
+            // Получаем user_id из текущего пользователя
+            let userId = null;
+            try {
+                const user = await window.UserAPI.getCurrentUser();
+                userId = user.telegram_id || user.user_id;
+            } catch (error) {
+                Utils.log('error', 'Failed to get user ID:', error);
+            }
 
-            const response = await window.PaymentAPI.createPaymentWithMonitoring(paymentData);
+            let response;
+            const serviceId = this.selectedService.service_id;
+
+            if (this.mode === 'renew') {
+                // Создание платежа за продление
+                response = await window.PaymentAPI.createRenewalPayment({
+                    subscription_id: this.subscriptionId,
+                    service_id: serviceId
+                }, userId);
+            } else {
+                // Создание платежа за новую подписку
+                response = await window.PaymentAPI.createSubscriptionPayment({
+                    service_id: serviceId
+                }, userId);
+            }
+
+            // API возвращает { payment: {...}, confirmation_url: "..." }
             const payment = response.payment || response;
+            const confirmationUrl = response.confirmation_url || response.url;
 
             // ✅ Обогащаем данными сервиса
             payment.service_name = this.selectedService.name;
-            payment.service_duration = this.selectedService.duration;
-            payment.service_original_price = this.selectedService.price;
+            payment.service_duration = this.selectedService.duration || this.formatDuration(this.selectedService.duration_days);
+            payment.service_original_price = this.selectedService.original_price || this.selectedService.price;
 
-            if (!payment.price) {
+            if (!payment.amount && !payment.price) {
+                payment.amount = parseFloat(this.selectedService.price);
                 payment.price = this.selectedService.price;
             }
 
-            // ✅ Правильно передаем URL - используем receipt_link из API
+            // ✅ Правильно передаем URL
             const paymentWithUrl = {
                 ...payment,
-                payment_url: response.receipt_link || response.url, // ← Правильное поле
-                url: response.receipt_link || response.url
+                payment_url: confirmationUrl,
+                url: confirmationUrl,
+                confirmation_url: confirmationUrl
             };
 
             this.hide();
@@ -533,12 +576,11 @@ window.ServiceSelector = {
             }
 
             // Открываем страницу оплаты
-            const paymentUrl = response.receipt_link || response.url;
-            if (paymentUrl && window.TelegramApp) {
-                window.TelegramApp.openLink(paymentUrl);
+            if (confirmationUrl && window.TelegramApp) {
+                window.TelegramApp.openLink(confirmationUrl);
             }
 
-            Utils.log('info', 'Payment created and monitoring started:', payment.id);
+            Utils.log('info', 'Payment created and monitoring started:', payment.payment_id || payment.id);
 
         } catch (error) {
             Utils.log('error', 'Failed to create payment:', error);
