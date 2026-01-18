@@ -54,9 +54,10 @@ window.TGSLoader = {
                 preload: true
             },
             {
-                containerId: 'auto-renewal-animation',
+                containerId: /^auto-renewal-animation-\d+$/,
                 tgsPath: 'assets/images/gifs/auto-renewal.tgs',
                 fallbackIcon: 'fas fa-sync-alt',
+                dynamic: true,
                 preload: true
             }
         ],

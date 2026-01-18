@@ -46,10 +46,18 @@ window.SubscriptionScreen = {
         try {
             if (window.ServiceAPI) {
                 const response = await window.ServiceAPI.getServices();
-                const services = response.services || [];
+                const services = Array.isArray(response) ? response : (response.services || []);
 
                 services.forEach(service => {
-                    this.servicesCache.set(service.id, service);
+                    // Сохраняем по service_id (приоритет) или id
+                    const serviceId = service.service_id || service.id;
+                    if (serviceId) {
+                        this.servicesCache.set(serviceId, service);
+                    }
+                    // Также сохраняем по id, если он отличается от service_id
+                    if (service.id && service.id !== serviceId) {
+                        this.servicesCache.set(service.id, service);
+                    }
                 });
 
                 Utils.log('info', `Cached ${services.length} services`);
@@ -98,6 +106,11 @@ window.SubscriptionScreen = {
             const subscriptionScreen = e.target.closest('#subscriptionScreen');
             if (!subscriptionScreen) return;
 
+            // Пропускаем клики на автопродление - они обрабатываются отдельным обработчиком
+            if (e.target.closest('.auto-renewal') || e.target.closest('.subscription-compact-auto-renewal')) {
+                return;
+            }
+
             const target = e.target.closest('[data-action]');
             if (!target) return;
 
@@ -125,31 +138,72 @@ window.SubscriptionScreen = {
             const subscriptionScreen = e.target.closest('#subscriptionScreen');
             if (!subscriptionScreen) return;
 
-            const autoRenewal = e.target.closest('.auto-renewal');
+            // Проверяем клик на .auto-renewal или на элементы внутри него (включая toggle-switch)
+            let autoRenewal = e.target.closest('.auto-renewal');
+            
+            // Если клик был на toggle-switch или его дочерних элементах, находим родительский .auto-renewal
+            if (!autoRenewal) {
+                const clickedElement = e.target;
+                // Проверяем, является ли кликнутый элемент частью toggle-switch
+                if (clickedElement.closest('.toggle-switch') || 
+                    clickedElement.classList.contains('toggle-switch') || 
+                    clickedElement.classList.contains('toggle-slider')) {
+                    const toggleSwitch = clickedElement.closest('.toggle-switch') || clickedElement;
+                    autoRenewal = toggleSwitch.closest('.auto-renewal');
+                }
+            }
+            
             if (!autoRenewal) return;
 
-            if (autoRenewal.hasAttribute('data-processing')) return;
+            // Предотвращаем обработку если уже обрабатывается
+            if (autoRenewal.hasAttribute('data-processing')) {
+                return;
+            }
+
+            // Останавливаем всплытие, чтобы другие обработчики не сработали
+            e.stopPropagation();
+            e.preventDefault();
+
             autoRenewal.setAttribute('data-processing', 'true');
             setTimeout(() => autoRenewal.removeAttribute('data-processing'), 300);
 
             const subscriptionId = autoRenewal.dataset.subscriptionId;
-            this.handleAutoRenewalToggle(subscriptionId);
-        });
+            if (subscriptionId) {
+                Utils.log('info', 'Auto renewal toggle clicked:', subscriptionId);
+                this.handleAutoRenewalToggle(subscriptionId);
+            } else {
+                Utils.log('warn', 'Auto renewal clicked but no subscriptionId found');
+            }
+        }, true); // Используем capture phase для более раннего перехвата
 
         document.addEventListener('click', (e) => {
             const subscriptionScreen = e.target.closest('#subscriptionScreen');
             if (!subscriptionScreen) return;
 
+            // Проверяем клик на компактный автопродление или на элементы внутри него
             const compactAutoRenewal = e.target.closest('.subscription-compact-auto-renewal');
             if (!compactAutoRenewal) return;
 
-            if (compactAutoRenewal.hasAttribute('data-processing')) return;
+            // Предотвращаем обработку если уже обрабатывается
+            if (compactAutoRenewal.hasAttribute('data-processing')) {
+                return;
+            }
+
+            // Останавливаем всплытие, чтобы другие обработчики не сработали
+            e.stopPropagation();
+            e.preventDefault();
+
             compactAutoRenewal.setAttribute('data-processing', 'true');
             setTimeout(() => compactAutoRenewal.removeAttribute('data-processing'), 300);
 
             const subscriptionId = compactAutoRenewal.dataset.subscriptionId;
-            this.handleAutoRenewalToggle(subscriptionId);
-        });
+            if (subscriptionId) {
+                Utils.log('info', 'Compact auto renewal toggle clicked:', subscriptionId);
+                this.handleAutoRenewalToggle(subscriptionId);
+            } else {
+                Utils.log('warn', 'Compact auto renewal clicked but no subscriptionId found');
+            }
+        }, true); // Используем capture phase для более раннего перехвата
     },
 
     /**
@@ -349,20 +403,45 @@ window.SubscriptionScreen = {
      * Переключение автопродления
      */
     async handleAutoRenewalToggle(subscriptionId) {
-        const subscription = this.currentSubscriptions.find(s => (s.subscription_id || s.id) === subscriptionId);
-        if (!subscription) return;
+        Utils.log('info', 'handleAutoRenewalToggle called with subscriptionId:', subscriptionId);
+        
+        // Преобразуем subscriptionId в число, если это строка
+        const id = typeof subscriptionId === 'string' ? parseInt(subscriptionId, 10) : subscriptionId;
+        
+        const subscription = this.currentSubscriptions.find(s => {
+            const subId = s.subscription_id || s.id;
+            return subId === id || subId === subscriptionId;
+        });
+        
+        if (!subscription) {
+            Utils.log('error', 'Subscription not found:', { subscriptionId, id, subscriptions: this.currentSubscriptions });
+            return;
+        }
+
+        Utils.log('info', 'Found subscription:', { 
+            subscription_id: subscription.subscription_id || subscription.id,
+            current_auto_renewal: subscription.auto_renewal 
+        });
 
         const newAutoRenewal = !subscription.auto_renewal;
-
-        const confirmed = await this.showAutoRenewalConfirmation(newAutoRenewal);
-        if (!confirmed) return;
+        Utils.log('info', 'New auto renewal value:', newAutoRenewal);
 
         try {
-            await window.SubscriptionAPI.updateAutoRenewal(subscriptionId, newAutoRenewal);
+            const confirmed = await this.showAutoRenewalConfirmation(newAutoRenewal);
+            Utils.log('info', 'Confirmation result:', confirmed);
+            
+            if (!confirmed) {
+                Utils.log('info', 'User cancelled auto renewal change');
+                return;
+            }
+
+            Utils.log('info', 'Updating auto renewal via API...');
+            await window.SubscriptionAPI.updateAutoRenewal(id || subscriptionId, newAutoRenewal);
 
             subscription.auto_renewal = newAutoRenewal;
 
-            this.updateAutoRenewalUI(subscriptionId, newAutoRenewal);
+            Utils.log('info', 'Updating UI...');
+            this.updateAutoRenewalUI(id || subscriptionId, newAutoRenewal);
 
             if (window.Toast) {
                 const message = newAutoRenewal
@@ -382,7 +461,6 @@ window.SubscriptionScreen = {
                 const message = error.data?.comment || error.message || 'Ошибка изменения автопродления';
                 window.Toast.error(message);
             }
-        } finally {
         }
     },
 
@@ -395,10 +473,28 @@ window.SubscriptionScreen = {
             ? 'При включении автопродления ваша подписка будет автоматически продлеваться за день до окончания действующего периода. Вы всегда можете отключить эту функцию.'
             : 'При отключении автопродления ваша подписка завершится в указанную дату. Вам потребуется продлить её вручную.';
 
-        if (window.Modal) {
-            return window.Modal.showConfirm(title, message);
+        Utils.log('info', 'Showing auto renewal confirmation:', { enable, title });
+
+        if (window.Modal && window.Modal.showConfirm) {
+            try {
+                const result = await window.Modal.showConfirm(title, message);
+                Utils.log('info', 'Modal confirmation result:', result);
+                return result;
+            } catch (error) {
+                Utils.log('error', 'Error showing modal confirmation:', error);
+                // Fallback to Telegram
+                if (window.TelegramApp && window.TelegramApp.showConfirm) {
+                    return await window.TelegramApp.showConfirm(`${title}\n\n${message}`);
+                }
+                return false;
+            }
+        } else if (window.TelegramApp && window.TelegramApp.showConfirm) {
+            const result = await window.TelegramApp.showConfirm(`${title}\n\n${message}`);
+            Utils.log('info', 'Telegram confirmation result:', result);
+            return result;
         } else {
-            return window.TelegramApp.showConfirm(`${title}\n\n${message}`);
+            Utils.log('warn', 'No confirmation method available, defaulting to true');
+            return true; // Fallback - разрешаем изменение
         }
     },
 
@@ -829,6 +925,11 @@ window.SubscriptionScreen = {
             container.style.transition = 'all 0.2s ease-out';
             container.style.opacity = '1';
             container.style.transform = 'translateY(0)';
+            
+            // Инициализируем TGS анимации после рендера
+            setTimeout(() => {
+                this.initializeTGSAnimations();
+            }, 100);
         });
     },
 
@@ -1414,14 +1515,17 @@ window.SubscriptionScreen = {
      * Проверка на пробный период
      */
     isTrialSubscription(subscription) {
-        // Проверяем по source подписки или по service_id через кеш услуг
-        if (subscription.source === 'trial') {
+        // Главный критерий: проверяем, является ли текущий service_id пробным сервисом
+        // Если подписка была продлена на обычный сервис, она больше не пробная,
+        // даже если source остался 'trial'
+        const service = this.servicesCache.get(subscription.service_id);
+        if (service && service.is_trial) {
             return true;
         }
         
-        // Проверяем через кеш услуг
-        const service = this.servicesCache.get(subscription.service_id);
-        if (service && service.is_trial) {
+        // Если service_id не найден в кеше, проверяем source как fallback
+        // Но только если service_id не определен (старые данные)
+        if (!service && subscription.source === 'trial') {
             return true;
         }
         
@@ -1448,27 +1552,61 @@ window.SubscriptionScreen = {
      * Обновление UI автопродления
      */
     updateAutoRenewalUI(subscriptionId, autoRenewal) {
+        Utils.log('info', 'updateAutoRenewalUI called:', { subscriptionId, autoRenewal });
+        
+        // Преобразуем subscriptionId в строку для селектора
+        const idStr = String(subscriptionId);
+        
         // Обновляем полный формат
-        const toggle = document.querySelector(`[data-subscription-id="${subscriptionId}"] .toggle-switch`);
-        const statusText = document.querySelector(`[data-subscription-id="${subscriptionId}"] .auto-renewal-status`);
+        const autoRenewalElement = document.querySelector(`[data-subscription-id="${idStr}"].auto-renewal`);
+        const toggle = autoRenewalElement ? autoRenewalElement.querySelector('.toggle-switch') : null;
+        const statusText = autoRenewalElement ? autoRenewalElement.querySelector('.auto-renewal-status') : null;
+
+        Utils.log('info', 'Found elements:', { 
+            autoRenewalElement: !!autoRenewalElement,
+            toggle: !!toggle,
+            statusText: !!statusText
+        });
 
         if (toggle) {
-            toggle.classList.toggle('active', autoRenewal);
+            if (autoRenewal) {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
+            Utils.log('info', 'Toggle updated:', { hasActive: toggle.classList.contains('active') });
+        } else {
+            Utils.log('warn', 'Toggle not found for subscriptionId:', idStr);
         }
 
         if (statusText) {
-            const subscription = this.currentSubscriptions.find(s => s.id === subscriptionId);
+            const subscription = this.currentSubscriptions.find(s => {
+                const subId = s.subscription_id || s.id;
+                return subId === subscriptionId || String(subId) === idStr;
+            });
+            
             if (subscription) {
                 const renewalDate = Utils.formatDate(subscription.end_date);
                 statusText.textContent = autoRenewal
                     ? `Продление ${renewalDate}`
                     : `Завершится ${renewalDate}`;
+                Utils.log('info', 'Status text updated');
+            } else {
+                Utils.log('warn', 'Subscription not found for UI update');
             }
         }
 
-        const compactToggle = document.querySelector(`[data-subscription-id="${subscriptionId}"] .toggle-switch-compact`);
+        // Обновляем компактный формат
+        const compactAutoRenewal = document.querySelector(`[data-subscription-id="${idStr}"].subscription-compact-auto-renewal`);
+        const compactToggle = compactAutoRenewal ? compactAutoRenewal.querySelector('.toggle-switch-compact') : null;
+        
         if (compactToggle) {
-            compactToggle.classList.toggle('active', autoRenewal);
+            if (autoRenewal) {
+                compactToggle.classList.add('active');
+            } else {
+                compactToggle.classList.remove('active');
+            }
+            Utils.log('info', 'Compact toggle updated');
         }
     },
 
@@ -1763,11 +1901,6 @@ window.SubscriptionScreen = {
                             </div>
                             <div class="currency-name">${currencyName}</div>
                             <div class="currency-code">${currencyCode}</div>
-                        </div>
-
-                        <div class="currency-balance-display">
-                            <div class="balance-label">Ваш баланс</div>
-                            <div class="balance-amount">${parseFloat(balanceAmount).toFixed(0)} ${currencyCode}</div>
                         </div>
 
                         <div class="currency-stats">
