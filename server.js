@@ -49,6 +49,7 @@ const server = http.createServer((req, res) => {
     '/js/api/keys.js': 'js/api/keys.js',
     '/js/api/referral.js': 'js/api/referral.js',
     '/js/api/services.js': 'js/api/services.js',
+    '/js/api/servers.js': 'js/api/servers.js',
 
     // Components JS
     '/js/components/toast.js': 'js/components/toast.js',

@@ -243,22 +243,33 @@ ${this.referralLink.link}`;
      * Рендеринг статистики
      */
     renderStats() {
+        const bonusDays = this.calculateBonusDays();
+        
         return `
             <div class="referral-stats-grid">
                 <div class="stat-card">
                     <div class="stat-number">${this.stats.total_count || 0}</div>
-                    <div class="stat-label">Всего друзей</div>
+                    <div class="stat-label">Приглашено рефералов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${bonusDays}</div>
+                    <div class="stat-label">Бонусных дней</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${this.stats.partners || 0}</div>
                     <div class="stat-label">Активных</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number">${this.calculateEarnings()}</div>
-                    <div class="stat-label">Заработано</div>
-                </div>
             </div>
         `;
+    },
+
+    /**
+     * Вычисление бонусных дней
+     */
+    calculateBonusDays() {
+        // Каждый активный реферал дает 15 дней бонуса
+        const activeReferrals = this.stats.partners || 0;
+        return activeReferrals * 15;
     },
 
     initializeTGSAnimations() {

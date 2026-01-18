@@ -357,7 +357,22 @@ window.Loading = {
     // Загрузка платежей
     async loadPayments() {
         return this.withLoading(
-            () => window.PaymentAPI?.listPayments(),
+            async () => {
+                // Получаем user_id из текущего пользователя
+                let userId = null;
+                try {
+                    const user = await window.UserAPI.getCurrentUser();
+                    userId = user.telegram_id || user.user_id;
+                } catch (error) {
+                    Utils.log('error', 'Failed to get user ID:', error);
+                }
+
+                if (!userId) {
+                    return { payments: [] };
+                }
+
+                return await window.PaymentAPI?.listPayments(userId, { limit: 50, offset: 0 });
+            },
             'Загрузка истории платежей...'
         );
     },

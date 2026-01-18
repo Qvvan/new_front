@@ -6,7 +6,7 @@ window.ServiceAPI = {
      * @returns {Promise<Array>} Список сервисов
      */
     async getServices() {
-        return await window.APIClient.get('/services');
+        return await window.APIClient.get('/subscription/services');
     },
 
     /**

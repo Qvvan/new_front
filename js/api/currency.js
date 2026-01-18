@@ -6,7 +6,7 @@ window.CurrencyAPI = {
      * @returns {Promise<Object>} Баланс валюты
      */
     async getBalance() {
-        return await window.APIClient.get('/currency/balance');
+        return await window.APIClient.get('/user/currency/balance');
     },
 
     /**
@@ -15,7 +15,7 @@ window.CurrencyAPI = {
      * @returns {Promise<Object>} История транзакций с total, limit, offset
      */
     async getTransactions(params = {}) {
-        return await window.APIClient.get('/currency/transactions', params);
+        return await window.APIClient.get('/user/currency/transactions', params);
     },
 
     /**
@@ -24,7 +24,7 @@ window.CurrencyAPI = {
      * @returns {Promise<Object>} Данные транзакции
      */
     async getTransaction(transactionId) {
-        return await window.APIClient.get(`/currency/transactions/${transactionId}`);
+        return await window.APIClient.get(`/user/currency/transactions/${transactionId}`);
     },
 
     /**
@@ -32,7 +32,7 @@ window.CurrencyAPI = {
      * @returns {Promise<Object>} Статус бонуса (current_streak, can_claim, next_claim_available_at, bonus_amount)
      */
     async getDailyBonusStatus() {
-        return await window.APIClient.get('/currency/daily-bonus/status');
+        return await window.APIClient.get('/user/currency/daily-bonus/status');
     },
 
     /**
@@ -40,6 +40,14 @@ window.CurrencyAPI = {
      * @returns {Promise<Object>} Результат получения бонуса (balance, bonus_amount, streak_day, next_claim_available_at)
      */
     async claimDailyBonus() {
-        return await window.APIClient.post('/currency/daily-bonus/claim');
+        return await window.APIClient.post('/user/currency/daily-bonus/claim');
+    },
+
+    /**
+     * Получение списка ежедневных бонусов
+     * @returns {Promise<Object>} Список бонусов с total_bonuses
+     */
+    async getDailyBonusList() {
+        return await window.APIClient.get('/user/currency/daily-bonus/list');
     }
 };

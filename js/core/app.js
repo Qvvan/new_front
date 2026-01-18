@@ -335,7 +335,21 @@ window.DragonVPNApp = {
 
             Utils.log('info', 'Checking for actual pending payments from API...');
 
-            const response = await window.PaymentAPI.listPayments();
+            // Получаем user_id из текущего пользователя
+            let userId = null;
+            try {
+                const user = await window.UserAPI.getCurrentUser();
+                userId = user.telegram_id || user.user_id;
+            } catch (error) {
+                Utils.log('error', 'Failed to get user ID:', error);
+            }
+
+            if (!userId) {
+                Utils.log('warn', 'User ID not available, skipping pending payments check');
+                return;
+            }
+
+            const response = await window.PaymentAPI.listPayments(userId, { limit: 50, offset: 0 });
             const allPayments = response.payments || [];
 
             // ✅ СТРОГО фильтруем только pending
@@ -678,26 +692,6 @@ window.DragonVPNApp = {
         this.pendingReferrerId = null;
     },
 
-    async ensureUserRegistration() {
-        try {
-            const userData = await window.Storage?.getUserData();
-            const telegramUser = window.TelegramApp?.getUserInfo();
-
-            if (!userData && telegramUser) {
-                Utils.log('info', 'Registering new user');
-
-                if (window.UserAPI) {
-                    const referrerId = window.TelegramApp?.getReferrerId();
-                    return await window.UserAPI.registerUser(referrerId);
-                    await window.Storage?.setUserData(result.user);
-
-                    await this.processReferralAfterRegistration();
-                }
-            }
-        } catch (error) {
-            Utils.log('error', 'User registration failed:', error);
-        }
-    },
 
     async processReferralAfterRegistration() {
         try {

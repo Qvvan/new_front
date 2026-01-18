@@ -6,7 +6,7 @@ window.SubscriptionAPI = {
      * @returns {Promise<Array>} Список подписок
      */
     async listSubscriptions() {
-        return await window.APIClient.get('/subscriptions/user');
+        return await window.APIClient.get('/subscription/subscriptions/user');
     },
 
     /**
@@ -32,7 +32,7 @@ window.SubscriptionAPI = {
      * @returns {Promise<Object>} Созданная пробная подписка
      */
     async activateTrial() {
-        return await window.APIClient.post('/subscriptions/trial');
+        return await window.APIClient.post('/subscription/subscriptions/trial');
     },
 
     /**
@@ -42,9 +42,8 @@ window.SubscriptionAPI = {
      * @returns {Promise<Object>} Результат операции
      */
     async updateAutoRenewal(subscriptionId, autoRenewal) {
-        return await window.APIClient.post(`/subscriptions/${subscriptionId}/auto-renewal`, null, {
-            params: { auto_renewal: autoRenewal }
-        });
+        const url = `/subscription/subscriptions/${subscriptionId}/auto-renewal?auto_renewal=${autoRenewal}`;
+        return await window.APIClient.post(url);
     },
 
     /**
@@ -73,6 +72,6 @@ window.SubscriptionAPI = {
      * @returns {Promise<Array>} История пользователя
      */
     async getUserHistory(userId, params = {}) {
-        return await window.APIClient.get(`/subscriptions/user/${userId}/history`, params);
+        return await window.APIClient.get(`/subscription/subscriptions/user/${userId}/history`, params);
     }
 };

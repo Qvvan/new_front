@@ -33,16 +33,35 @@ window.Modal = {
     setupGlobalEvents() {
         // Закрытие по клику на фон
         this.backdrop.addEventListener('click', (e) => {
+            // Не закрываем если идет скролл (пользователь начал скролл внутри модального окна)
+            if (this.backdrop.dataset.scrolling === 'true') {
+                return;
+            }
+            
+            // Проверяем что клик именно на backdrop, а не на модальное окно
             if (e.target === this.backdrop && this.modalStack.length > 0) {
                 const topModalId = this.modalStack[this.modalStack.length - 1];
                 const modalData = this.activeModals.get(topModalId);
-                if (modalData) {
+                if (modalData && modalData.config.closable !== false) {
                     // Вызываем onCancel если есть, чтобы Promise резолвился
                     if (modalData.config.onCancel) {
                         modalData.config.onCancel(topModalId);
                     }
                     this.close(topModalId);
                 }
+            }
+        });
+        
+        // Предотвращаем закрытие при mouseup/touchend если был скролл
+        this.backdrop.addEventListener('mouseup', (e) => {
+            if (this.backdrop.dataset.scrolling === 'true' && e.target === this.backdrop) {
+                e.stopPropagation();
+            }
+        });
+        
+        this.backdrop.addEventListener('touchend', (e) => {
+            if (this.backdrop.dataset.scrolling === 'true' && e.target === this.backdrop) {
+                e.stopPropagation();
             }
         });
 
@@ -85,22 +104,31 @@ window.Modal = {
         const modalConfig = { ...defaultConfig, ...config };
         const modal = this.createModal(modalConfig);
 
+        // Убеждаемся что backdrop готов к показу
+        if (!this.backdrop.parentNode) {
+            document.body.appendChild(this.backdrop);
+        }
+
         // Добавляем в DOM
         this.backdrop.appendChild(modal);
         this.activeModals.set(modalConfig.id, { element: modal, config: modalConfig });
         this.modalStack.push(modalConfig.id);
 
-        // Сбрасываем стили backdrop перед показом
+        // Сбрасываем стили backdrop перед показом (сразу, без задержки)
         this.backdrop.style.transition = '';
         this.backdrop.style.opacity = '';
+        this.backdrop.style.visibility = 'visible';
+        this.backdrop.style.pointerEvents = 'auto';
 
         // Показываем фон
         this.backdrop.classList.add('active');
 
-        // Анимация появления
-        setTimeout(() => {
-            modal.classList.add('active');
-        }, 10);
+        // Анимация появления (используем requestAnimationFrame для плавности)
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                modal.classList.add('active');
+            });
+        });
 
         // Вызываем callback
         if (typeof modalConfig.onShow === 'function') {
@@ -159,15 +187,39 @@ window.Modal = {
      * Рендеринг кнопок
      */
     renderButtons(buttons) {
-        return buttons.map(button => {
+        // Группируем кнопки по позициям
+        const leftButtons = buttons.filter(b => !b.position || b.position === 'left');
+        const rightButtons = buttons.filter(b => b.position === 'right');
+        
+        const renderButton = (button) => {
             const btnClass = button.type === 'primary' ? 'btn btn-primary' : 'btn btn-secondary';
+            const disabledClass = button.disabled ? 'btn-disabled' : '';
+            const disabledAttr = button.disabled ? 'disabled' : '';
             return `
-                <button class="${btnClass}" data-action="${button.action || 'custom'}" data-button-id="${button.id || ''}">
+                <button class="${btnClass} ${disabledClass}" 
+                        data-action="${button.action || 'custom'}" 
+                        data-button-id="${button.id || ''}"
+                        ${disabledAttr}>
                     ${button.icon ? `<i class="${button.icon}"></i>` : ''}
                     ${Utils.escapeHtml(button.text)}
                 </button>
             `;
-        }).join('');
+        };
+        
+        // Если есть кнопки справа, используем flex layout
+        if (rightButtons.length > 0) {
+            return `
+                <div class="modal-actions-left">
+                    ${leftButtons.map(renderButton).join('')}
+                </div>
+                <div class="modal-actions-right">
+                    ${rightButtons.map(renderButton).join('')}
+                </div>
+            `;
+        }
+        
+        // Иначе обычный рендеринг
+        return buttons.map(renderButton).join('');
     },
 
     /**
@@ -175,8 +227,12 @@ window.Modal = {
      */
     setupModalEvents(modal, config) {
         modal.addEventListener('click', (e) => {
-            const action = e.target.closest('[data-action]')?.dataset.action;
-            const buttonId = e.target.closest('[data-button-id]')?.dataset.buttonId;
+            // Ищем кнопку или элемент внутри кнопки
+            const button = e.target.closest('button[data-action]');
+            if (!button) return;
+            
+            const action = button.dataset.action;
+            const buttonId = button.dataset.buttonId;
 
             if (action) {
                 this.handleModalAction(config.id, action, buttonId, config);
@@ -190,6 +246,10 @@ window.Modal = {
     handleModalAction(modalId, action, buttonId, config) {
         switch (action) {
             case 'close':
+                const closeModalData = this.activeModals.get(modalId);
+                if (closeModalData && closeModalData.config.onCancel) {
+                    closeModalData.config.onCancel(modalId);
+                }
                 this.close(modalId);
                 break;
             case 'confirm':
@@ -212,9 +272,40 @@ window.Modal = {
                 // Находим кнопку и вызываем её обработчик
                 const button = config.buttons.find(btn => btn.id === buttonId);
                 if (button && typeof button.handler === 'function') {
-                    const result = button.handler(modalId);
-                    if (result !== false && button.closeAfter !== false) {
-                        this.close(modalId);
+                    // Находим элемент кнопки в DOM
+                    const modalElement = this.activeModals.get(modalId)?.element;
+                    if (!modalElement) return;
+                    
+                    const buttonElement = modalElement.querySelector(`button[data-button-id="${buttonId}"]`);
+                    
+                    // Проверяем disabled состояние
+                    if (buttonElement && (buttonElement.disabled || buttonElement.classList.contains('btn-disabled'))) {
+                        return; // Не обрабатываем клик по disabled кнопке
+                    }
+                    
+                    // Вызываем обработчик (может быть async)
+                    try {
+                        // Вызываем без параметров, так как handler может не принимать modalId
+                        const result = button.handler();
+                        
+                        // Обрабатываем Promise если обработчик async
+                        if (result instanceof Promise) {
+                            result.then((resolvedResult) => {
+                                // Закрываем только если явно указано closeAfter !== false и результат не false/keep-open
+                                if (resolvedResult !== false && resolvedResult !== 'keep-open' && button.closeAfter !== false) {
+                                    this.close(modalId);
+                                }
+                            }).catch(() => {
+                                // При ошибке не закрываем модальное окно
+                            });
+                        } else {
+                            // Синхронный результат
+                            if (result !== false && result !== 'keep-open' && button.closeAfter !== false) {
+                                this.close(modalId);
+                            }
+                        }
+                    } catch (error) {
+                        // При ошибке не закрываем модальное окно
                     }
                 }
                 break;
@@ -230,50 +321,53 @@ window.Modal = {
 
         const { element, config } = modalData;
 
-        // Мгновенно скрываем модальное окно и backdrop
-        element.classList.remove('active');
-        element.style.transition = 'none'; // Отключаем анимацию для мгновенного закрытия
-        element.style.opacity = '0';
-        element.style.transform = 'scale(0.95)';
-
-        // Скрываем backdrop сразу если это последнее модальное окно
+        // Удаляем из стека сразу
         const stackIndex = this.modalStack.indexOf(modalId);
         if (stackIndex !== -1) {
             this.modalStack.splice(stackIndex, 1);
         }
 
-        if (this.modalStack.length === 0) {
-            this.backdrop.classList.remove('active');
-            this.backdrop.style.transition = 'none';
-            this.backdrop.style.opacity = '0';
-            // Сбрасываем стили backdrop после закрытия
-            setTimeout(() => {
-                this.backdrop.style.transition = '';
-                this.backdrop.style.opacity = '';
-            }, 20);
-        }
-
         // Удаляем из активных сразу
         this.activeModals.delete(modalId);
 
-        // Минимальная задержка только для очистки DOM
-        setTimeout(() => {
-            // Удаляем из DOM
+        // Скрываем модальное окно
+        element.classList.remove('active');
+        element.style.opacity = '0';
+        element.style.transform = 'scale(0.95)';
+
+        // Если это последнее модальное окно - скрываем backdrop сразу
+        const isLastModal = this.modalStack.length === 0;
+        if (isLastModal) {
+            this.backdrop.classList.remove('active');
+            this.backdrop.style.opacity = '0';
+            this.backdrop.style.visibility = 'hidden';
+            this.backdrop.style.pointerEvents = 'none';
+        }
+
+        // Удаляем из DOM в следующем кадре анимации
+        requestAnimationFrame(() => {
             if (element.parentNode) {
                 element.parentNode.removeChild(element);
             }
 
-            // Сбрасываем стили элемента после удаления
+            // Сбрасываем стили элемента
             element.style.transition = '';
             element.style.opacity = '';
             element.style.transform = '';
+
+            // Полностью сбрасываем стили backdrop если нет активных модальных окон
+            if (isLastModal) {
+                this.backdrop.style.transition = '';
+                this.backdrop.style.opacity = '';
+                this.backdrop.style.visibility = '';
+                this.backdrop.style.pointerEvents = '';
+            }
 
             // Вызываем callback
             if (typeof config.onHide === 'function') {
                 config.onHide(modalId);
             }
-
-        }, 10); // Минимальная задержка для быстрого закрытия
+        });
     },
 
     /**
@@ -282,8 +376,19 @@ window.Modal = {
     closeTop() {
         if (this.modalStack.length > 0) {
             const topModalId = this.modalStack[this.modalStack.length - 1];
+            const modalData = this.activeModals.get(topModalId);
+            if (modalData && modalData.config.onCancel) {
+                modalData.config.onCancel(topModalId);
+            }
             this.close(topModalId);
         }
+    },
+
+    /**
+     * Скрыть модальное окно (алиас для closeTop)
+     */
+    hide() {
+        this.closeTop();
     },
 
     /**

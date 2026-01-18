@@ -5,8 +5,8 @@ window.ReferralAPI = {
      * @param {Object} params - Параметры фильтрации
      * @returns {Promise<Object>} Список рефералов
      */
-    async listReferrals(params = {}) {
-        return await window.APIClient.get('/referrals', params);
+    async listReferrals() {
+        return await window.APIClient.get('/user/referral/me');
     },
 
     /**
@@ -23,8 +23,8 @@ window.ReferralAPI = {
      * @param {number} userId - ID пользователя
      * @returns {Promise<Object>} Статистика рефералов
      */
-    async getReferralStats(userId) {
-        return await window.APIClient.get(`/user/${userId}/referrals`);
+    async getReferralStats() {
+        return await window.APIClient.get('/user/referral/me');
     },
 
     /**

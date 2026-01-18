@@ -4,7 +4,7 @@ window.ServiceSelector = {
     isVisible: false,
     services: [],
     selectedService: null,
-    mode: null, // 'buy' или 'renew'
+    mode: null, // 'buy', 'renew' или 'gift'
     subscriptionId: null,
 
     /**
@@ -132,12 +132,14 @@ window.ServiceSelector = {
     render() {
         const modal = this.getModalElement();
 
-        const titleText = this.mode === 'renew' ? 'Продление подписки' : 'Новая подписка';
+        const titleText = this.mode === 'renew' ? 'Продление подписки' : (this.mode === 'gift' ? 'Подарить подписку' : 'Новая подписка');
 
         // ⚠️ Добавляем иконки к пояснениям
         let explanationText = '';
         if (this.mode === 'renew') {
             explanationText = '<i class="fas fa-sync-alt"></i>Выберите тариф для продления. Новый период добавится к текущему.';
+        } else if (this.mode === 'gift') {
+            explanationText = '<i class="fas fa-gift"></i>Выберите подписку, которую хотите подарить.';
         } else {
             const hasActiveSubscription = this.checkForActiveSubscriptions();
             if (hasActiveSubscription) {
@@ -165,7 +167,7 @@ window.ServiceSelector = {
                     <div class="services-grid-compact">
                         ${this.renderCompactServices()}
                     </div>
-                    ${this.renderTrialService()}
+                    ${this.mode !== 'gift' ? this.renderTrialService() : ''}
                 </div>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" id="serviceSelectorCancel">
@@ -471,6 +473,12 @@ window.ServiceSelector = {
                 subscriptionId: this.subscriptionId
             });
 
+            // ✅ Для режима подарка переходим к следующему шагу
+            if (this.mode === 'gift') {
+                await this.handleGiftContinue();
+                return;
+            }
+
             // ✅ Для пробного периода используем отдельный метод
             if (this.selectedService.is_trial) {
                 await this.activateTrial();
@@ -483,6 +491,25 @@ window.ServiceSelector = {
             if (window.Toast) {
                 window.Toast.show('Ошибка создания платежа', 'error');
             }
+        }
+    },
+
+    /**
+     * Обработка продолжения для подарка
+     */
+    async handleGiftContinue() {
+        if (!this.selectedService || this.mode !== 'gift') return;
+
+        // Сохраняем выбранную услугу в GiftFlow
+        if (window.GiftFlow) {
+            window.GiftFlow.selectedService = this.selectedService;
+            window.GiftFlow.giftData.service_id = this.selectedService.service_id || this.selectedService.id;
+            
+            // Скрываем ServiceSelector
+            this.hide();
+            
+            // Переходим к шагу 2 (получатель и сообщение)
+            window.GiftFlow.showStep2();
         }
     },
 

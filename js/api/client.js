@@ -15,12 +15,6 @@ window.APIClient = {
     async request(endpoint, method = 'GET', data = null, options = {}) {
         let url = `${this.baseURL}${endpoint}`;
 
-        // Для GET запросов добавляем timestamp чтобы предотвратить кеширование
-        if (method.toUpperCase() === 'GET') {
-            const separator = url.includes('?') ? '&' : '?';
-            url += `${separator}_t=${Date.now()}`;
-        }
-
         const config = {
             method: method.toUpperCase(),
             headers: {
@@ -70,7 +64,8 @@ window.APIClient = {
 
         try {
             errorData = await response.json();
-            errorMessage = errorData.message || errorData.error || errorMessage;
+            // Приоритет: comment (от бэкенда) > message > error > statusText
+            errorMessage = errorData.comment || errorData.message || errorData.error || errorMessage;
         } catch (e) {
             // Если не удалось распарсить JSON ошибки
             errorMessage = response.statusText || errorMessage;
@@ -79,7 +74,7 @@ window.APIClient = {
         // Специфичные сообщения для различных статусов
         switch (response.status) {
             case 400:
-                errorMessage = errorData?.message || 'Неверные данные запроса';
+                errorMessage = errorData?.comment || errorData?.message || 'Неверные данные запроса';
                 break;
             case 401:
                 errorMessage = 'Необходима авторизация';

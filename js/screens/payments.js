@@ -1,17 +1,21 @@
 // Payments Screen for Dragon VPN Mini App
 window.PaymentsScreen = {
     payments: [],
+    currencyTransactions: [],
+    gifts: [],
     services: new Map(), // Кеш сервисов по ID
     groupedPayments: new Map(),
+    allActions: [], // Все действия объединенные
     isLoaded: false,
 
     /**
      * Инициализация экрана платежей
      */
     async init() {
-
         await this.loadServices();
         await this.loadPayments();
+        await this.loadCurrencyTransactions();
+        await this.loadGifts();
         this.render();
         this.setupEventListeners();
         this.isLoaded = true;
@@ -27,10 +31,167 @@ window.PaymentsScreen = {
 
             const paymentItem = e.target.closest('.payment-item');
             if (paymentItem) {
-                const paymentId = paymentItem.dataset.paymentId;
-                this.showPaymentDetails(paymentId);
+                if (paymentItem.dataset.paymentId) {
+                    this.showPaymentDetails(paymentItem.dataset.paymentId);
+                } else if (paymentItem.dataset.giftId) {
+                    this.showGiftDetails(paymentItem.dataset.giftId);
+                } else if (paymentItem.dataset.transactionId) {
+                    this.showTransactionDetails(paymentItem.dataset.transactionId);
+                }
             }
         });
+    },
+
+    /**
+     * Показ деталей подарка
+     */
+    async showGiftDetails(giftId) {
+        const gift = this.gifts.find(g => (g.gift_id === giftId) || (g.id === giftId));
+        if (!gift) return;
+
+        if (window.TelegramApp) {
+            window.TelegramApp.haptic.light();
+        }
+
+        const canRefund = gift.status === 'pending' && !gift.activated_at && gift.gift_code;
+
+        if (window.Modal) {
+            window.Modal.show({
+                title: 'Детали подарка',
+                content: `
+                    <div class="payment-details">
+                        <div class="payment-detail-item">
+                            <span class="detail-label">Статус</span>
+                            <span class="detail-value payment-status ${gift.status}">
+                                ${gift.status === 'activated' ? 'Активирован' : 
+                                  gift.status === 'pending' ? 'Ожидает активации' : 'Отменен'}
+                            </span>
+                        </div>
+                        ${gift.gift_code ? `
+                            <div class="payment-detail-item">
+                                <span class="detail-label">Код активации</span>
+                                <span class="detail-value">${gift.gift_code}</span>
+                            </div>
+                        ` : ''}
+                        ${gift.recipient_user_id ? `
+                            <div class="payment-detail-item">
+                                <span class="detail-label">Получатель</span>
+                                <span class="detail-value">ID: ${gift.recipient_user_id}</span>
+                            </div>
+                        ` : ''}
+                        ${gift.activated_at ? `
+                            <div class="payment-detail-item">
+                                <span class="detail-label">Активирован</span>
+                                <span class="detail-value">${Utils.formatDate(gift.activated_at, 'long')}</span>
+                            </div>
+                        ` : ''}
+                        <div class="payment-detail-item">
+                            <span class="detail-label">Дата создания</span>
+                            <span class="detail-value">${Utils.formatDate(gift.created_at, 'long')}</span>
+                        </div>
+                    </div>
+                `,
+                buttons: [
+                    ...(canRefund ? [{
+                        id: 'refund',
+                        text: 'Запросить возврат',
+                        type: 'warning',
+                        handler: () => this.handleGiftRefund(gift)
+                    }] : []),
+                    {
+                        id: 'close',
+                        text: 'Закрыть',
+                        action: 'close'
+                    }
+                ]
+            });
+        }
+    },
+
+    /**
+     * Обработка возврата подарка
+     */
+    async handleGiftRefund(gift) {
+        const confirmed = await window.Modal?.showConfirm(
+            'Запросить возврат средств?',
+            'Код подарка будет деактивирован, а средства возвращены на ваш счет.'
+        );
+
+        if (!confirmed) return;
+
+        try {
+            if (window.Loading) {
+                window.Loading.show('Обработка возврата...');
+            }
+
+            await window.GiftAPI.refundGift(gift.gift_id || gift.id);
+
+            if (window.Loading) {
+                window.Loading.hide();
+            }
+
+            if (window.Toast) {
+                window.Toast.success('Запрос на возврат отправлен');
+            }
+
+            // Обновляем данные
+            await this.refresh();
+
+            if (window.TelegramApp) {
+                window.TelegramApp.haptic.success();
+            }
+
+        } catch (error) {
+            if (window.Loading) {
+                window.Loading.hide();
+            }
+
+            Utils.log('error', 'Failed to refund gift:', error);
+            if (window.Toast) {
+                window.Toast.error(error.data?.comment || error.message || 'Ошибка возврата средств');
+            }
+        }
+    },
+
+    /**
+     * Показ деталей транзакции валюты
+     */
+    async showTransactionDetails(transactionId) {
+        const transaction = this.currencyTransactions.find(t => 
+            (t.transaction_id === transactionId) || (t.id === transactionId)
+        );
+        if (!transaction) return;
+
+        if (window.Modal) {
+            window.Modal.show({
+                title: 'Детали транзакции',
+                content: `
+                    <div class="payment-details">
+                        <div class="payment-detail-item">
+                            <span class="detail-label">Тип</span>
+                            <span class="detail-value">${transaction.description || this.getCurrencyTransactionType(transaction.transaction_type)}</span>
+                        </div>
+                        <div class="payment-detail-item">
+                            <span class="detail-label">Сумма</span>
+                            <span class="detail-value">${transaction.amount} DRG</span>
+                        </div>
+                        <div class="payment-detail-item">
+                            <span class="detail-label">Баланс после</span>
+                            <span class="detail-value">${transaction.balance_after} DRG</span>
+                        </div>
+                        <div class="payment-detail-item">
+                            <span class="detail-label">Дата</span>
+                            <span class="detail-value">${Utils.formatDate(transaction.created_at, 'long')}</span>
+                        </div>
+                    </div>
+                `,
+                buttons: [{
+                    id: 'close',
+                    text: 'Закрыть',
+                    action: 'close'
+                }]
+            });
+        }
     },
 
     /**
@@ -56,7 +217,21 @@ window.PaymentsScreen = {
      */
     async loadPayments() {
         try {
-            const response = await window.PaymentAPI.listPayments();
+            // Получаем user_id из текущего пользователя
+            let userId = null;
+            try {
+                const user = await window.UserAPI.getCurrentUser();
+                userId = user.telegram_id || user.user_id;
+            } catch (error) {
+                Utils.log('error', 'Failed to get user ID:', error);
+            }
+
+            if (!userId) {
+                this.payments = [];
+                return;
+            }
+
+            const response = await window.PaymentAPI.listPayments(userId, { limit: 50, offset: 0 });
             this.payments = response.payments || [];
 
             // Обогащаем каждый платеж данными сервиса
@@ -69,6 +244,89 @@ window.PaymentsScreen = {
                 window.Toast.error('Ошибка загрузки платежей');
             }
         }
+    },
+
+    /**
+     * Загрузка транзакций валюты
+     */
+    async loadCurrencyTransactions() {
+        try {
+            const response = await window.CurrencyAPI.getTransactions({ limit: 50, offset: 0 });
+            this.currencyTransactions = response.transactions || [];
+        } catch (error) {
+            this.currencyTransactions = [];
+            Utils.log('error', 'Failed to load currency transactions:', error);
+        }
+    },
+
+    /**
+     * Загрузка подарков
+     */
+    async loadGifts() {
+        try {
+            // Получаем user_id из текущего пользователя
+            let userId = null;
+            try {
+                const user = await window.UserAPI.getCurrentUser();
+                userId = user.telegram_id || user.user_id;
+            } catch (error) {
+                Utils.log('error', 'Failed to get user ID:', error);
+            }
+
+            if (!userId) {
+                this.gifts = [];
+                return;
+            }
+
+            // Загружаем pending и sent подарки
+            const [pendingGifts, sentGifts] = await Promise.all([
+                window.GiftAPI.getPendingGifts(userId).catch(() => []),
+                window.GiftAPI.getSentGifts(userId).catch(() => [])
+            ]);
+
+            // Объединяем подарки
+            this.gifts = [...pendingGifts, ...sentGifts];
+        } catch (error) {
+            this.gifts = [];
+            Utils.log('error', 'Failed to load gifts:', error);
+        }
+    },
+
+    /**
+     * Объединение всех действий (платежи, транзакции, подарки) для отображения
+     */
+    combineAllActions() {
+        this.allActions = [];
+
+        // Добавляем платежи
+        this.payments.forEach(payment => {
+            this.allActions.push({
+                type: 'payment',
+                data: payment,
+                date: new Date(payment.created_at)
+            });
+        });
+
+        // Добавляем транзакции валюты
+        this.currencyTransactions.forEach(transaction => {
+            this.allActions.push({
+                type: 'currency',
+                data: transaction,
+                date: new Date(transaction.created_at)
+            });
+        });
+
+        // Добавляем подарки
+        this.gifts.forEach(gift => {
+            this.allActions.push({
+                type: 'gift',
+                data: gift,
+                date: new Date(gift.created_at)
+            });
+        });
+
+        // Сортируем по дате (новые сверху)
+        this.allActions.sort((a, b) => b.date - a.date);
     },
 
     /**
@@ -165,7 +423,10 @@ window.PaymentsScreen = {
                 this.groupedPayments.set(dateKey, []);
             }
 
-            this.groupedPayments.get(dateKey).push(payment);
+            this.groupedPayments.get(dateKey).push({
+                type: 'payment',
+                data: payment
+            });
         });
 
         // Сортируем группы по дате (новые сверху)
@@ -181,9 +442,12 @@ window.PaymentsScreen = {
         const container = document.getElementById('paymentsScreen');
         if (!container) return;
 
+        // Объединяем все действия перед рендерингом
+        this.combineAllActions();
+
         let content = '';
 
-        if (this.payments.length === 0) {
+        if (this.allActions.length === 0) {
             content = this.renderEmptyState();
         } else {
             content = this.renderPaymentHistory();
@@ -244,34 +508,59 @@ window.PaymentsScreen = {
             </div>
         `;
 
-        for (const [dateKey, dayPayments] of this.groupedPayments) {
-            content += this.renderDateGroup(dateKey, dayPayments);
+        // Группируем все действия по дате
+        const groupedByDate = new Map();
+        this.allActions.forEach(action => {
+            const dateKey = action.date.toISOString().split('T')[0]; // YYYY-MM-DD
+            if (!groupedByDate.has(dateKey)) {
+                groupedByDate.set(dateKey, []);
+            }
+            groupedByDate.get(dateKey).push(action);
+        });
+
+        // Сортируем группы по дате (новые сверху)
+        const sortedGroups = [...groupedByDate.entries()].sort((a, b) => new Date(b[0]) - new Date(a[0]));
+
+        for (const [dateKey, dayActions] of sortedGroups) {
+            content += this.renderDateGroup(dateKey, dayActions);
         }
 
         return content;
     },
 
     /**
-     * Рендеринг группы платежей по дате
+     * Рендеринг группы действий по дате
      */
-    renderDateGroup(dateKey, payments) {
+    renderDateGroup(dateKey, actions) {
         const date = new Date(dateKey);
         const dateLabel = this.formatDateLabel(date);
-        const totalAmount = payments.reduce((sum, p) => sum + (p.price || 0), 0);
+        
+        // Вычисляем общую сумму только для платежей
+        const totalAmount = actions
+            .filter(a => a.type === 'payment')
+            .reduce((sum, a) => sum + (a.data.price || a.data.amount || 0), 0);
 
         let content = `
             <div class="payment-date-group">
                 <div class="payment-date-header">
                     <h3 class="payment-date-title">${dateLabel}</h3>
-                    <div class="payment-date-total">
-                        ${Utils.formatPrice(totalAmount)}
-                    </div>
+                    ${totalAmount > 0 ? `
+                        <div class="payment-date-total">
+                            ${Utils.formatPrice(totalAmount)}
+                        </div>
+                    ` : ''}
                 </div>
                 <div class="payment-list">
         `;
 
-        payments.forEach(payment => {
-            content += this.renderPaymentItem(payment);
+        actions.forEach(action => {
+            if (action.type === 'payment') {
+                content += this.renderPaymentItem(action.data);
+            } else if (action.type === 'currency') {
+                content += this.renderCurrencyTransaction(action.data);
+            } else if (action.type === 'gift') {
+                content += this.renderGiftItem(action.data);
+            }
         });
 
         content += `
@@ -343,10 +632,85 @@ window.PaymentsScreen = {
     },
 
     /**
+     * Рендеринг транзакции валюты
+     */
+    renderCurrencyTransaction(transaction) {
+        const isPositive = parseFloat(transaction.amount) > 0;
+        const icon = isPositive ? 'fa-plus-circle' : 'fa-minus-circle';
+        const colorClass = isPositive ? 'success' : 'warning';
+        const typeText = this.getCurrencyTransactionType(transaction.transaction_type);
+
+        return `
+            <div class="payment-item currency-transaction ${colorClass}" data-transaction-id="${transaction.transaction_id || transaction.id}">
+                <div class="payment-item-icon">
+                    <i class="fas ${icon}"></i>
+                </div>
+                <div class="payment-item-info">
+                    <div class="payment-item-service">${transaction.description || typeText}</div>
+                    <div class="payment-item-meta">
+                        ${Utils.formatDate(transaction.created_at, 'relative')}
+                    </div>
+                </div>
+                <div class="payment-item-amount">
+                    <div class="payment-amount ${isPositive ? 'text-green' : 'text-yellow'}">
+                        ${isPositive ? '+' : ''}${transaction.amount} DRG
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Получение типа транзакции валюты
+     */
+    getCurrencyTransactionType(type) {
+        const typeMap = {
+            'daily_bonus': 'Ежедневный бонус',
+            'referral_bonus': 'Реферальный бонус',
+            'admin_bonus': 'Бонус от администратора',
+            'purchase': 'Покупка',
+            'refund': 'Возврат'
+        };
+        return typeMap[type] || 'Транзакция';
+    },
+
+    /**
+     * Рендеринг подарка
+     */
+    renderGiftItem(gift) {
+        const isActivated = gift.status === 'activated';
+        const isPending = gift.status === 'pending';
+        const statusClass = isActivated ? 'success' : (isPending ? 'pending' : 'canceled');
+        const statusIcon = isActivated ? 'fa-check' : (isPending ? 'fa-clock' : 'fa-times');
+        const statusText = isActivated ? 'Активирован' : (isPending ? 'Ожидает' : 'Отменен');
+
+        return `
+            <div class="payment-item gift-item ${statusClass}" data-gift-id="${gift.gift_id || gift.id}">
+                <div class="payment-item-icon">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <div class="payment-item-info">
+                    <div class="payment-item-service">
+                        ${gift.recipient_user_id ? 'Подарок отправлен' : 'Подарок (код)'}
+                    </div>
+                    <div class="payment-item-meta">
+                        ${gift.gift_code ? `Код: ${gift.gift_code}` : ''}
+                        ${gift.activated_at ? `• Активирован ${Utils.formatDate(gift.activated_at, 'relative')}` : ''}
+                        ${!gift.activated_at && gift.status === 'pending' ? '• Ожидает активации' : ''}
+                    </div>
+                </div>
+                <div class="payment-item-amount">
+                    <div class="payment-status ${statusClass}">${statusText}</div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
      * Показ деталей платежа
      */
     async showPaymentDetails(paymentId) {
-        const payment = this.payments.find(p => p.id === paymentId);
+        const payment = this.payments.find(p => (p.id === paymentId) || (p.payment_id === paymentId));
         if (!payment) return;
 
         if (window.TelegramApp) {
@@ -489,6 +853,8 @@ window.PaymentsScreen = {
     async refresh() {
         await this.loadServices();
         await this.loadPayments();
+        await this.loadCurrencyTransactions();
+        await this.loadGifts();
         this.render();
     },
 
@@ -497,6 +863,9 @@ window.PaymentsScreen = {
      */
     cleanup() {
         this.payments = [];
+        this.currencyTransactions = [];
+        this.gifts = [];
+        this.allActions = [];
         this.services.clear();
         this.groupedPayments.clear();
         this.isLoaded = false;

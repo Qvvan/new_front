@@ -28,11 +28,8 @@ window.PaymentAPI = {
      * @returns {Promise<Object>} Результат создания платежа
      */
     async createSubscriptionPayment(data, userId) {
-        const paymentData = {
-            payment_type: 'subscription',
-            ...data
-        };
-        return await this.createPayment(paymentData, userId);
+        const endpoint = `/subscription/subscriptions/payment?user_id=${userId}`;
+        return await window.APIClient.post(endpoint, data);
     },
 
     /**
@@ -42,11 +39,8 @@ window.PaymentAPI = {
      * @returns {Promise<Object>} Результат создания платежа
      */
     async createRenewalPayment(data, userId) {
-        const paymentData = {
-            payment_type: 'renewal',
-            ...data
-        };
-        return await this.createPayment(paymentData, userId);
+        const endpoint = `/subscription/subscriptions/renewal/payment?user_id=${userId}`;
+        return await window.APIClient.post(endpoint, data);
     },
 
     /**
@@ -98,26 +92,14 @@ window.PaymentAPI = {
      */
     async getPendingPayments(userId) {
         try {
-            // ✅ Запрашиваем все платежи и фильтруем только pending
-            const response = await this.listPayments(userId);
-            const allPayments = response.payments || [];
-
-            // ✅ Фильтруем только pending и недавние (последние 24 часа)
-            const now = Date.now();
-            const dayAgo = now - (24 * 60 * 60 * 1000);
-
-            const pendingPayments = allPayments.filter(payment => {
-                const isActuallyPending = payment.status === 'pending';
-                const createdAt = new Date(payment.created_at).getTime();
-                const isRecent = createdAt > dayAgo;
-
-                return isActuallyPending && isRecent;
-            });
-            return pendingPayments;
+            const response = await window.APIClient.get(`/payments/user/${userId}/pending`);
+            return response.payments || [];
         } catch (error) {
+            Utils.log('warn', 'Pending payments endpoint not available:', error);
             return [];
         }
     },
+
 
     /**
      * Возврат средств за платеж
