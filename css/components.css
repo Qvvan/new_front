@@ -4866,7 +4866,7 @@ button:disabled:hover {
         0 2px 6px rgba(255, 71, 87, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transition: all var(--transition-normal);
-    overflow: hidden;
+    overflow: visible;
 }
 
 .daily-bonus-button-icon::before {
@@ -4931,7 +4931,7 @@ button:disabled:hover {
     box-shadow: 
         0 0 0 2px rgba(255, 59, 48, 0.4),
         0 2px 8px rgba(255, 59, 48, 0.5);
-    z-index: 2;
+    z-index: 999;
     animation: bonusPulse 2s ease-in-out infinite;
 }
 
