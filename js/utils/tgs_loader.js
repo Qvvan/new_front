@@ -138,35 +138,13 @@ window.TGSLoader = {
 
 
     /**
-     * 🚀 ИНИЦИАЛИЗАЦИЯ: Предзагрузка критичных TGS в blob URLs
+     * 🚀 ИНИЦИАЛИЗАЦИЯ: Ленивая загрузка TGS (не предзагружаем все сразу)
+     * ✅ ОПТИМИЗАЦИЯ: Анимации загружаются только при открытии экрана
      */
     async initialize() {
-        Utils.log('info', '🚀 Initializing TGS Loader with blob caching...');
-
-        // Собираем только TGS файлы для предзагрузки
-        const preloadFiles = new Set();
-
-        Object.values(this.presets).forEach(preset => {
-            preset.forEach(config => {
-                if (config.preload && config.tgsPath.endsWith('.tgs')) {
-                    preloadFiles.add(config.tgsPath);
-                }
-            });
-        });
-
-        // Предзагружаем только TGS в фоне
-        const preloadPromises = Array.from(preloadFiles).map(tgsPath =>
-            this.preloadTGSToBlob(tgsPath).catch(error => {
-                Utils.log('warn', `Failed to preload ${tgsPath}:`, error.message);
-            })
-        );
-
-        try {
-            await Promise.allSettled(preloadPromises);
-            Utils.log('info', `✅ Preloaded ${preloadFiles.size} TGS files as blob URLs`);
-        } catch (error) {
-            Utils.log('error', 'Failed to preload TGS files:', error);
-        }
+        Utils.log('info', 'TGS Loader initialized (lazy loading mode)');
+        // ✅ ОПТИМИЗАЦИЯ: Не предзагружаем все анимации - они загрузятся по требованию
+        // Это значительно снижает нагрузку при старте приложения
     },
 
     /**
@@ -353,6 +331,7 @@ window.TGSLoader = {
             }
 
             // Обработка динамических элементов (регулярные выражения)
+            // ✅ ОПТИМИЗАЦИЯ: querySelectorAll выполняется только при инициализации экрана, не постоянно
             if (config.dynamic && config.containerId instanceof RegExp) {
                 const allElements = document.querySelectorAll('[id]');
                 allElements.forEach(element => {
@@ -472,25 +451,8 @@ window.TGSLoader = {
     }
 };
 
-// 🚀 Автоматическая инициализация при загрузке
-document.addEventListener('DOMContentLoaded', async () => {
-    // Ждем загрузки библиотек
-    const maxWait = 5000; // 5 секунд максимум
-    const startTime = Date.now();
-
-    while (!window.TGSLoader.isLibrariesAvailable() && (Date.now() - startTime) < maxWait) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-    }
-
-    if (window.TGSLoader.isLibrariesAvailable()) {
-        await window.TGSLoader.initialize();
-
-        // Выводим статистику
-        const stats = window.TGSLoader.getCacheStats();
-    } else {
-        Utils.log('error', '❌ Failed to initialize TGS Loader - libraries not available');
-    }
-});
+// ✅ ОПТИМИЗАЦИЯ: Убрана автоматическая инициализация - теперь инициализируется только через Assets.preloadAssets()
+// Это предотвращает дублирование и позволяет контролировать момент загрузки
 
 // 🧹 Очистка при закрытии страницы
 window.addEventListener('beforeunload', () => {

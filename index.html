@@ -114,42 +114,43 @@
     <script src="js/utils/simple-lazy.js"></script>
 
     <!-- API Modules -->
-    <script src="js/api/user.js"></script>
-    <script src="js/api/subscription.js"></script>
-    <script src="js/api/payment.js"></script>
-    <script src="js/api/currency.js"></script>
-    <script src="js/api/keys.js"></script>
-    <script src="js/api/referral.js"></script>
-    <script src="js/api/services.js"></script>
-    <script src="js/api/gift.js"></script>
-    <script src="js/api/servers.js"></script>
+    <!-- ✅ ОПТИМИЗАЦИЯ: defer для некритичных API модулей - загружаются параллельно, но выполняются после DOM -->
+    <script src="js/api/user.js" defer></script>
+    <script src="js/api/subscription.js" defer></script>
+    <script src="js/api/payment.js" defer></script>
+    <script src="js/api/currency.js" defer></script>
+    <script src="js/api/keys.js" defer></script>
+    <script src="js/api/referral.js" defer></script>
+    <script src="js/api/services.js" defer></script>
+    <script src="js/api/gift.js" defer></script>
+    <script src="js/api/servers.js" defer></script>
 
     <!-- Utils -->
-    <script src="js/utils/tgs_loader.js"></script>
+    <script src="js/utils/tgs_loader.js" defer></script>
 
     <!-- Components -->
-    <script src="js/components/toast.js"></script>
-    <script src="js/components/modal.js"></script>
-    <script src="js/components/loading.js"></script>
-    <script src="js/components/navigation.js"></script>
-    <script src="js/components/subscription-card.js"></script>
-    <script src="js/components/service-selector.js"></script>
-    <script src="js/components/payment-banner.js"></script>
-    <script src="js/components/gift-flow.js"></script>
+    <script src="js/components/toast.js" defer></script>
+    <script src="js/components/modal.js" defer></script>
+    <script src="js/components/loading.js" defer></script>
+    <script src="js/components/navigation.js" defer></script>
+    <script src="js/components/subscription-card.js" defer></script>
+    <script src="js/components/service-selector.js" defer></script>
+    <script src="js/components/payment-banner.js" defer></script>
+    <script src="js/components/gift-flow.js" defer></script>
 
     <!-- Services -->
-    <script src="js/services/haptic.js"></script>
-    <script src="js/services/payment-monitor.js"></script>
-    <script src="js/services/referral-parser.js"></script>
-    <script src="js/services/subscription-manager.js"></script>
+    <script src="js/services/haptic.js" defer></script>
+    <script src="js/services/payment-monitor.js" defer></script>
+    <script src="js/services/referral-parser.js" defer></script>
+    <script src="js/services/subscription-manager.js" defer></script>
 
     <!-- Screens -->
-    <script src="js/screens/subscription.js"></script>
-    <script src="js/screens/keys.js"></script>
-    <script src="js/screens/referrals.js"></script>
-    <script src="js/screens/payments.js"></script>
-    <script src="js/screens/instructions.js"></script>
-    <script src="js/screens/support.js"></script>
+    <script src="js/screens/subscription.js" defer></script>
+    <script src="js/screens/keys.js" defer></script>
+    <script src="js/screens/referrals.js" defer></script>
+    <script src="js/screens/payments.js" defer></script>
+    <script src="js/screens/instructions.js" defer></script>
+    <script src="js/screens/support.js" defer></script>
 
     <!-- Router and Main App -->
     <script src="js/core/router.js"></script>

@@ -35,7 +35,7 @@ window.MediaCache = {
         }
     },
 
-    // Ожидание загрузки
+    // ✅ ОПТИМИЗАЦИЯ: Ожидание загрузки с requestAnimationFrame вместо setTimeout
     waitForLoad(url) {
         return new Promise(resolve => {
             const check = () => {
@@ -44,7 +44,8 @@ window.MediaCache = {
                 } else if (!this.loading.has(url)) {
                     resolve(url); // Загрузка провалилась
                 } else {
-                    setTimeout(check, 50);
+                    // ✅ Используем requestAnimationFrame для более эффективной проверки
+                    requestAnimationFrame(check);
                 }
             };
             check();

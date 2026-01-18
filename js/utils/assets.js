@@ -19,26 +19,36 @@ class Assets {
 
     /**
      * 🔄 Предзагрузка смешанных ассетов
+     * ✅ ОПТИМИЗАЦИЯ: Ленивая загрузка - инициализируем TGS Loader, но не предзагружаем все анимации
      */
     static async preloadAssets() {
-        // TGS файлы загружаем через TGSLoader
+        // ✅ ОПТИМИЗАЦИЯ: Инициализируем TGS Loader, но НЕ предзагружаем все анимации сразу
+        // Анимации будут загружаться по требованию при открытии экранов
         if (window.TGSLoader) {
-            await window.TGSLoader.initialize();
+            // Только проверяем доступность библиотек, но не загружаем все файлы
+            if (!window.TGSLoader.isLibrariesAvailable()) {
+                Utils.log('warn', 'TGS libraries not available');
+            } else {
+                Utils.log('info', 'TGS Loader ready for lazy loading');
+            }
         }
 
-        // PNG файлы загружаем через MediaCache
+        // ✅ ОПТИМИЗАЦИЯ: Предзагружаем только критичные изображения
         if (window.MediaCache) {
-            const staticImages = [
+            const criticalImages = [
                 this.getStaticGif('gift-opened.png'),
-                // добавьте другие PNG файлы
+                // Только самые важные изображения
             ];
 
-            await Promise.allSettled(
-                staticImages.map(src => window.MediaCache.loadImageSafely(src))
-            );
+            // Загружаем в фоне, не блокируя инициализацию
+            Promise.allSettled(
+                criticalImages.map(src => window.MediaCache.loadImageSafely(src))
+            ).catch(() => {
+                // Игнорируем ошибки предзагрузки
+            });
         }
 
-        Utils.log('info', 'Все ассеты предзагружены');
+        Utils.log('info', 'Assets initialization completed');
     }
 }
 
