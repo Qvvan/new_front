@@ -175,6 +175,23 @@ window.Utils = {
         return `${minutes}:${secs.toString().padStart(2, '0')}`;
     },
 
+    formatTimeUntil(targetDate) {
+        const target = new Date(targetDate);
+        const now = new Date();
+        const diffMs = target - now;
+
+        if (diffMs <= 0) return 'Доступно';
+
+        const diffMinutes = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMinutes / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffDays > 0) return `через ${diffDays} ${this.pluralize(diffDays, ['день', 'дня', 'дней'])}`;
+        if (diffHours > 0) return `через ${diffHours} ${this.pluralize(diffHours, ['час', 'часа', 'часов'])}`;
+        if (diffMinutes > 0) return `через ${diffMinutes} ${this.pluralize(diffMinutes, ['минуту', 'минуты', 'минут'])}`;
+        return 'Скоро';
+    },
+
     /**
      * Создание элемента DOM с атрибутами
      * @param {string} tag - Тег элемента

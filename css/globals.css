@@ -1,10 +1,10 @@
 /* CSS Custom Properties (Variables) */
 :root {
     /* Colors */
-    --bg-primary: #0d0d0d;
-    --bg-secondary: #1a1a1a;
-    --bg-tertiary: #2a2a2a;
-    --bg-accent: #262626;
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a
+    --bg-tertiary: #151515;    /* было #2a2a2a */
+    --bg-accent: #1a1a1a;
     --text-primary: #ffffff;
     --text-secondary: #a0a0a0;
     --text-muted: #666666;
@@ -207,7 +207,7 @@ p {
 
     /* 🔥 Учитываем safe area но НЕ заходим в системную панель */
     padding-top: var(--safe-area-top);
-    padding-bottom: var(--safe-area-bottom);
+    padding-bottom: 0;
     padding-left: var(--safe-area-left);
     padding-right: var(--safe-area-right);
 
@@ -238,11 +238,9 @@ p {
     margin: 0;
 }
 
-/* 🔥 Offset для payment banner */
+/* 🔥 Offset для payment banner (теперь баннер внизу над навигацией) */
 .main-content.with-payment-banner {
-    height: calc(100vh - var(--nav-height) - var(--payment-banner-height) - var(--safe-area-top) - var(--safe-area-bottom));
-    height: calc(var(--tg-viewport-height, 100vh) - var(--nav-height) - var(--payment-banner-height) - var(--safe-area-top) - var(--safe-area-bottom));
-    padding-top: 0; /* Убираем padding-top, используем offset через height */
+    padding-bottom: calc(var(--payment-banner-height) + var(--nav-height));
 }
 
 .screen {
@@ -496,7 +494,7 @@ p {
     }
 
     .main-content.with-payment-banner {
-        height: calc(100vh - var(--nav-height) - var(--payment-banner-height));
+        padding-bottom: calc(var(--payment-banner-height) + var(--nav-height));
     }
 }
 

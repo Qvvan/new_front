@@ -5,27 +5,40 @@ class Assets {
         return `${this.basePath}images/${path}`;
     }
 
-    static getGif(name) {
-        const url = this.getImage(`gifs/${name}`);
-        return url;
+    static getTGS(name) {
+        return this.getImage(`gifs/${name}.tgs`);
+    }
+
+    static getStaticGif(name) {
+        return this.getImage(`gifs/${name}`);
     }
 
     static getIcon(name) {
         return this.getImage(`icons/${name}`);
     }
 
-    // Предзагрузка важных ассетов
+    /**
+     * 🔄 Предзагрузка смешанных ассетов
+     */
     static async preloadAssets() {
-        const criticalAssets = [
-            this.getGif('gift-animate.gif'),
-            this.getGif('gift-opened.png'),
-            this.getGif('auto-renewal.gif'),
-            this.getGif('payment-pending.gif'),
-            this.getGif('payment-success.gif'),
-            this.getGif('management.gif')
-        ];
+        // TGS файлы загружаем через TGSLoader
+        if (window.TGSLoader) {
+            await window.TGSLoader.initialize();
+        }
 
-        await Promise.all(criticalAssets.map(src => window.MediaCache.load(src)));
+        // PNG файлы загружаем через MediaCache
+        if (window.MediaCache) {
+            const staticImages = [
+                this.getStaticGif('gift-opened.png'),
+                // добавьте другие PNG файлы
+            ];
+
+            await Promise.allSettled(
+                staticImages.map(src => window.MediaCache.loadImageSafely(src))
+            );
+        }
+
+        console.log('✅ Все ассеты предзагружены');
     }
 }
 

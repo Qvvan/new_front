@@ -1,28 +1,23 @@
-// server.js
+// Development Server for Dragon VPN Frontend
+// Простой HTTP сервер для локальной разработки
+
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
 
-const server = http.createServer((req, res) => {
-  console.log(`📥 Запрос: ${req.url}`);
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || 'localhost';
 
-  // Парсим URL и параметры
+const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname;
-  const queryParams = parsedUrl.query;
 
-  // Логируем важные параметры для Telegram WebApp
-  if (queryParams.tgWebAppStartParam) {
-    console.log(`🔗 Получен параметр startapp: ${queryParams.tgWebAppStartParam}`);
-  }
-  if (queryParams.start) {
-    console.log(`🎯 Получен параметр start: ${queryParams.start}`);
-  }
+  // Логирование запросов в dev режиме
+  console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${pathname}`);
 
   // Обработка статических файлов
   const fileMap = {
-    // HTML
     '/': 'index.html',
     '/index.html': 'index.html',
 
@@ -80,23 +75,20 @@ const server = http.createServer((req, res) => {
     '/js/utils/simple-lazy.js': 'js/utils/simple-lazy.js',
     '/js/utils/tgs-loader.js': 'js/utils/tgs-loader.js',
 
-    // Assets
-    '/assets/images/gifs/gift-animate.gif': 'assets/images/gifs/gift-animate.gif',
     '/assets/images/gifs/gift-opened.png': 'assets/images/gifs/gift-opened.png',
-    '/assets/images/gifs/auto-renewal.gif': 'assets/images/gifs/auto-renewal.gif',
-    '/assets/images/gifs/management.gif': 'assets/images/gifs/management.gif',
 
     // Misc
     '/favicon.ico': 'favicon.ico'
   };
 
-  // Для главной страницы (с параметрами или без) отдаем index.html
+  // Для главной страницы отдаем index.html
   let filePath = pathname === '/' ? 'index.html' : fileMap[pathname];
 
   // Если файл не найден в карте, пробуем найти его по пути
   if (!filePath && pathname !== '/') {
     const potentialPath = pathname.startsWith('/') ? pathname.slice(1) : pathname;
-    if (fs.existsSync(path.join(__dirname, potentialPath))) {
+    const fullPath = path.join(__dirname, potentialPath);
+    if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
       filePath = potentialPath;
     }
   }
@@ -104,19 +96,25 @@ const server = http.createServer((req, res) => {
   if (filePath) {
     serveFile(res, filePath, getContentType(filePath));
   } else {
-    console.log(`❌ Файл не найден: ${pathname}`);
     res.writeHead(404, {
-      'Content-Type': 'text/html',
+      'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'no-cache'
     });
     res.end(`
       <!DOCTYPE html>
       <html>
-      <head><title>404 - Not Found</title></head>
-      <body style="font-family: Arial; padding: 20px; background: #0d0d0d; color: white;">
+      <head>
+        <title>404 - Not Found</title>
+        <style>
+          body { font-family: Arial; padding: 20px; background: #0d0d0d; color: white; }
+          code { background: #222; padding: 2px 6px; border-radius: 3px; }
+          a { color: #4a9eff; }
+        </style>
+      </head>
+      <body>
         <h1>404 - Файл не найден</h1>
         <p>Запрошенный файл <code>${pathname}</code> не существует.</p>
-        <a href="/" style="color: #fff;">← Вернуться на главную</a>
+        <a href="/">← Вернуться на главную</a>
       </body>
       </html>
     `);
@@ -136,7 +134,8 @@ function getContentType(filename) {
     '.gif': 'image/gif',
     '.svg': 'image/svg+xml',
     '.json': 'application/json; charset=utf-8',
-    '.txt': 'text/plain; charset=utf-8'
+    '.txt': 'text/plain; charset=utf-8',
+    '.tgs': 'application/octet-stream'
   };
 
   return contentTypes[ext] || 'application/octet-stream';
@@ -147,7 +146,6 @@ function serveFile(res, filename, contentType) {
 
   fs.readFile(filePath, (err, content) => {
     if (err) {
-      console.log(`❌ Ошибка чтения файла ${filename}:`, err.message);
       if (err.code === 'ENOENT') {
         res.writeHead(404);
         res.end('File not found');
@@ -158,14 +156,12 @@ function serveFile(res, filename, contentType) {
       return;
     }
 
-    console.log(`✅ Отдан файл: ${filename} (${content.length} bytes)`);
-
     res.writeHead(200, {
       'Content-Type': contentType,
       'Cache-Control': 'no-cache, no-store, must-revalidate',
       'Pragma': 'no-cache',
       'Expires': '0',
-      'Access-Control-Allow-Origin': '*', // Для разработки
+      'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     });
@@ -175,16 +171,17 @@ function serveFile(res, filename, contentType) {
 
 // Graceful shutdown
 process.on('SIGINT', () => {
-  console.log('\n🔄 Остановка сервера...');
+  console.log('\n🛑 Остановка сервера разработки...');
   server.close(() => {
     console.log('✅ Сервер остановлен');
     process.exit(0);
   });
 });
 
-server.listen(8080, () => {
-  console.log('🚀 Dragon VPN Dev Server запущен на http://localhost:8080');
-  console.log('📁 Структура файлов готова к разработке');
-  console.log('🔄 Кеширование отключено для разработки');
-  console.log('\nДля остановки нажмите Ctrl+C');
+server.listen(PORT, HOST, () => {
+  console.log('\n🚀 Сервер разработки запущен!');
+  console.log(`📍 Локальный адрес: http://${HOST}:${PORT}`);
+  console.log(`🌐 Сеть: http://0.0.0.0:${PORT}`);
+  console.log('\n💡 Для остановки нажмите Ctrl+C\n');
 });
+

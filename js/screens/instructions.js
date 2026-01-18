@@ -41,7 +41,6 @@ window.InstructionsScreen = {
     render() {
         if (!this.modal) return;
 
-        console.log('Rendering step:', this.currentStep, 'Device:', this.deviceType);
 
         this.modal.innerHTML = `
             <div class="modal modal-instructions">
@@ -226,8 +225,6 @@ window.InstructionsScreen = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to activate profile:', error);
-
             if (window.Toast) {
                 window.Toast.error('Ошибка активации профиля. Попробуйте получить ключи вручную.');
             }
@@ -253,14 +250,12 @@ window.InstructionsScreen = {
             });
 
             if (activeSubscription) {
-                Utils.log('info', 'Found active subscription with config:', activeSubscription.config_link);
                 return activeSubscription.config_link;
             }
 
             throw new Error('No active subscription with config found');
 
         } catch (error) {
-            Utils.log('error', 'Failed to get active subscription config:', error);
             throw error;
         }
     },
@@ -420,7 +415,6 @@ window.InstructionsScreen = {
     },
 
     selectDevice(deviceType) {
-        console.log('selectDevice called with:', deviceType);
         this.deviceType = deviceType;
 
         // Обновляем UI БЕЗ полного перерендера
@@ -433,7 +427,6 @@ window.InstructionsScreen = {
         const nextBtn = this.modal.querySelector('#instructionsNext');
         if (nextBtn) {
             nextBtn.disabled = false;
-            console.log('Next button enabled');
         }
 
         // Вибрация выбора
@@ -443,7 +436,6 @@ window.InstructionsScreen = {
     },
 
     nextStep() {
-        console.log('nextStep called, currentStep BEFORE:', this.currentStep);
 
         // Проверяем можно ли перейти дальше с текущего шага
         if (this.currentStep === 0 && !this.deviceType) {
@@ -455,7 +447,6 @@ window.InstructionsScreen = {
 
         // Сначала увеличиваем шаг
         this.currentStep++;
-        console.log('currentStep AFTER increment:', this.currentStep);
 
         // Проверяем на завершение после увеличения
         if (this.currentStep > 2) {

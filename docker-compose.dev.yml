@@ -1,0 +1,39 @@
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+    networks:
+      - dev-network
+    restart: unless-stopped
+    extra_hosts:
+      # Для доступа к локальному API на хосте
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: node server.dev.js
+    ports:
+      - "3000:3000"
+    volumes:
+      # Монтируем код для hot reload
+      - .:/app
+      - /app/node_modules
+    networks:
+      - dev-network
+    environment:
+      - NODE_ENV=development
+      - HOST=0.0.0.0
+      - PORT=3000
+    restart: unless-stopped
+
+networks:
+  dev-network:
+    driver: bridge
+

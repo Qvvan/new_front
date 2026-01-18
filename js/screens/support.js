@@ -274,7 +274,7 @@ window.SupportScreen = {
                 this.modal.parentNode.removeChild(this.modal);
             }
             this.cleanup();
-        }, 300);
+        }, 150); // Уменьшено с 300ms до 150ms для быстрого закрытия
 
         this.isVisible = false;
     },

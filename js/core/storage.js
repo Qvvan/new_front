@@ -16,15 +16,11 @@ window.Storage = {
      * Инициализация системы хранения
      */
     async init() {
-        Utils.log('info', 'Initializing minimal storage system');
 
-        // Агрессивно очищаем весь localStorage кроме критического минимума
         await this.cleanupStaleCache();
 
         // Полностью очищаем сессионный кеш
         this.session.clear();
-
-        Utils.log('info', 'Storage initialized - session cache cleared');
     },
 
     /**
@@ -34,7 +30,6 @@ window.Storage = {
         // 1. Сначала проверяем сессионный кеш
         if (useSession && this.session.has(key)) {
             const cached = this.session.get(key);
-            Utils.log('debug', `Using session cache for: ${key}`);
             return cached;
         }
 
@@ -88,12 +83,8 @@ window.Storage = {
             // Удаляем все найденные ключи
             keysToRemove.forEach(key => {
                 localStorage.removeItem(key);
-                Utils.log('debug', `Removed stale cache: ${key}`);
             });
-
-            Utils.log('info', `Cleaned up ${keysToRemove.length} stale cache entries`);
         } catch (error) {
-            Utils.log('error', 'Failed to cleanup stale cache:', error);
         }
     },
 
@@ -105,7 +96,6 @@ window.Storage = {
             const stored = localStorage.getItem(key);
             return stored ? JSON.parse(stored) : defaultValue;
         } catch (error) {
-            Utils.log('error', `Failed to get from localStorage: ${key}`, error);
             return defaultValue;
         }
     },
@@ -115,8 +105,37 @@ window.Storage = {
             localStorage.setItem(key, JSON.stringify(value));
             return true;
         } catch (error) {
-            Utils.log('error', `Failed to set to localStorage: ${key}`, error);
             return false;
+        }
+    },
+
+    async getReferralData() {
+        try {
+            const cached = this.session.get('referral_data');
+            if (cached) {
+                Utils.log('debug', 'Using cached referral data from session');
+                return cached;
+            }
+
+            // Возвращаем структуру по умолчанию если нет данных
+            const defaultData = {
+                referrals: [],
+                stats: {
+                    total_count: 0,
+                    invited: 0,
+                    partners: 0
+                },
+                last_updated: null
+            };
+
+            Utils.log('debug', 'Using default referral data structure');
+            return defaultData;
+        } catch (error) {
+            Utils.log('error', 'Failed to get referral data:', error);
+            return {
+                referrals: [],
+                stats: { total_count: 0, invited: 0, partners: 0 }
+            };
         }
     },
 
@@ -131,7 +150,6 @@ window.Storage = {
 
     async setSubscriptions(subscriptions) {
         this.session.set('subscriptions', subscriptions);
-        Utils.log('debug', `Cached ${subscriptions.length} subscriptions in session`);
     },
 
     // Данные пользователя - НЕ персистентные
@@ -141,7 +159,6 @@ window.Storage = {
 
     async setUserData(userData) {
         this.session.set('user_data', userData);
-        Utils.log('debug', 'Cached user data in session');
     },
 
     /**
@@ -151,14 +168,91 @@ window.Storage = {
     // Получение pending платежей - ТОЛЬКО из сессионного кеша
     async getPendingPayments() {
         const pending = this.session.get('pending_payments') || [];
-        Utils.log('debug', `Retrieved ${pending.length} pending payments from session`);
         return pending;
+    },
+
+    async setReferralData(data) {
+        try {
+            if (!data) {
+                Utils.log('warn', 'Attempted to set null referral data');
+                return false;
+            }
+
+            // Добавляем timestamp для отслеживания актуальности
+            const dataWithTimestamp = {
+                ...data,
+                last_updated: Date.now(),
+                _timestamp: Date.now()
+            };
+
+            this.session.set('referral_data', dataWithTimestamp);
+            Utils.log('debug', `Cached referral data: ${data.referrals?.length || 0} referrals`);
+            return true;
+        } catch (error) {
+            Utils.log('error', 'Failed to set referral data:', error);
+            return false;
+        }
+    },
+
+    async markReferralsAsViewed() {
+        try {
+            const data = await this.getReferralData();
+            if (data.referrals && data.referrals.length > 0) {
+                // Убираем флаг is_new у всех рефералов
+                data.referrals = data.referrals.map(ref => ({
+                    ...ref,
+                    is_new: false
+                }));
+
+                await this.setReferralData(data);
+                Utils.log('debug', 'Marked all referrals as viewed');
+                return true;
+            }
+            return false;
+        } catch (error) {
+            Utils.log('error', 'Failed to mark referrals as viewed:', error);
+            return false;
+        }
+    },
+
+    async sync() {
+        try {
+            Utils.log('debug', 'Syncing storage data');
+
+            // Можно добавить логику синхронизации с API
+            // Например, периодическое обновление данных
+
+            // Очистка старых данных сессии
+            this.cleanupSessionData();
+
+            Utils.log('debug', 'Storage sync completed');
+            return true;
+        } catch (error) {
+            Utils.log('error', 'Storage sync failed:', error);
+            return false;
+        }
+    },
+
+    /**
+     * Очистка старых данных из сессионного кеша
+     */
+    cleanupSessionData() {
+        const maxAge = 30 * 60 * 1000; // 30 минут
+        const now = Date.now();
+
+        for (const [key, value] of this.session.entries()) {
+            if (value && typeof value === 'object' && value._timestamp) {
+                if ((now - value._timestamp) > maxAge) {
+                    this.session.delete(key);
+                    Utils.log('debug', `Cleaned up expired session data: ${key}`);
+                }
+            }
+        }
     },
 
     // Добавление pending платежа - ТОЛЬКО в сессию
     async addPendingPayment(payment) {
         if (!payment || !payment.id) {
-            Utils.log('warn', 'Invalid payment data for adding to pending');
             return;
         }
 
@@ -170,7 +264,6 @@ window.Storage = {
         );
 
         if (exists) {
-            Utils.log('debug', `Payment ${payment.id} already in pending list`);
             return;
         }
 
@@ -191,7 +284,6 @@ window.Storage = {
         pending.push(paymentData);
         this.session.set('pending_payments', pending);
 
-        Utils.log('info', `Added pending payment to SESSION: ${payment.id}`);
     },
 
     // Удаление pending платежа
@@ -206,15 +298,12 @@ window.Storage = {
         this.session.set('pending_payments', filtered);
 
         const removedCount = pending.length - filtered.length;
-        Utils.log('info', `Removed ${removedCount} pending payment(s): ${paymentId}`);
-
         return filtered.length;
     },
 
     // ПОЛНАЯ очистка pending платежей
     async clearPendingPayments() {
         this.session.set('pending_payments', []);
-        Utils.log('info', 'CLEARED all pending payments from session');
     },
 
     /**
@@ -258,7 +347,6 @@ window.Storage = {
     // Полная очистка сессии (при logout/ошибке)
     clearSession() {
         this.session.clear();
-        Utils.log('info', 'Session cache completely cleared');
     },
 
     // Удаление конкретного ключа
@@ -302,8 +390,6 @@ window.Storage = {
         keysToRemove.forEach(key => {
             localStorage.removeItem(key);
         });
-
-        Utils.log('warn', `Cleared ALL storage data: ${keysToRemove.length} localStorage keys + session`);
     },
 
     /**

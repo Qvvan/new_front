@@ -33,9 +33,6 @@ window.Router = {
      * Инициализация роутера
      */
     init() {
-        Utils.log('info', 'Initializing Router');
-
-        // 🔥 Принудительно расширяем при инициализации роутера
         this.ensureExpanded();
 
         this.setupFullViewport();
@@ -52,7 +49,6 @@ window.Router = {
             // Проверяем каждые 2 секунды что приложение расширено
             setInterval(() => {
                 if (!window.TelegramApp.webApp.isExpanded) {
-                    Utils.log('warn', 'App collapsed, force expanding...');
                     window.TelegramApp.forceExpand();
                 }
             }, 2000);
@@ -92,21 +88,17 @@ window.Router = {
      */
     async navigate(screenName, addToHistory = true, params = {}) {
         if (this.isNavigating) {
-            Utils.log('warn', 'Navigation already in progress');
             return;
         }
 
         if (!this.screens[screenName]) {
-            Utils.log('error', `Screen not found: ${screenName}`);
             return;
         }
 
         this.isNavigating = true;
 
         try {
-            Utils.log('info', `Navigating to screen: ${screenName}`, params);
 
-            // Добавляем в историю
             if (addToHistory && this.currentScreen !== screenName) {
                 this.addToHistory(this.currentScreen);
             }
@@ -129,7 +121,6 @@ window.Router = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Navigation failed:', error);
         } finally {
             this.isNavigating = false;
         }
@@ -195,10 +186,16 @@ window.Router = {
         const handler = this.screenHandlers[screenName]?.();
 
         if (handler) {
-            if (typeof handler.init === 'function' && !handler.isLoaded) {
+            // Если экран уже загружен - показываем его сразу без повторного рендеринга
+            if (handler.isLoaded) {
+                // Не вызываем refresh чтобы избежать двойного рендеринга
+                // Данные обновятся при следующем явном обновлении
+                return; // Показываем экран сразу
+            }
+
+            // Только для первого раза делаем полную инициализацию
+            if (typeof handler.init === 'function') {
                 await handler.init(params);
-            } else if (typeof handler.refresh === 'function') {
-                await handler.refresh(params);
             }
         }
     },
@@ -358,11 +355,8 @@ window.Router = {
                 this.previousScreen = state.previousScreen || null;
                 this.history = state.history || [];
 
-                Utils.log('info', 'Router state restored:', state);
             }
         } catch (error) {
-            Utils.log('error', 'Failed to restore router state:', error);
-            // Используем значения по умолчанию
             this.currentScreen = 'subscription';
             this.previousScreen = null;
             this.history = [];
@@ -449,7 +443,6 @@ window.Router = {
 
             return false;
         } catch (error) {
-            Utils.log('error', 'Failed to handle deep link:', error);
             return false;
         }
     },

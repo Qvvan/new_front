@@ -193,8 +193,10 @@
     }
 
     .payment-banner {
-        border-left: 1px solid var(--border-dark);
-        border-right: 1px solid var(--border-dark);
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: none;
     }
 }
 
@@ -290,8 +292,12 @@
     }
 
     .toggle-switch {
-        min-width: 60px;
-        min-height: 36px;
+        min-width: 50px !important;
+        min-height: 28px !important;
+        max-width: 50px !important;
+        max-height: 28px !important;
+        width: 50px !important;
+        height: 28px !important;
     }
 
     .modal-close {
@@ -389,7 +395,7 @@
     }
 
     .payment-banner {
-        top: max(0, env(safe-area-inset-top));
+        bottom: var(--nav-height);
     }
 }
 

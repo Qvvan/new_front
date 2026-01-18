@@ -1,7 +1,7 @@
 // API Client for Dragon VPN Mini App
 
 window.APIClient = {
-    baseURL: '/api',
+    baseURL: '/api/v1',
     defaultTimeout: 10000,
 
     /**
@@ -13,17 +13,19 @@ window.APIClient = {
      * @returns {Promise} Результат запроса
      */
     async request(endpoint, method = 'GET', data = null, options = {}) {
-        const url = `${this.baseURL}${endpoint}`;
+        let url = `${this.baseURL}${endpoint}`;
 
         const config = {
             method: method.toUpperCase(),
             headers: {
                 'Content-Type': 'application/json',
-                'Cache-Control': 'no-cache', // ⚠️ Принудительно отключаем кеш
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
                 'Pragma': 'no-cache',
+                'Expires': '0',
                 ...this.getAuthHeaders(),
                 ...options.headers
             },
+            cache: 'no-store', // Принудительно отключаем кеш браузера
             ...options
         };
 
@@ -32,8 +34,6 @@ window.APIClient = {
         }
 
         try {
-            Utils.log('debug', `API Request: ${method} ${endpoint}`);
-
             const response = await fetch(url, config);
 
             if (!response.ok) {
@@ -46,8 +46,6 @@ window.APIClient = {
             return result;
 
         } catch (error) {
-            Utils.log('error', 'API Error:', error);
-
             if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
                 throw new Error('Нет соединения с сервером. Проверьте интернет подключение.');
             }
@@ -66,7 +64,8 @@ window.APIClient = {
 
         try {
             errorData = await response.json();
-            errorMessage = errorData.message || errorData.error || errorMessage;
+            // Приоритет: comment (от бэкенда) > message > error > statusText
+            errorMessage = errorData.comment || errorData.message || errorData.error || errorMessage;
         } catch (e) {
             // Если не удалось распарсить JSON ошибки
             errorMessage = response.statusText || errorMessage;
@@ -75,7 +74,7 @@ window.APIClient = {
         // Специфичные сообщения для различных статусов
         switch (response.status) {
             case 400:
-                errorMessage = errorData?.message || 'Неверные данные запроса';
+                errorMessage = errorData?.comment || errorData?.message || 'Неверные данные запроса';
                 break;
             case 401:
                 errorMessage = 'Необходима авторизация';
@@ -108,7 +107,6 @@ window.APIClient = {
      * Обработка неавторизованного доступа
      */
     handleUnauthorized() {
-        Utils.log('warn', 'Unauthorized access detected');
 
         // Очищаем локальные данные
         if (window.Storage) {
@@ -165,7 +163,11 @@ window.APIClient = {
             url += `?${searchParams.toString()}`;
         }
 
-        return this.request(url, 'GET', null, options);
+        // Принудительно отключаем кеширование для GET запросов
+        return this.request(url, 'GET', null, {
+            ...options,
+            cache: 'no-store'
+        });
     },
 
     /**
@@ -243,7 +245,6 @@ window.APIClient = {
 
             return await response.json();
         } catch (error) {
-            Utils.log('error', 'Upload Error:', error);
             throw error;
         }
     },
@@ -288,7 +289,6 @@ window.APIClient = {
 
             return true;
         } catch (error) {
-            Utils.log('error', 'Download Error:', error);
             throw error;
         }
     },
@@ -302,7 +302,6 @@ window.APIClient = {
             await this.get('/health', {}, { timeout: 5000 });
             return true;
         } catch (error) {
-            Utils.log('warn', 'Health check failed:', error);
             return false;
         }
     },
@@ -330,7 +329,6 @@ window.APIClient = {
 
                 if (attempt < maxRetries) {
                     const delay = baseDelay * Math.pow(2, attempt);
-                    Utils.log('warn', `Request failed, retrying in ${delay}ms`, error);
                     await new Promise(resolve => setTimeout(resolve, delay));
                 }
             }
@@ -395,7 +393,6 @@ window.APIClient = {
      */
     setBaseURL(url) {
         this.baseURL = url.replace(/\/$/, ''); // Убираем слеш в конце
-        Utils.log('info', `API base URL set to: ${this.baseURL}`);
     },
 
     /**
@@ -404,6 +401,5 @@ window.APIClient = {
      */
     setTimeout(timeout) {
         this.defaultTimeout = timeout;
-        Utils.log('info', `API timeout set to: ${timeout}ms`);
     }
 };

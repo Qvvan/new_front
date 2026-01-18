@@ -2,12 +2,11 @@
 window.KeysScreen = {
     subscriptions: [],
     allKeys: [],
-    activeTab: 'profiles',
+    servers: [],
+    activeTab: 'servers',
     isLoaded: false,
 
     async init() {
-        Utils.log('info', 'Initializing Keys Screen');
-
         await this.loadData();
         this.render();
         this.setupEventListeners();
@@ -16,14 +15,15 @@ window.KeysScreen = {
 
     async loadData() {
         try {
+            // Загружаем подписки
             const subscriptionsResponse = await window.SubscriptionAPI.listSubscriptions();
-            this.subscriptions = subscriptionsResponse.subscriptions || [];
+            this.subscriptions = Array.isArray(subscriptionsResponse) ? subscriptionsResponse : (subscriptionsResponse.subscriptions || []);
 
+            // Загружаем ключи
             this.allKeys = [];
-
             for (const subscription of this.subscriptions) {
                 try {
-                    const keysResponse = await window.KeysAPI.getKeys(subscription.id);
+                    const keysResponse = await window.KeysAPI.getKeys(subscription.subscription_id || subscription.id);
                     const keys = keysResponse.keys || [];
 
                     keys.forEach(key => {
@@ -31,17 +31,27 @@ window.KeysScreen = {
                     });
 
                     this.allKeys.push(...keys);
-
                 } catch (error) {
-                    Utils.log('error', `Failed to get keys for subscription ${subscription.id}:`, error);
+                    Utils.log('error', 'Failed to load keys for subscription:', error);
                 }
+            }
+
+            // Загружаем серверы
+            try {
+                if (window.ServersAPI) {
+                    const serversResponse = await window.ServersAPI.getServers();
+                    this.servers = Array.isArray(serversResponse) ? serversResponse : (serversResponse.servers || []);
+                }
+            } catch (error) {
+                Utils.log('error', 'Failed to load servers:', error);
+                this.servers = [];
             }
 
         } catch (error) {
             Utils.log('error', 'Failed to load data:', error);
             this.subscriptions = [];
             this.allKeys = [];
-
+            this.servers = [];
         }
     },
 
@@ -73,6 +83,9 @@ window.KeysScreen = {
             case 'copy-key':
                 await this.copyKey(data.key);
                 break;
+            case 'install-profile':
+                await this.installProfile(data.configLink);
+                break;
             case 'go-to-subscription':
                 window.Router.navigate('subscription');
                 break;
@@ -87,6 +100,11 @@ window.KeysScreen = {
         const container = document.getElementById('tabContentContainer');
         if (container) {
             container.innerHTML = this.renderTabContent();
+
+            // ✅ ИСПРАВЛЕНИЕ: Инициализируем анимации при смене вкладки
+            setTimeout(() => {
+                this.initializeTGSAnimations();
+            }, 100);
         }
 
         document.querySelectorAll('.tab-button').forEach(btn => {
@@ -121,6 +139,21 @@ window.KeysScreen = {
         }
     },
 
+    async installProfile(configLink) {
+        if (!configLink) return;
+
+        // Deeplink для установки профиля
+        if (window.TelegramApp) {
+            window.TelegramApp.openLink(configLink);
+        } else {
+            window.open(configLink, '_blank');
+        }
+
+        if (window.Toast) {
+            window.Toast.success('Открываем установку профиля...');
+        }
+    },
+
     render() {
         const container = document.getElementById('keysScreen');
         if (!container) return;
@@ -134,6 +167,10 @@ window.KeysScreen = {
         `;
 
         container.innerHTML = Utils.wrapContent(content);
+
+        // Инициализируем анимации сразу без задержки
+        this.initializeTGSAnimations();
+
         this.animateElements();
     },
 
@@ -160,16 +197,16 @@ window.KeysScreen = {
         return `
             <div class="tabs">
                 <div class="tabs-nav">
-                    <button class="tab-button ${this.activeTab === 'profiles' ? 'active' : ''}"
+                    <button class="tab-button ${this.activeTab === 'servers' ? 'active' : ''}"
                             data-action="switch-tab"
-                            data-tab="profiles">
-                        <div id="profile-tab-animation" style="width: 24px; height: 24px; display: inline-block; margin-right: 8px;"></div>
-                        Профили
+                            data-tab="servers">
+                        <i class="fas fa-server"></i>
+                        Сервера
                     </button>
                     <button class="tab-button ${this.activeTab === 'keys' ? 'active' : ''}"
                             data-action="switch-tab"
                             data-tab="keys">
-                        <div id="keys-tab-animation" style="width: 24px; height: 24px; display: inline-block; margin-right: 8px;"></div>
+                        <div id="keys-tab-animation" style="width: 24px; height: 24px;"></div>
                         Ключи
                     </button>
                 </div>
@@ -178,48 +215,205 @@ window.KeysScreen = {
     },
 
     renderTabContent() {
-        if (this.activeTab === 'profiles') {
-            return this.renderProfilesTab();
-        } else {
+        if (this.activeTab === 'servers') {
+            return this.renderServersTab();
+        } else if (this.activeTab === 'keys') {
             return this.renderKeysTab();
+        } else {
+            return this.renderProfilesTab();
         }
     },
 
     /**
-     * ВКЛАДКА ПРОФИЛЕЙ
+     * ВКЛАДКА СЕРВЕРОВ
      */
-    renderProfilesTab() {
-        if (this.subscriptions.length === 0) {
-            // ✅ Планируем инициализацию анимаций ПОСЛЕ рендера DOM
-            setTimeout(() => {
-                this.initializeTGSAnimations();
-            }, 100);
-
+    renderServersTab() {
+        if (this.servers.length === 0) {
             return `
                 <div class="empty-state-card">
                     <div class="empty-state-content">
                         <div class="empty-state-icon">
-                            <div id="keys-empty-animation" style="width: 80px; height: 80px; margin: 0 auto;"></div>
+                            <i class="fas fa-server" style="font-size: 48px; opacity: 0.3;"></i>
                         </div>
-                        <h3 class="empty-state-title">Нет профилей</h3>
-                        <p class="empty-state-text">Оформите подписку чтобы получить VPN профили для подключения</p>
-                        <button class="btn-empty-action" data-action="go-to-subscription">
-                            <div class="btn-empty-bg"></div>
-                            <div class="btn-empty-content">
-                                <i class="fas fa-plus"></i>
-                                <span>Оформить подписку</span>
-                            </div>
-                        </button>
+                        <h3 class="empty-state-title">Серверы временно недоступны</h3>
+                        <p class="empty-state-text">Ведутся технические работы</p>
                     </div>
                 </div>
             `;
         }
 
         return `
-            <div class="keys-content">
-                ${this.subscriptions.map(subscription => this.renderProfileSubscription(subscription)).join('')}
+            <div class="servers-list">
+                ${this.servers.map((server, index) => {
+                    const card = this.renderServerItem(server);
+                    // Добавляем задержку анимации для эффекта появления по очереди
+                    return card.replace(
+                        'class="server-card"',
+                        `class="server-card" style="animation-delay: ${index * 0.1}s"`
+                    );
+                }).join('')}
             </div>
         `;
+    },
+
+    renderServerItem(server) {
+        const loadPercentage = server.current_users && server.max_users 
+            ? Math.round((server.current_users / server.max_users) * 100) 
+            : 0;
+        
+        const hasLoadData = server.current_users !== undefined && server.max_users !== undefined;
+        const loadText = hasLoadData
+            ? `${server.current_users} из ${server.max_users}`
+            : 'Неизвестно';
+
+        const countryFlag = this.getCountryFlag(server.country || server.name);
+        const serverName = server.name || server.country || 'VPN Сервер';
+
+        // Определяем цвет статуса
+        let statusColor = 'unknown';
+        if (hasLoadData) {
+            if (loadPercentage >= 80) {
+                statusColor = 'high';
+            } else if (loadPercentage >= 50) {
+                statusColor = 'medium';
+            } else {
+                statusColor = 'low';
+            }
+        }
+
+        return `
+            <div class="server-card" data-server-id="${server.server_id || server.id}">
+                <div class="server-card-content">
+                    <div class="server-card-header">
+                        <div class="server-flag-wrapper">
+                            <div class="server-flag-large">${countryFlag}</div>
+                        </div>
+                        <div class="server-title-section">
+                            <h3 class="server-card-name">${serverName}</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="server-card-body">
+                        <div class="server-load-section">
+                            ${hasLoadData ? `
+                                <div class="server-load-info">
+                                    <span class="server-load-text">Нагрузка: ${loadText}</span>
+                                    <div class="server-load-bar-container">
+                                        <div class="server-load-bar">
+                                            <div class="server-load-fill ${statusColor}" style="width: ${loadPercentage}%">
+                                                <div class="server-load-shine"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : `
+                                <div class="server-load-unknown">
+                                    <span class="server-load-text">Нагрузка: <span class="unknown-text">${loadText}</span></span>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    getCountryFlag(countryName) {
+        if (!countryName) return '🌐';
+        
+        // Коды стран (ISO 3166-1 alpha-2) - приоритетная проверка
+        const countryCodes = {
+            'nl': '🇳🇱', // Нидерланды
+            'de': '🇩🇪', // Германия
+            'fr': '🇫🇷', // Франция
+            'se': '🇸🇪', // Швеция
+            'fi': '🇫🇮', // Финляндия
+            'ch': '🇨🇭', // Швейцария
+            'no': '🇳🇴', // Норвегия
+            'gb': '🇬🇧', 'uk': '🇬🇧', // Великобритания
+            'us': '🇺🇸', // США
+            'ca': '🇨🇦', // Канада
+            'jp': '🇯🇵', // Япония
+            'ru': '🇷🇺', // Россия
+            'sg': '🇸🇬', // Сингапур
+            'pl': '🇵🇱', // Польша
+            'it': '🇮🇹', // Италия
+            'es': '🇪🇸', // Испания
+            'ie': '🇮🇪', // Ирландия
+            'be': '🇧🇪', // Бельгия
+            'at': '🇦🇹', // Австрия
+            'dk': '🇩🇰', // Дания
+            'cz': '🇨🇿', // Чехия
+            'ro': '🇷🇴', // Румыния
+            'bg': '🇧🇬', // Болгария
+            'gr': '🇬🇷', // Греция
+            'pt': '🇵🇹', // Португалия
+            'hu': '🇭🇺', // Венгрия
+            'sk': '🇸🇰', // Словакия
+            'si': '🇸🇮', // Словения
+            'ee': '🇪🇪', // Эстония
+            'lv': '🇱🇻', // Латвия
+            'lt': '🇱🇹', // Литва
+            'au': '🇦🇺', // Австралия
+            'nz': '🇳🇿', // Новая Зеландия
+            'br': '🇧🇷', // Бразилия
+            'mx': '🇲🇽', // Мексика
+            'ar': '🇦🇷', // Аргентина
+            'kr': '🇰🇷', // Южная Корея
+            'cn': '🇨🇳', // Китай
+            'in': '🇮🇳', // Индия
+            'tr': '🇹🇷', // Турция
+            'za': '🇿🇦', // ЮАР
+            'eg': '🇪🇬', // Египет
+            'ae': '🇦🇪', // ОАЭ
+            'il': '🇮🇱', // Израиль
+            'th': '🇹🇭', // Таиланд
+            'vn': '🇻🇳', // Вьетнам
+            'ph': '🇵🇭', // Филиппины
+            'id': '🇮🇩', // Индонезия
+            'my': '🇲🇾', // Малайзия
+        };
+        
+        // Полные названия стран
+        const countryFlags = {
+            'нидерланды': '🇳🇱', 'netherlands': '🇳🇱', 'голландия': '🇳🇱',
+            'германия': '🇩🇪', 'germany': '🇩🇪',
+            'франция': '🇫🇷', 'france': '🇫🇷',
+            'швеция': '🇸🇪', 'sweden': '🇸🇪',
+            'финляндия': '🇫🇮', 'finland': '🇫🇮',
+            'швейцария': '🇨🇭', 'switzerland': '🇨🇭',
+            'норвегия': '🇳🇴', 'norway': '🇳🇴',
+            'великобритания': '🇬🇧', 'uk': '🇬🇧', 'united kingdom': '🇬🇧',
+            'сша': '🇺🇸', 'usa': '🇺🇸', 'united states': '🇺🇸',
+            'канада': '🇨🇦', 'canada': '🇨🇦',
+            'япония': '🇯🇵', 'japan': '🇯🇵',
+            'россия': '🇷🇺', 'russia': '🇷🇺',
+            'сингапур': '🇸🇬', 'singapore': '🇸🇬'
+        };
+
+        const lowerName = countryName.toLowerCase().trim();
+        
+        // Сначала проверяем коды стран (точное совпадение)
+        if (countryCodes[lowerName]) {
+            return countryCodes[lowerName];
+        }
+        
+        // Затем проверяем полные названия (частичное совпадение)
+        for (const [country, flag] of Object.entries(countryFlags)) {
+            if (lowerName.includes(country) || country.includes(lowerName)) {
+                return flag;
+            }
+        }
+
+        return '🌐';
+    },
+
+    /**
+     * ВКЛАДКА ПРОФИЛЕЙ (скрыта, используется только для ключей)
+     */
+    renderProfilesTab() {
+        // Эта вкладка больше не используется, но оставляем для совместимости
+        return this.renderKeysTab();
     },
 
     renderProfileSubscription(subscription) {
@@ -269,8 +463,13 @@ window.KeysScreen = {
      * ВКЛАДКА КЛЮЧЕЙ
      */
     renderKeysTab() {
-        if (this.allKeys.length === 0) {
-            // ✅ Планируем инициализацию анимаций ПОСЛЕ рендера DOM
+        // Проверяем наличие активной подписки
+        const hasActiveSubscription = this.subscriptions.some(sub => {
+            const daysLeft = Utils.daysBetween(sub.end_date);
+            return daysLeft > 0 && (sub.status === 'active' || sub.is_active);
+        });
+
+        if (!hasActiveSubscription) {
             setTimeout(() => {
                 this.initializeTGSAnimations();
             }, 100);
@@ -281,15 +480,64 @@ window.KeysScreen = {
                         <div class="empty-state-icon">
                             <div id="keys-empty-animation" style="width: 80px; height: 80px; margin: 0 auto;"></div>
                         </div>
-                        <h3 class="empty-state-title">Нет ключей</h3>
-                        <p class="empty-state-text">Получите доступ к VPN серверам оформив подписку</p>
-                        <button class="btn-empty-action" data-action="go-to-subscription">
-                            <div class="btn-empty-bg"></div>
-                            <div class="btn-empty-content">
-                                <i class="fas fa-rocket"></i>
-                                <span>Начать использовать VPN</span>
+                        <h3 class="empty-state-title">Доступно с подпиской</h3>
+                        <p class="empty-state-text">Оформите подписку чтобы получить VPN ключи для подключения</p>
+                        <button class="btn-subscription-purchase" data-action="go-to-subscription">
+                            <div class="btn-purchase-bg"></div>
+                            <div class="btn-purchase-content">
+                                <i class="fas fa-bolt"></i>
+                                <span>Оформить подписку</span>
                             </div>
                         </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        if (this.allKeys.length === 0) {
+            return `
+                <div class="empty-state-card">
+                    <div class="empty-state-content">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-key" style="font-size: 48px; opacity: 0.3;"></i>
+                        </div>
+                        <h3 class="empty-state-title">Нет ключей</h3>
+                        <p class="empty-state-text">Ключи будут доступны после активации подписки</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Первый элемент - основной профиль VPN
+        const mainProfile = this.subscriptions.find(sub => {
+            const daysLeft = Utils.daysBetween(sub.end_date);
+            return daysLeft > 0 && (sub.status === 'active' || sub.is_active) && sub.config_link;
+        });
+
+        let content = '';
+
+        if (mainProfile) {
+            const fullProfileUrl = `https://skydragonvpn.ru/sub/${mainProfile.config_link}`;
+            content += `
+                <div class="main-profile-card">
+                    <div class="main-profile-header">
+                        <h4>Основной профиль VPN</h4>
+                        <span class="profile-status active">Активен</span>
+                    </div>
+                    <div class="main-profile-content">
+                        <div class="profile-url-display">
+                            <code>${this.getUrlPreview(fullProfileUrl)}</code>
+                        </div>
+                        <div class="profile-actions">
+                            <button class="btn btn-sm btn-secondary" data-action="copy-profile" data-config-link="${fullProfileUrl}">
+                                <i class="fas fa-copy"></i>
+                                Скопировать
+                            </button>
+                            <button class="btn btn-sm btn-primary" data-action="install-profile" data-config-link="${fullProfileUrl}">
+                                <i class="fas fa-download"></i>
+                                Установить
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -388,42 +636,6 @@ window.KeysScreen = {
         }
     },
 
-    getCountryFlag(serverName) {
-        const countryFlags = {
-            'нидерланды': '🇳🇱',
-            'netherlands': '🇳🇱',
-            'германия': '🇩🇪',
-            'germany': '🇩🇪',
-            'франция': '🇫🇷',
-            'france': '🇫🇷',
-            'швеция': '🇸🇪',
-            'sweden': '🇸🇪',
-            'финляндия': '🇫🇮',
-            'finland': '🇫🇮',
-            'швейцария': '🇨🇭',
-            'switzerland': '🇨🇭',
-            'норвегия': '🇳🇴',
-            'norway': '🇳🇴',
-            'великобритания': '🇬🇧',
-            'uk': '🇬🇧',
-            'сша': '🇺🇸',
-            'usa': '🇺🇸',
-            'канада': '🇨🇦',
-            'canada': '🇨🇦',
-            'япония': '🇯🇵',
-            'japan': '🇯🇵'
-        };
-
-        const lowerName = serverName.toLowerCase();
-
-        for (const [country, flag] of Object.entries(countryFlags)) {
-            if (lowerName.includes(country)) {
-                return flag;
-            }
-        }
-
-        return '🌐';
-    },
 
     getServiceName(subscription) {
         return subscription.service_name || `Подписка ${subscription.id.slice(0, 8)}`;
@@ -452,7 +664,8 @@ window.KeysScreen = {
     cleanup() {
         this.subscriptions = [];
         this.allKeys = [];
-        this.activeTab = 'profiles';
+        this.servers = [];
+        this.activeTab = 'servers';
         this.isLoaded = false;
     }
 };

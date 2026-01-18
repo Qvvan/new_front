@@ -17,7 +17,6 @@ window.Navigation = {
         this.setupEventListeners();
         this.updateActiveState();
         this.isInitialized = true;
-        Utils.log('info', 'Navigation initialized');
     },
 
     /**
@@ -28,18 +27,10 @@ window.Navigation = {
             const navItem = e.target.closest('.nav-item');
             if (!navItem) return;
 
-            // ✅ Debounce для дополнительной защиты
-            if (_navigationDebounce) {
-                clearTimeout(_navigationDebounce);
+            const screen = navItem.dataset.screen;
+            if (screen && screen !== this.currentScreen) {
+                this.navigateTo(screen);
             }
-
-            _navigationDebounce = setTimeout(() => {
-                const screen = navItem.dataset.screen;
-                if (screen && screen !== this.currentScreen) {
-                    this.navigateTo(screen);
-                }
-                _navigationDebounce = null;
-            }, 50);
         });
     },
 
@@ -71,9 +62,6 @@ window.Navigation = {
                 await window.Router.navigate(screen);
             }
 
-            // ✅ НЕ вызываем updateActiveState здесь - Router сам обновит
-
-            Utils.log('info', `Navigation: ${this.currentScreen} -> ${screen}`);
 
         } catch (error) {
             Utils.log('error', 'Navigation failed:', error);
@@ -81,10 +69,8 @@ window.Navigation = {
                 window.Toast.error('Ошибка навигации');
             }
         } finally {
-            // ✅ Снимаем блокировку через фиксированное время
-            setTimeout(() => {
-                this.isNavigating = false;
-            }, 500); // Увеличиваем до 500ms
+            // Снимаем блокировку сразу после перехода
+            this.isNavigating = false;
         }
     },
 
@@ -95,10 +81,8 @@ window.Navigation = {
         const navItem = document.querySelector(`[data-screen="${screen}"]`);
         if (!navItem) return;
 
-        navItem.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            navItem.style.transform = 'scale(1)';
-        }, 150);
+        // Убираем анимацию для мгновенного отклика
+        navItem.style.transform = 'scale(1)';
     },
 
     /**
@@ -116,14 +100,11 @@ window.Navigation = {
 
             item.classList.toggle('active', isActive);
 
-            // Анимация иконки при активации
+            // Убираем анимацию для мгновенного отклика
             if (isActive) {
                 const icon = item.querySelector('.nav-icon');
                 if (icon) {
-                    icon.style.transform = 'scale(1.1)';
-                    setTimeout(() => {
-                        icon.style.transform = 'scale(1)';
-                    }, 200);
+                    icon.style.transform = 'scale(1)';
                 }
             }
         });

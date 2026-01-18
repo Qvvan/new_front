@@ -4,6 +4,7 @@ window.PaymentBanner = {
     timerInterval: null,
     isVisible: false,
     element: null,
+    servicesCache: new Map(), // Кеш сервисов
 
     init() {
         this.element = document.getElementById('paymentBanner');
@@ -11,7 +12,6 @@ window.PaymentBanner = {
             Utils.log('error', 'Payment banner element not found');
             return;
         }
-        Utils.log('info', 'Payment banner initialized');
     },
 
     /**
@@ -20,19 +20,14 @@ window.PaymentBanner = {
     async show(payment) {
         if (!this.element || !payment) return;
 
-        // ✅ КРИТИЧЕСКИ ВАЖНО: Не показываем баннер для успешных платежей
         if (payment.status === 'succeeded') {
-            Utils.log('info', `Payment ${payment.id} already succeeded, not showing banner`);
             return;
         }
 
-        // ✅ Показываем только для pending
         if (payment.status !== 'pending') {
-            Utils.log('info', `Payment ${payment.id} status is ${payment.status}, not showing banner`);
             return;
         }
 
-        // ✅ ИСПРАВЛЕНИЕ: Проверяем наличие URL для pending платежей
         if (!payment.payment_url && !payment.url && !payment.receipt_link) {
             Utils.log('warn', 'Payment URL missing, trying to get from storage');
 
@@ -45,7 +40,6 @@ window.PaymentBanner = {
             if (storedPayment && (storedPayment.payment_url || storedPayment.receipt_link)) {
                 payment.payment_url = storedPayment.payment_url || storedPayment.receipt_link;
                 payment.url = storedPayment.url || storedPayment.receipt_link;
-                Utils.log('info', 'Restored payment URL from storage');
             }
         }
 
@@ -65,12 +59,21 @@ window.PaymentBanner = {
             return;
         }
 
-        // ✅ Нормализуем URLs - используем receipt_link как основной источник
-        if (!payment.payment_url && payment.receipt_link) {
-            payment.payment_url = payment.receipt_link;
-        }
-        if (!payment.url && payment.receipt_link) {
-            payment.url = payment.receipt_link;
+        // ✅ Нормализуем URLs - для pending используем confirmation_url, для succeeded - receipt_link
+        if (payment.status === 'pending') {
+            if (!payment.payment_url && payment.confirmation_url) {
+                payment.payment_url = payment.confirmation_url;
+            }
+            if (!payment.url && payment.confirmation_url) {
+                payment.url = payment.confirmation_url;
+            }
+        } else {
+            if (!payment.payment_url && payment.receipt_link) {
+                payment.payment_url = payment.receipt_link;
+            }
+            if (!payment.url && payment.receipt_link) {
+                payment.url = payment.receipt_link;
+            }
         }
 
         // Обогащаем платеж данными сервиса
@@ -91,38 +94,94 @@ window.PaymentBanner = {
 
         // Показываем баннер
         this.element.classList.remove('hidden');
+    },
 
-        Utils.log('info', 'Payment banner shown for:', payment.id);
+    /**
+     * Загрузка и кеширование сервисов
+     */
+    async loadServices() {
+        try {
+            const response = await window.ServiceAPI.getServices();
+            const servicesList = response.services || [];
+
+            // Кешируем сервисы по ID
+            this.servicesCache.clear();
+            servicesList.forEach(service => {
+                this.servicesCache.set(service.service_id || service.id, service);
+            });
+        } catch (error) {
+            Utils.log('warn', 'Could not load services for payment banner:', error);
+        }
     },
 
     async enrichPaymentWithServiceData(payment) {
-        if (!payment.service_id) return;
+        // Если данные уже есть в платеже - используем их
+        if (payment.service_name && payment.service_duration) {
+            return;
+        }
 
-        try {
-            // Пытаемся получить данные сервиса
-            const response = await window.ServiceAPI.getService(payment.service_id);
-            const service = response.service || response; // API может возвращать разную структуру
+        // Загружаем сервисы если кеш пуст
+        if (this.servicesCache.size === 0) {
+            await this.loadServices();
+        }
 
+        // Пытаемся найти сервис в кеше
+        if (payment.service_id) {
+            const service = this.servicesCache.get(payment.service_id);
+            
             if (service) {
                 payment.service_name = service.name;
                 payment.service_duration = this.formatDuration(service.duration_days);
-                payment.service_original_price = service.price; // Оригинальная цена сервиса
+                payment.service_original_price = service.price;
 
                 // Если в платеже нет цены, используем цену сервиса
                 if (!payment.price || payment.price === 0) {
                     payment.price = service.price;
                 }
+                return;
             }
-        } catch (error) {
-            Utils.log('warn', 'Could not load service data for payment banner:', error);
-            // Используем fallback данные
-            payment.service_name = payment.description?.split(' - ')[0] || 'VPN подписка';
-            payment.service_duration = 'Подписка';
+        }
 
-            // Если нет цены в платеже, пытаемся извлечь из описания или ставим 0
-            if (!payment.price || payment.price === 0) {
-                payment.price = this.extractPriceFromDescription(payment.description) || 0;
+        // Fallback: используем данные из описания платежа
+        payment.service_name = payment.description?.split(' - ')[0] || 
+                               payment.service_name || 
+                               'VPN подписка';
+        
+        // Пытаемся определить длительность из описания
+        if (!payment.service_duration) {
+            const desc = payment.description || '';
+            // Ищем паттерны типа "1 месяц", "30 дней" и т.д.
+            if (desc.includes('месяц') || desc.includes('мес')) {
+                const months = desc.match(/(\d+)\s*(месяц|мес)/i);
+                if (months) {
+                    payment.service_duration = `${months[1]} ${Utils.pluralize(parseInt(months[1]), ['месяц', 'месяца', 'месяцев'])}`;
+                } else {
+                    payment.service_duration = '1 месяц';
+                }
+            } else if (desc.includes('день') || desc.includes('дн')) {
+                const days = desc.match(/(\d+)\s*(день|дн|дней)/i);
+                if (days) {
+                    payment.service_duration = `${days[1]} ${Utils.pluralize(parseInt(days[1]), ['день', 'дня', 'дней'])}`;
+                } else {
+                    payment.service_duration = '30 дней';
+                }
+            } else if (desc.includes('год')) {
+                const years = desc.match(/(\d+)\s*год/i);
+                if (years) {
+                    payment.service_duration = `${years[1]} ${Utils.pluralize(parseInt(years[1]), ['год', 'года', 'лет'])}`;
+                } else {
+                    payment.service_duration = '1 год';
+                }
+            } else {
+                payment.service_duration = 'Подписка';
             }
+        }
+
+        // Если нет цены в платеже, пытаемся извлечь из описания или используем amount
+        if (!payment.price || payment.price === 0) {
+            payment.price = payment.amount || 
+                           this.extractPriceFromDescription(payment.description) || 
+                           0;
         }
     },
 
@@ -166,8 +225,6 @@ window.PaymentBanner = {
 
         // Скрываем баннер
         this.element.classList.add('hidden');
-
-        Utils.log('info', 'Payment banner hidden');
     },
 
     /**
@@ -194,10 +251,11 @@ window.PaymentBanner = {
                 <div class="payment-info">
                     <div class="payment-timer">
                         <div class="timer-circle">
-                            <svg class="timer-progress" width="32" height="32">
-                                <circle cx="16" cy="16" r="14"
-                                       stroke-width="2"
-                                       stroke-dashoffset="${88 - (88 * progressPercent / 100)}"
+                            <svg class="timer-progress" width="44" height="44">
+                                <circle cx="22" cy="22" r="20"
+                                       stroke-width="3"
+                                       stroke-dasharray="125.6"
+                                       stroke-dashoffset="${125.6 - (125.6 * progressPercent / 100)}"
                                        class="${timeLeft > 0 ? 'active' : ''}"></circle>
                             </svg>
                             <span class="timer-text">${isSucceeded ? '✓' : formattedTime}</span>
@@ -228,8 +286,20 @@ window.PaymentBanner = {
     setupEventListeners() {
         const continueBtn = document.getElementById('continuePaymentBtn');
         if (continueBtn) {
-            continueBtn.addEventListener('click', () => {
+            continueBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Предотвращаем всплытие
                 this.handleContinuePayment();
+            });
+        }
+
+        // Клик по баннеру открывает модальное окно с деталями
+        if (this.element) {
+            this.element.addEventListener('click', (e) => {
+                // Не открываем модалку если клик по кнопке
+                if (e.target.closest('#continuePaymentBtn')) {
+                    return;
+                }
+                this.showPaymentDetails();
             });
         }
     },
@@ -265,13 +335,12 @@ window.PaymentBanner = {
             }
         }
 
-        // ✅ Для pending платежей ищем правильные поля
-        const paymentUrl = this.currentPayment.payment_url ||
-                          this.currentPayment.url ||
-                          this.currentPayment.receipt_link; // ← Добавить receipt_link как fallback
+        // ✅ Для pending платежей используем confirmation_url, для succeeded - receipt_link
+        const paymentUrl = this.currentPayment.status === 'pending' 
+            ? (this.currentPayment.confirmation_url || this.currentPayment.payment_url || this.currentPayment.url)
+            : (this.currentPayment.receipt_link || this.currentPayment.payment_url || this.currentPayment.url);
 
         if (paymentUrl) {
-            Utils.log('info', 'Opening payment URL:', paymentUrl);
 
             if (window.TelegramApp) {
                 window.TelegramApp.openLink(paymentUrl);
@@ -336,7 +405,7 @@ window.PaymentBanner = {
         }
 
         if (progressCircle) {
-            const offset = 88 - (88 * progressPercent / 100);
+            const offset = 125.6 - (125.6 * progressPercent / 100);
             progressCircle.style.strokeDashoffset = offset;
         }
     },
@@ -431,5 +500,110 @@ window.PaymentBanner = {
      */
     isShowing() {
         return this.isVisible;
+    },
+
+    /**
+     * Показать модальное окно с деталями платежа
+     */
+    showPaymentDetails() {
+        if (!this.currentPayment) return;
+
+        if (window.TelegramApp) {
+            window.TelegramApp.haptic.light();
+        }
+
+        const payment = this.currentPayment;
+        const isPending = payment.status === 'pending';
+        const isSuccess = payment.status === 'succeeded';
+        const statusText = isPending ? 'Ожидает оплаты' :
+                          isSuccess ? 'Успешно оплачено' : 'Отменено';
+        const statusClass = isPending ? 'pending' : isSuccess ? 'success' : 'canceled';
+
+        // Форматируем дату создания и обновления
+        const createdAt = payment.created_at ? Utils.formatDate(payment.created_at, 'long') : 'Неизвестно';
+        const updatedAt = payment.updated_at ? Utils.formatDate(payment.updated_at, 'long') : createdAt;
+
+        if (window.Modal) {
+            window.Modal.show({
+                title: 'Детали платежа',
+                content: `
+                    <div class="payment-details">
+                        <div class="payment-detail-item">
+                            <span class="detail-label">ID платежа</span>
+                            <span class="detail-value payment-id">${payment.payment_id || payment.id || 'Неизвестно'}</span>
+                        </div>
+                        <div class="payment-detail-item">
+                            <span class="detail-label">Услуга</span>
+                            <span class="detail-value">${payment.service_name || 'VPN подписка'}</span>
+                        </div>
+                        ${payment.service_duration ? `
+                            <div class="payment-detail-item">
+                                <span class="detail-label">Период</span>
+                                <span class="detail-value">${payment.service_duration}</span>
+                            </div>
+                        ` : ''}
+                        <div class="payment-detail-item">
+                            <span class="detail-label">Сумма</span>
+                            <span class="detail-value final-price">${Utils.formatPrice(payment.price || payment.amount || 0)}</span>
+                        </div>
+                        <div class="payment-detail-item">
+                            <span class="detail-label">Статус</span>
+                            <span class="detail-value payment-status ${statusClass}">
+                                ${statusText}
+                            </span>
+                        </div>
+                        <div class="payment-detail-item">
+                            <span class="detail-label">Дата создания</span>
+                            <span class="detail-value">${createdAt}</span>
+                        </div>
+                        ${updatedAt !== createdAt ? `
+                            <div class="payment-detail-item">
+                                <span class="detail-label">Последнее обновление</span>
+                                <span class="detail-value">${updatedAt}</span>
+                            </div>
+                        ` : ''}
+                        ${payment.description ? `
+                            <div class="payment-detail-item">
+                                <span class="detail-label">Описание</span>
+                                <span class="detail-value">${payment.description}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `,
+                buttons: [
+                    ...(isPending ? [{
+                        id: 'continue',
+                        text: 'Продолжить оплату',
+                        type: 'primary',
+                        handler: () => {
+                            this.handleContinuePayment();
+                            if (window.Modal) {
+                                window.Modal.hide();
+                            }
+                        }
+                    }] : []),
+                    ...(isSuccess && payment.receipt_link ? [{
+                        id: 'receipt',
+                        text: 'Открыть чек',
+                        type: 'primary',
+                        handler: () => {
+                            if (window.TelegramApp) {
+                                window.TelegramApp.openLink(payment.receipt_link);
+                            } else {
+                                window.open(payment.receipt_link, '_blank');
+                            }
+                            if (window.Modal) {
+                                window.Modal.hide();
+                            }
+                        }
+                    }] : []),
+                    {
+                        id: 'close',
+                        text: 'Закрыть',
+                        action: 'close'
+                    }
+                ]
+            });
+        }
     }
 };
