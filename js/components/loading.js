@@ -75,7 +75,7 @@ window.Loading = {
      */
     updateText(text) {
         if (!this.overlay) {
-            console.warn('Loading overlay not initialized');
+            Utils.log('warn', 'Loading overlay not initialized');
             return;
         }
 
@@ -83,7 +83,7 @@ window.Loading = {
         if (textElement) {
             textElement.textContent = text;
         } else {
-            console.warn('Loading text element not found');
+            Utils.log('warn', 'Loading text element not found');
         }
     },
 

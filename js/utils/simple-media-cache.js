@@ -28,7 +28,7 @@ window.MediaCache = {
             this.cache.set(url, blobUrl);
             return blobUrl;
         } catch (error) {
-            console.warn('Failed to load media:', url, error);
+            Utils.log('warn', 'Failed to load media:', { url, error });
             return url; // Fallback к оригинальному URL
         } finally {
             this.loading.delete(url);
@@ -62,7 +62,7 @@ window.MediaCache = {
         try {
             return await this.load(url);
         } catch (error) {
-            console.warn('Failed to load image safely:', url, error);
+            Utils.log('warn', 'Failed to load image safely:', { url, error });
             return url; // Fallback к оригинальному URL
         }
     },

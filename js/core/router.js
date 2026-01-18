@@ -46,12 +46,15 @@ window.Router = {
         if (window.TelegramApp && window.TelegramApp.webApp) {
             window.TelegramApp.forceExpand();
 
-            // Проверяем каждые 2 секунды что приложение расширено
-            setInterval(() => {
-                if (!window.TelegramApp.webApp.isExpanded) {
-                    window.TelegramApp.forceExpand();
-                }
-            }, 2000);
+            // ✅ ОПТИМИЗАЦИЯ: Проверяем только при изменении viewport, а не постоянно
+            // Используем событие viewportChanged вместо setInterval
+            if (window.TelegramApp.webApp.onEvent) {
+                window.TelegramApp.webApp.onEvent('viewportChanged', (eventData) => {
+                    if (eventData && !eventData.isExpanded) {
+                        window.TelegramApp.forceExpand();
+                    }
+                });
+            }
         }
     },
 
@@ -67,8 +70,11 @@ window.Router = {
             }
         };
 
+        // ✅ ОПТИМИЗАЦИЯ: Используем throttle для resize событий
+        const throttledUpdate = Utils.throttle(updateViewportHeight, 100);
+
         // Обновляем при изменении размера
-        window.addEventListener('resize', updateViewportHeight);
+        window.addEventListener('resize', throttledUpdate);
         window.addEventListener('orientationchange', updateViewportHeight);
 
         // Обновляем при изменении Telegram viewport

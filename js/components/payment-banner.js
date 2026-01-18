@@ -2,6 +2,7 @@
 window.PaymentBanner = {
     currentPayment: null,
     timerInterval: null,
+    animationFrameId: null, // ✅ ОПТИМИЗАЦИЯ: ID для requestAnimationFrame
     isVisible: false,
     element: null,
     servicesCache: new Map(), // Кеш сервисов
@@ -367,16 +368,32 @@ window.PaymentBanner = {
     startTimer() {
         this.stopTimer(); // Останавливаем предыдущий
 
-        this.timerInterval = setInterval(() => {
-            const timeLeft = this.getTimeLeft();
+        // ✅ ОПТИМИЗАЦИЯ: Используем requestAnimationFrame вместо setInterval
+        // Это более эффективно и не блокирует основной поток
+        let lastUpdate = Date.now();
+        const updateLoop = () => {
+            // Обновляем только раз в секунду, но используем RAF для плавности
+            const now = Date.now();
+            if (now - lastUpdate >= 1000) {
+                lastUpdate = now;
+                
+                const timeLeft = this.getTimeLeft();
 
-            if (timeLeft <= 0) {
-                this.handlePaymentExpired();
-                return;
+                if (timeLeft <= 0) {
+                    this.handlePaymentExpired();
+                    return;
+                }
+
+                this.updateTimer();
             }
 
-            this.updateTimer();
-        }, 1000);
+            // Продолжаем только если баннер видим
+            if (this.isVisible && this.currentPayment) {
+                this.animationFrameId = requestAnimationFrame(updateLoop);
+            }
+        };
+
+        this.animationFrameId = requestAnimationFrame(updateLoop);
     },
 
     /**
@@ -386,6 +403,11 @@ window.PaymentBanner = {
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
             this.timerInterval = null;
+        }
+        // ✅ ОПТИМИЗАЦИЯ: Отменяем requestAnimationFrame
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
         }
     },
 

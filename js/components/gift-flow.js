@@ -1,8 +1,5 @@
 // Gift Flow Component for Dragon VPN Mini App
 
-// Отладочный вывод для проверки загрузки
-console.log('[GiftFlow] Initializing...');
-
 window.GiftFlow = {
     isVisible: false,
     currentStep: 1, // 1: выбор услуги, 2: получатель и сообщение, 3: сводка
@@ -657,5 +654,3 @@ window.GiftFlow = {
     }
 };
 
-// Отладочный вывод для проверки загрузки
-console.log('[GiftFlow] Initialized:', typeof window.GiftFlow);

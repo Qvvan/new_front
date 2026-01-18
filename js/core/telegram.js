@@ -5,6 +5,7 @@ window.TelegramApp = {
     webApp: null,
     initData: null,
     user: null,
+    touchHandlerBound: false, // ✅ ОПТИМИЗАЦИЯ: Флаг для предотвращения дублирования обработчиков
 
     /**
      * Инициализация Telegram WebApp
@@ -171,42 +172,52 @@ window.TelegramApp = {
             }
         });
 
-        // 🔥 Блокируем закрытие через DOM события
+        // ✅ ОПТИМИЗАЦИЯ: Блокируем закрытие через DOM события с оптимизацией
         let startY = 0;
         let isScrolling = false;
 
-        document.addEventListener('touchstart', (e) => {
-            startY = e.touches[0].clientY;
-            isScrolling = false;
-        }, { passive: false });
+        // Добавляем обработчики только один раз
+        if (!this.touchHandlerBound) {
+            this.touchHandlerBound = true;
 
-        document.addEventListener('touchmove', (e) => {
-            const currentY = e.touches[0].clientY;
-            const deltaY = currentY - startY;
+            // ✅ ОПТИМИЗАЦИЯ: touchstart может быть passive
+            document.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+                isScrolling = false;
+            }, { passive: true });
 
-            // Если пользователь скроллит вниз И находится в начале страницы
-            const mainContent = document.querySelector('.main-content');
-            const isAtTop = mainContent ? mainContent.scrollTop <= 5 : window.scrollY <= 5;
+            // ✅ ОПТИМИЗАЦИЯ: Используем throttle для touchmove
+            const throttledTouchMove = Utils.throttle((e) => {
+                const currentY = e.touches[0].clientY;
+                const deltaY = currentY - startY;
 
-            if (deltaY > 0 && isAtTop && deltaY > 50) {
-                // Блокируем событие которое может закрыть приложение
-                e.preventDefault();
-                e.stopPropagation();
-                isScrolling = true;
+                // Если пользователь скроллит вниз И находится в начале страницы
+                const mainContent = document.querySelector('.main-content');
+                const isAtTop = mainContent ? mainContent.scrollTop <= 5 : window.scrollY <= 5;
 
-                // Принудительно расширяем приложение
-                this.webApp.expand();
-            }
-        }, { passive: false });
+                if (deltaY > 0 && isAtTop && deltaY > 50) {
+                    // Блокируем событие которое может закрыть приложение
+                    e.preventDefault();
+                    e.stopPropagation();
+                    isScrolling = true;
 
-        document.addEventListener('touchend', (e) => {
-            if (isScrolling) {
-                e.preventDefault();
-                e.stopPropagation();
-                // Финальная проверка что приложение расширено
-                this.webApp.expand();
-            }
-        }, { passive: false });
+                    // Принудительно расширяем приложение
+                    this.webApp.expand();
+                }
+            }, 16); // ~60fps
+
+            document.addEventListener('touchmove', throttledTouchMove, { passive: false });
+
+            document.addEventListener('touchend', (e) => {
+                if (isScrolling) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Финальная проверка что приложение расширено
+                    this.webApp.expand();
+                    isScrolling = false;
+                }
+            }, { passive: false });
+        }
     },
 
     forceExpand() {

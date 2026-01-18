@@ -116,10 +116,11 @@ window.DragonVPNApp = {
             // Инициализируем базовый функционал
             window.TelegramApp.init();
 
-            // Ждем полной инициализации
+            // ✅ ОПТИМИЗАЦИЯ: Уменьшаем количество попыток и увеличиваем интервал
             await new Promise(resolve => {
                 let attempts = 0;
-                const maxAttempts = 100; // Увеличиваем количество попыток
+                const maxAttempts = 20; // Уменьшено с 100 до 20
+                const checkInterval = 100; // Увеличено с 50 до 100ms
 
                 const checkReady = () => {
                     attempts++;
@@ -131,11 +132,11 @@ window.DragonVPNApp = {
                         Utils.log('warn', 'Telegram WebApp initialization timeout');
                         resolve();
                     } else {
-                        setTimeout(checkReady, 50); // Проверяем чаще
+                        setTimeout(checkReady, checkInterval);
                     }
                 };
 
-                setTimeout(checkReady, 50);
+                setTimeout(checkReady, checkInterval);
             });
 
             // 🔥 После инициализации принудительно настраиваем полуполноэкранный режим
@@ -494,23 +495,49 @@ window.DragonVPNApp = {
      * Настройка периодических задач
      */
     setupPeriodicTasks() {
-        setInterval(() => {
-            if (window.SubscriptionScreen) {
-                window.SubscriptionScreen.checkExpiredSubscriptions();
-            }
-        }, 5 * 60 * 1000);
+        // ✅ ОПТИМИЗАЦИЯ: Останавливаем задачи когда страница не видна
+        let subscriptionInterval, navigationInterval, storageInterval;
 
-        setInterval(() => {
-            if (window.Navigation) {
-                window.Navigation.updateNavigationState();
-            }
-        }, 2 * 60 * 1000);
+        const startTasks = () => {
+            // Проверка истекших подписок каждые 5 минут
+            subscriptionInterval = setInterval(() => {
+                if (!document.hidden && window.SubscriptionScreen) {
+                    window.SubscriptionScreen.checkExpiredSubscriptions();
+                }
+            }, 5 * 60 * 1000);
 
-        setInterval(() => {
-            if (window.Storage) {
-                window.Storage.sync();
+            // Обновление навигации каждые 2 минуты
+            navigationInterval = setInterval(() => {
+                if (!document.hidden && window.Navigation) {
+                    window.Navigation.updateNavigationState();
+                }
+            }, 2 * 60 * 1000);
+
+            // Синхронизация Storage каждые 10 минут
+            storageInterval = setInterval(() => {
+                if (!document.hidden && window.Storage) {
+                    window.Storage.sync();
+                }
+            }, 10 * 60 * 1000);
+        };
+
+        const stopTasks = () => {
+            if (subscriptionInterval) clearInterval(subscriptionInterval);
+            if (navigationInterval) clearInterval(navigationInterval);
+            if (storageInterval) clearInterval(storageInterval);
+        };
+
+        // Управление задачами в зависимости от видимости страницы
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopTasks();
+            } else {
+                startTasks();
             }
-        }, 10 * 60 * 1000);
+        });
+
+        // Запускаем задачи при старте
+        startTasks();
     },
 
     /**
@@ -727,6 +754,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         await window.DragonVPNApp.init();
         window.DragonVPNApp.handleLifecycleEvents();
     } catch (error) {
-        console.error('Failed to start Dragon VPN App:', error);
+        Utils.log('error', 'Failed to start Dragon VPN App:', error);
     }
 });

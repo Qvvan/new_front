@@ -341,7 +341,7 @@ window.Utils = {
                 return result;
             }
         } catch (error) {
-            console.error('Failed to copy text:', error);
+            Utils.log('error', 'Failed to copy text:', error);
             return false;
         }
     },
@@ -387,6 +387,16 @@ window.Utils = {
      * @param {any} data - Дополнительные данные
      */
     log(level, message, data = null) {
+        // ✅ ОПТИМИЗАЦИЯ: Логируем только в dev режиме или для ошибок
+        const isDev = window.location.hostname === 'localhost' || 
+                     window.location.hostname === '127.0.0.1' ||
+                     window.location.search.includes('debug=true');
+        
+        // Всегда логируем ошибки, остальное только в dev
+        if (!isDev && level !== 'error') {
+            return;
+        }
+
         const timestamp = new Date().toISOString();
         const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
 

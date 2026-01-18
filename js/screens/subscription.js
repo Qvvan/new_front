@@ -2299,8 +2299,9 @@ window.SubscriptionScreen = {
             }, 100);
         };
 
-        // Обработчик скролла
-        container.addEventListener('scroll', handleScroll, { passive: true });
+        // ✅ ОПТИМИЗАЦИЯ: Используем throttle для scroll события
+        const throttledHandleScroll = Utils.throttle(handleScroll, 100);
+        container.addEventListener('scroll', throttledHandleScroll, { passive: true });
 
         // Drag-to-scroll функциональность
         let isDragging = false;
@@ -2396,9 +2397,12 @@ window.SubscriptionScreen = {
             }, 200);
         };
 
+        // ✅ ОПТИМИЗАЦИЯ: Используем throttle для mousemove
+        const throttledHandleMouseMove = Utils.throttle(handleMouseMove, 16); // ~60fps
+        
         // Добавляем обработчики для мыши
         container.addEventListener('mousedown', handleMouseDown);
-        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mousemove', throttledHandleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
         container.addEventListener('mouseleave', handleMouseLeave);
 
