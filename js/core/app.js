@@ -595,6 +595,11 @@ window.DragonVPNApp = {
         document.addEventListener('visibilitychange', async () => {
             if (document.visibilityState === 'visible' && this.isReady) {
                 await this.onAppResume();
+                // ✅ ОПТИМИЗАЦИЯ: Возобновляем CSS анимации когда страница видна
+                this.resumeAnimations();
+            } else if (document.hidden) {
+                // ✅ ОПТИМИЗАЦИЯ: Останавливаем CSS анимации когда страница скрыта
+                this.pauseAnimations();
             }
         });
 
@@ -608,6 +613,30 @@ window.DragonVPNApp = {
 
         window.addEventListener('unhandledrejection', (event) => {
             this.handleGlobalError(event.reason);
+        });
+    },
+
+    /**
+     * ✅ ОПТИМИЗАЦИЯ: Остановка бесконечных CSS анимаций когда страница скрыта
+     */
+    pauseAnimations() {
+        const animatedElements = document.querySelectorAll('[style*="animation"], .animate-glow, .animate-heartbeat, .background-glow, [class*="infinite"]');
+        animatedElements.forEach(el => {
+            if (el.style.animationPlayState !== 'paused') {
+                el.dataset.animationState = el.style.animationPlayState || 'running';
+                el.style.animationPlayState = 'paused';
+            }
+        });
+    },
+
+    /**
+     * ✅ ОПТИМИЗАЦИЯ: Возобновление CSS анимаций когда страница видна
+     */
+    resumeAnimations() {
+        const animatedElements = document.querySelectorAll('[data-animation-state]');
+        animatedElements.forEach(el => {
+            el.style.animationPlayState = el.dataset.animationState || 'running';
+            delete el.dataset.animationState;
         });
     },
 

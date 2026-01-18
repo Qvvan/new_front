@@ -95,41 +95,71 @@ window.SimpleLazy = {
         img.removeAttribute('data-src');
     },
 
-    // Настройка MutationObserver для автоматической обработки новых изображений
+    // ✅ ОПТИМИЗАЦИЯ: Настройка MutationObserver с throttle для снижения нагрузки
     setupMutationObserver() {
         if (!('MutationObserver' in window)) return;
 
-        const mutationObserver = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
+        // ✅ Используем throttle для обработки мутаций
+        let pendingMutations = [];
+        const processMutations = Utils.throttle(() => {
+            const nodesToProcess = new Set();
+            
+            pendingMutations.forEach(mutation => {
                 mutation.addedNodes.forEach((node) => {
                     if (node.nodeType === 1) { // Element node
-                        // Обрабатываем новые изображения с data-src
-                        const images = node.querySelectorAll ? node.querySelectorAll('img[data-src]') : [];
-                        images.forEach(img => {
-                            // Пропускаем если уже загружено
-                            if (img.classList.contains('loaded') || !img.dataset.src) {
-                                return;
-                            }
-                            
-                            if (this.observer) {
-                                this.observer.observe(img);
-                            } else {
-                                this.loadImage(img);
-                            }
-                        });
-
-                        // Если сам узел - изображение с data-src
-                        if (node.tagName === 'IMG' && node.dataset.src && !node.classList.contains('loaded')) {
-                            if (this.observer) {
-                                this.observer.observe(node);
-                            } else {
-                                this.loadImage(node);
-                            }
-                        }
+                        nodesToProcess.add(node);
                     }
                 });
             });
+
+            nodesToProcess.forEach(node => {
+                // Обрабатываем новые изображения с data-src
+                const images = node.querySelectorAll ? node.querySelectorAll('img[data-src]') : [];
+                images.forEach(img => {
+                    // Пропускаем если уже загружено
+                    if (img.classList.contains('loaded') || !img.dataset.src) {
+                        return;
+                    }
+                    
+                    if (this.observer) {
+                        this.observer.observe(img);
+                    } else {
+                        this.loadImage(img);
+                    }
+                });
+
+                // Если сам узел - изображение с data-src
+                if (node.tagName === 'IMG' && node.dataset.src && !node.classList.contains('loaded')) {
+                    if (this.observer) {
+                        this.observer.observe(node);
+                    } else {
+                        this.loadImage(node);
+                    }
+                }
+            });
+
+            pendingMutations = [];
+        }, 100); // Обрабатываем мутации раз в 100ms
+
+        const mutationObserver = new MutationObserver((mutations) => {
+            // ✅ Накапливаем мутации и обрабатываем батчами
+            pendingMutations.push(...mutations);
+            processMutations();
         });
+
+        // ✅ ОПТИМИЗАЦИЯ: Останавливаем наблюдение когда страница не видна
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                mutationObserver.disconnect();
+            } else {
+                mutationObserver.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
         // Наблюдаем за изменениями в document.body
         mutationObserver.observe(document.body, {

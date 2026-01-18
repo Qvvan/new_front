@@ -310,6 +310,16 @@ p {
     z-index: var(--z-background);
     animation: float 20s ease-in-out infinite;
     pointer-events: none;
+    /* ✅ ОПТИМИЗАЦИЯ: Останавливаем анимацию когда страница не видна */
+    animation-play-state: running;
+}
+
+/* ✅ ОПТИМИЗАЦИЯ: Останавливаем анимацию фона когда страница скрыта */
+@media (prefers-reduced-motion: no-preference) {
+    /* Анимация работает только когда страница видна */
+    body:not(:has(.screen.active)) .background-glow {
+        animation-play-state: paused;
+    }
 }
 
 @keyframes float {
