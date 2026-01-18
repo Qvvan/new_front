@@ -1897,35 +1897,35 @@ window.SubscriptionScreen = {
         animationElement.style.transform = 'translate(-50%, -50%) scale(0)';
         animationElement.style.zIndex = '10000';
 
-        // Анимация появления - более плавная и длинная
+        // Анимация появления - плавная, 2 секунды общая длительность
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                animationElement.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                animationElement.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
                 animationElement.style.transform = 'translate(-50%, -50%) scale(1)';
                 animationElement.style.opacity = '1';
             });
         });
 
-        // Держим анимацию видимой дольше перед началом движения
+        // Держим анимацию видимой
         setTimeout(() => {
-            // Небольшая пауза с легким покачиванием
-            animationElement.style.transition = 'all 0.3s ease-out';
-            animationElement.style.transform = 'translate(-50%, -50%) scale(1.05)';
-        }, 1200);
+            // Легкое покачивание
+            animationElement.style.transition = 'all 0.2s ease-out';
+            animationElement.style.transform = 'translate(-50%, -50%) scale(1.03)';
+        }, 800);
 
-        // Плавное движение вверх и исчезновение - более длинное и плавное
+        // Плавное движение вверх и исчезновение - общая длительность 2 секунды
         setTimeout(() => {
-            animationElement.style.transition = 'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-            animationElement.style.transform = `translate(-50%, ${cardRect.top - 150}px) scale(0.7)`;
+            animationElement.style.transition = 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            animationElement.style.transform = `translate(-50%, ${cardRect.top - 120}px) scale(0.8)`;
             animationElement.style.opacity = '0';
-        }, 1500);
+        }, 1000);
 
-        // Удаляем элемент после завершения анимации
+        // Удаляем элемент после завершения анимации (2 секунды)
         setTimeout(() => {
             if (animationElement.parentNode) {
                 animationElement.parentNode.removeChild(animationElement);
             }
-        }, 3200); // Увеличено время показа анимации
+        }, 2200);
     },
 
     /**
