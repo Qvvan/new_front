@@ -1600,7 +1600,7 @@ window.SubscriptionScreen = {
                         <div class="daily-bonus-header-compact">
                             <div class="streak-info-compact">
                                 <i class="fas fa-fire"></i>
-                                <span>Серия: ${currentStreak} из 7</span>
+                                <span>Серия: ${currentStreak}</span>
                             </div>
                             ${nextClaimAt && !canClaim ? `
                                 <div class="next-claim-compact">
@@ -1614,12 +1614,23 @@ window.SubscriptionScreen = {
                             <div class="scroll-fade-left"></div>
                             <div class="daily-bonus-cards-container" id="dailyBonusScrollContainer">
                                 ${bonuses.map((bonus, index) => {
-                                    const isClaimed = index < currentStreak;
-                                    const isCurrent = index === currentStreak - 1;
-                                    const isNext = index === currentStreak && canClaim;
+                                    // Четкая логика для определения статусов карточек
+                                    const nextStreak = status.next_streak || 0;
+                                    
+                                    // Следующий день для получения - день с номером next_streak (желтый)
+                                    const isNext = canClaim && bonus.day_number === nextStreak;
+                                    
+                                    // Забранные дни: ТОЛЬКО дни с номером меньше next_streak
+                                    // Это означает дни, которые уже забраны в текущем цикле
+                                    const isClaimed = bonus.day_number < nextStreak;
+                                    
+                                    // ВАЖНО: Заблокированные дни - это все дни, которые:
+                                    // - НЕ забраны (day_number >= next_streak)
+                                    // - НЕ являются следующим днем (day_number !== next_streak)
+                                    // Они будут черными (без классов claimed и next)
                                     
                                     return `
-                                        <div class="daily-bonus-card-horizontal ${isClaimed ? 'claimed' : ''} ${isCurrent ? 'current' : ''} ${isNext ? 'next' : ''}" data-day="${bonus.day_number}" data-index="${index}">
+                                        <div class="daily-bonus-card-horizontal ${isClaimed ? 'claimed' : ''} ${isNext ? 'next' : ''}" data-day="${bonus.day_number}" data-index="${index}">
                                             <div class="bonus-card-header">
                                                 <div class="bonus-day-badge">День ${bonus.day_number}</div>
                                                 ${bonus.is_final ? '<div class="bonus-final-tag">Финальный</div>' : ''}
@@ -1657,12 +1668,11 @@ window.SubscriptionScreen = {
                         position: 'right',
                         action: 'custom',
                         disabled: !canClaim,
+                        closeAfter: false, // ЯВНО запрещаем закрытие модального окна
                         handler: async () => {
-                            if (!canClaim) return;
+                            if (!canClaim) return 'keep-open'; // Возвращаем keep-open для гарантии
                             await this.handleClaimDailyBonus();
-                            if (window.Modal) {
-                                window.Modal.close();
-                            }
+                            return 'keep-open'; // ЯВНО возвращаем keep-open чтобы модальное окно НЕ закрывалось
                         }
                     }
                 ],
@@ -1812,19 +1822,22 @@ window.SubscriptionScreen = {
             }
 
             const response = await window.CurrencyAPI.claimDailyBonus();
+            const bonusAmount = response.bonus_amount || '0';
             
             if (window.Loading) {
                 window.Loading.hide();
             }
+
+            // Показываем анимацию начисления бонуса в модальном окне
+            this.showBonusClaimAnimation(bonusAmount);
 
             // Обновляем данные
             await this.loadDailyBonusStatus();
             await this.loadCurrencyBalance();
             this.render();
 
-            if (window.Toast) {
-                window.Toast.success(`Получено ${response.bonus_amount} DRG!`);
-            }
+            // Обновляем модальное окно с новыми данными
+            this.updateDailyBonusModal();
 
             if (window.TelegramApp) {
                 window.TelegramApp.haptic.success();
@@ -1839,6 +1852,150 @@ window.SubscriptionScreen = {
             if (window.Toast) {
                 window.Toast.error(error.data?.comment || error.message || 'Ошибка получения бонуса');
             }
+        }
+    },
+
+    /**
+     * Показ анимации начисления бонуса
+     */
+    showBonusClaimAnimation(bonusAmount) {
+        const container = document.getElementById('dailyBonusScrollContainer');
+        if (!container) return;
+
+        // Находим текущую карточку бонуса
+        const status = this.dailyBonusStatus || {};
+        const nextStreak = status.next_streak || 0;
+        const targetCard = container.querySelector(`[data-day="${nextStreak}"]`);
+        
+        if (!targetCard) return;
+
+        // Создаем элемент анимации
+        const animationElement = document.createElement('div');
+        animationElement.className = 'bonus-claim-animation';
+        animationElement.innerHTML = `
+            <div class="bonus-animation-content">
+                <div class="bonus-animation-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="bonus-animation-text">
+                    <div class="bonus-animation-amount">+${bonusAmount}</div>
+                    <div class="bonus-animation-label">DRG</div>
+                </div>
+            </div>
+        `;
+
+        // Позиционируем относительно карточки
+        const cardRect = targetCard.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        
+        document.body.appendChild(animationElement);
+        
+        // Устанавливаем начальную позицию
+        animationElement.style.position = 'fixed';
+        animationElement.style.left = `${cardRect.left + cardRect.width / 2}px`;
+        animationElement.style.top = `${cardRect.top + cardRect.height / 2}px`;
+        animationElement.style.transform = 'translate(-50%, -50%) scale(0)';
+        animationElement.style.zIndex = '10000';
+
+        // Анимация появления - более плавная и длинная
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                animationElement.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                animationElement.style.transform = 'translate(-50%, -50%) scale(1)';
+                animationElement.style.opacity = '1';
+            });
+        });
+
+        // Держим анимацию видимой дольше перед началом движения
+        setTimeout(() => {
+            // Небольшая пауза с легким покачиванием
+            animationElement.style.transition = 'all 0.3s ease-out';
+            animationElement.style.transform = 'translate(-50%, -50%) scale(1.05)';
+        }, 1200);
+
+        // Плавное движение вверх и исчезновение - более длинное и плавное
+        setTimeout(() => {
+            animationElement.style.transition = 'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            animationElement.style.transform = `translate(-50%, ${cardRect.top - 150}px) scale(0.7)`;
+            animationElement.style.opacity = '0';
+        }, 1500);
+
+        // Удаляем элемент после завершения анимации
+        setTimeout(() => {
+            if (animationElement.parentNode) {
+                animationElement.parentNode.removeChild(animationElement);
+            }
+        }, 3200); // Увеличено время показа анимации
+    },
+
+    /**
+     * Обновление модального окна с новыми данными
+     */
+    updateDailyBonusModal() {
+        const status = this.dailyBonusStatus || {};
+        const bonuses = this.dailyBonusList?.bonuses || [];
+        const currentStreak = status.current_streak || 0;
+        const nextStreak = status.next_streak || 0;
+        const canClaim = status.can_claim || false;
+        const nextClaimAt = status.next_claim_available_at;
+
+        const container = document.getElementById('dailyBonusScrollContainer');
+        if (!container) return;
+
+        // Обновляем карточки
+        bonuses.forEach((bonus, index) => {
+            const card = container.querySelector(`[data-day="${bonus.day_number}"]`);
+            if (!card) return;
+
+            const nextStreak = status.next_streak || 0;
+            
+            // Следующий день для получения - день с номером next_streak (желтый)
+            const isNext = canClaim && bonus.day_number === nextStreak;
+            
+            // Забранные дни: ТОЛЬКО дни с номером меньше next_streak
+            // Это означает дни, которые уже забраны в текущем цикле
+            const isClaimed = bonus.day_number < nextStreak;
+            
+            // ВАЖНО: Заблокированные дни - это все дни, которые:
+            // - НЕ забраны (day_number >= next_streak)
+            // - НЕ являются следующим днем (day_number !== next_streak)
+            // Они будут черными (без классов claimed и next)
+
+            // Обновляем классы - четко: либо claimed (зеленый), либо next (желтый), либо ничего (черный)
+            card.className = `daily-bonus-card-horizontal ${isClaimed ? 'claimed' : ''} ${isNext ? 'next' : ''}`;
+
+            // Обновляем статус
+            const statusElement = card.querySelector('.bonus-card-status');
+            if (statusElement) {
+                if (isClaimed) {
+                    statusElement.innerHTML = '<div class="status-claimed"><i class="fas fa-check-circle"></i> Забран</div>';
+                } else if (isNext) {
+                    statusElement.innerHTML = '<div class="status-available"><i class="fas fa-gift"></i> Доступен</div>';
+                } else {
+                    statusElement.innerHTML = '<div class="status-locked"><i class="fas fa-lock"></i> Заблокирован</div>';
+                }
+            }
+            
+            // Обновляем data-атрибуты для корректной работы скролла
+            card.setAttribute('data-day', bonus.day_number);
+            card.setAttribute('data-index', index);
+        });
+
+        // Обновляем кнопку "Забрать бонус"
+        const claimButton = document.querySelector('button[data-button-id="claim"]');
+        if (claimButton) {
+            claimButton.disabled = !canClaim;
+            if (!canClaim) {
+                claimButton.classList.add('btn-disabled');
+            } else {
+                claimButton.classList.remove('btn-disabled');
+            }
+        }
+
+        // Обновляем заголовок с серией
+        const streakInfo = document.querySelector('.streak-info-compact span');
+        if (streakInfo) {
+            streakInfo.textContent = `Серия: ${currentStreak}`;
         }
     },
 
