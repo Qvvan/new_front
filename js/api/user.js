@@ -20,7 +20,7 @@ window.UserAPI = {
      * @returns {Promise<Object>} Данные текущего пользователя
      */
     async getCurrentUser() {
-        return await window.APIClient.get('/user/me');
+        return await window.APIClient.get('/user/user/me');
     },
 
     /**
@@ -29,7 +29,7 @@ window.UserAPI = {
      * @returns {Promise<Object>} Обновленные данные пользователя
      */
     async updateCurrentUser(userData) {
-        return await window.APIClient.put('/user/me', userData);
+        return await window.APIClient.put('/user/user/me', userData);
     },
 
     /**
@@ -56,7 +56,7 @@ window.UserAPI = {
      * @returns {Promise<void>}
      */
     async updateLastSeen() {
-        return await window.APIClient.post('/user/me/last-seen');
+        return await window.APIClient.post('/user/user/me/last-seen');
     },
 
     /**

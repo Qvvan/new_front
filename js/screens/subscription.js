@@ -881,10 +881,11 @@ window.SubscriptionScreen = {
                             <button class="btn-trial-activation" data-action="activate-trial">
                                 <div class="btn-trial-bg">
                                     <div class="btn-trial-shine"></div>
+                                    <div class="btn-trial-glow"></div>
                                 </div>
                                 <div class="btn-trial-content">
-                                    <div class="trial-gift-icon">
-                                        <div id="trial-gift-tgs" style="width: 24px; height: 24px;" data-tgs="${trialTgs}"></div>
+                                    <div class="trial-icon-wrapper">
+                                        <i class="fas fa-sparkles"></i>
                                     </div>
                                     <div class="trial-text">
                                         <span class="trial-main">Пробный период</span>
@@ -972,9 +973,9 @@ window.SubscriptionScreen = {
                     ` : ''}
 
                 <div class="subscription-actions">
-                    <button class="btn btn-primary" data-action="renew" data-subscription-id="${subscription.subscription_id || subscription.id}">
-                        <i class="fas fa-credit-card"></i>
-                        ${isExpired ? 'Возобновить' : 'Продлить сейчас'}
+                    <button class="btn btn-primary btn-renew" data-action="renew" data-subscription-id="${subscription.subscription_id || subscription.id}">
+                        <i class="fas fa-sync-alt"></i>
+                        ${isExpired ? 'Возобновить' : 'Продлить подписку'}
                     </button>
                 </div>
             </div>
@@ -1024,8 +1025,8 @@ window.SubscriptionScreen = {
                                 </div>
                             </div>
                         ` : ''}
-                        <button class="btn btn-sm btn-primary" data-action="renew" data-subscription-id="${subscription.id}">
-                            <i class="fas fa-credit-card"></i>
+                        <button class="btn btn-sm btn-primary btn-renew" data-action="renew" data-subscription-id="${subscription.id}">
+                            <i class="fas fa-sync-alt"></i>
                         </button>
                     </div>
                 </div>
