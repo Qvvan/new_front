@@ -127,7 +127,7 @@ window.PaymentMonitor = {
      */
     async handlePaymentStatusChange(payment, info) {
         const currentStatus = payment.status;
-        const paymentId = payment.id;
+        const paymentId = payment.payment_id || payment.id;
 
         if (currentStatus === 'succeeded') {
             if (!info.wasSuccessful) {

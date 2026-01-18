@@ -575,7 +575,7 @@ window.ServiceSelector = {
 
             // API возвращает { payment: {...}, confirmation_url: "..." }
             const payment = response.payment || response;
-            const confirmationUrl = response.confirmation_url || response.url;
+            const confirmationUrl = response.confirmation_url || payment.confirmation_url || response.url || payment.url;
 
             // ✅ Обогащаем данными сервиса
             payment.service_name = this.selectedService.name;
@@ -587,7 +587,7 @@ window.ServiceSelector = {
                 payment.price = this.selectedService.price;
             }
 
-            // ✅ Правильно передаем URL
+            // ✅ Правильно передаем URL - используем confirmation_url из ответа или из payment
             const paymentWithUrl = {
                 ...payment,
                 payment_url: confirmationUrl,
@@ -595,16 +595,38 @@ window.ServiceSelector = {
                 confirmation_url: confirmationUrl
             };
 
-            this.hide();
-
-            // Показываем баннер
-            if (window.PaymentBanner) {
-                window.PaymentBanner.show(paymentWithUrl);
+            // Сохраняем в pending платежи перед открытием
+            if (window.Storage && payment.id && payment.status === 'pending') {
+                await window.Storage.addPendingPayment(paymentWithUrl);
             }
 
-            // Открываем страницу оплаты
-            if (confirmationUrl && window.TelegramApp) {
-                window.TelegramApp.openLink(confirmationUrl);
+            // Добавляем в мониторинг
+            if (window.PaymentMonitor && payment.status === 'pending') {
+                const paymentId = payment.payment_id || payment.id;
+                if (paymentId) {
+                    window.PaymentMonitor.addPayment(paymentId);
+                }
+            }
+
+            this.hide();
+
+            // ✅ ВАЖНО: Сначала открываем страницу оплаты
+            if (confirmationUrl) {
+                if (window.TelegramApp) {
+                    window.TelegramApp.openLink(confirmationUrl);
+                } else {
+                    window.open(confirmationUrl, '_blank');
+                }
+            } else {
+                Utils.log('error', 'No confirmation URL in payment response:', response);
+                if (window.Toast) {
+                    window.Toast.error('Ссылка на оплату недоступна');
+                }
+            }
+
+            // Показываем баннер после открытия оплаты
+            if (window.PaymentBanner && payment.status === 'pending') {
+                window.PaymentBanner.show(paymentWithUrl);
             }
 
             Utils.log('info', 'Payment created and monitoring started:', payment.payment_id || payment.id);

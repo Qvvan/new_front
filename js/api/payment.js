@@ -82,7 +82,7 @@ window.PaymentAPI = {
      */
     async listPayments(userId, params = {}) {
         const queryParams = { ...params };
-        return await window.APIClient.get(`/payments/user/${userId}`, queryParams);
+        return await window.APIClient.get(`/payments/user/${userId}/history`, queryParams);
     },
 
     /**
