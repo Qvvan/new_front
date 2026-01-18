@@ -1223,7 +1223,7 @@ window.SubscriptionScreen = {
                     <div class="notcoin-action-card" data-action="news-channel">
                         <div class="notcoin-action-content">
                             <div class="notcoin-action-text">
-                                <div class="notcoin-action-title">Канал с новостями</div>
+                                <div class="notcoin-action-title">Новости</div>
                                 <div class="notcoin-action-subtitle">Актуальные обновления</div>
                             </div>
                             <div class="notcoin-decorative-icon">
