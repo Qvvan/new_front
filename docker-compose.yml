@@ -7,14 +7,13 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      # ИСПРАВЛЕННЫЙ путь - файл находится в директории nginx/
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - /home/ivan/new_front/ssl/certificate.crt:/etc/nginx/ssl/certificate.crt:ro
-      - /home/ivan/new_front/ssl/certificate.key:/etc/nginx/ssl/certificate.key:ro
+      - /root/new_front/ssl/certificate.crt:/etc/nginx/ssl/certificate.crt:ro
+      - /root/new_front/ssl/certificate.key:/etc/nginx/ssl/certificate.key:ro
     depends_on:
       - frontend
     networks:
-      - common-network
+      - network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "nginx", "-t"]
@@ -29,7 +28,7 @@ services:
     expose:
       - "8080"
     networks:
-      - common-network
+      - network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
@@ -38,5 +37,5 @@ services:
       retries: 3
 
 networks:
-  common-network:
+  network:
     external: true
