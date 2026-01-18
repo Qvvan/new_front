@@ -32,7 +32,7 @@ window.SubscriptionAPI = {
      * @returns {Promise<Object>} Созданная пробная подписка
      */
     async activateTrial() {
-        return await window.APIClient.post('/subscription/subscriptions/trial');
+        return await window.APIClient.post('/user/user/trial');
     },
 
     /**
