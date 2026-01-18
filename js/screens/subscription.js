@@ -986,7 +986,7 @@ window.SubscriptionScreen = {
                                 </div>
                                 <div class="btn-trial-content">
                                     <div class="trial-icon-wrapper">
-                                        <i class="fas fa-sparkles"></i>
+                                        <div id="trial-gift-tgs" style="width: 40px; height: 40px;"></div>
                                     </div>
                                     <div class="trial-text">
                                         <span class="trial-main">Пробный период</span>
@@ -1005,14 +1005,6 @@ window.SubscriptionScreen = {
                                 <span>Пробный период использован</span>
                             </div>
                         `}
-
-                        <button class="btn-subscription-purchase" data-action="buy">
-                            <div class="btn-purchase-bg"></div>
-                            <div class="btn-purchase-content">
-                                <i class="fas fa-bolt"></i>
-                                <span>Оформить подписку</span>
-                            </div>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -1074,9 +1066,22 @@ window.SubscriptionScreen = {
                     ` : ''}
 
                 <div class="subscription-actions">
-                    <button class="btn btn-primary btn-renew" data-action="renew" data-subscription-id="${subscription.subscription_id || subscription.id}">
-                        <i class="fas fa-sync-alt"></i>
-                        ${isExpired ? 'Возобновить' : 'Продлить подписку'}
+                    <button class="btn-trial-activation btn-renew" data-action="renew" data-subscription-id="${subscription.subscription_id || subscription.id}">
+                        <div class="btn-trial-bg">
+                            <div class="btn-trial-shine"></div>
+                            <div class="btn-trial-glow"></div>
+                        </div>
+                        <div class="btn-trial-content">
+                            <div class="trial-icon-wrapper">
+                                <i class="fas fa-sync-alt"></i>
+                            </div>
+                            <div class="trial-text">
+                                <span class="trial-main">${isExpired ? 'Возобновить' : 'Продлить подписку'}</span>
+                            </div>
+                            <div class="trial-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
                     </button>
                 </div>
             </div>
@@ -1126,8 +1131,19 @@ window.SubscriptionScreen = {
                                 </div>
                             </div>
                         ` : ''}
-                        <button class="btn btn-sm btn-primary btn-renew" data-action="renew" data-subscription-id="${subscription.id}">
-                            <i class="fas fa-sync-alt"></i>
+                        <button class="btn-trial-activation btn-renew-compact" data-action="renew" data-subscription-id="${subscription.id}">
+                            <div class="btn-trial-bg">
+                                <div class="btn-trial-shine"></div>
+                                <div class="btn-trial-glow"></div>
+                            </div>
+                            <div class="btn-trial-content">
+                                <div class="trial-icon-wrapper">
+                                    <i class="fas fa-sync-alt"></i>
+                                </div>
+                                <div class="trial-text">
+                                    <span class="trial-main">Продлить</span>
+                                </div>
+                            </div>
                         </button>
                     </div>
                 </div>
