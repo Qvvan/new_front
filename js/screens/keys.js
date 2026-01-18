@@ -244,7 +244,14 @@ window.KeysScreen = {
 
         return `
             <div class="servers-list">
-                ${this.servers.map(server => this.renderServerItem(server)).join('')}
+                ${this.servers.map((server, index) => {
+                    const card = this.renderServerItem(server);
+                    // Добавляем задержку анимации для эффекта появления по очереди
+                    return card.replace(
+                        'class="server-card"',
+                        `class="server-card" style="animation-delay: ${index * 0.1}s"`
+                    );
+                }).join('')}
             </div>
         `;
     },
@@ -254,33 +261,58 @@ window.KeysScreen = {
             ? Math.round((server.current_users / server.max_users) * 100) 
             : 0;
         
-        let loadColor = 'green';
-        if (loadPercentage >= 80) {
-            loadColor = 'red';
-        } else if (loadPercentage >= 50) {
-            loadColor = 'yellow';
-        }
-
-        const loadText = server.current_users && server.max_users
+        const hasLoadData = server.current_users !== undefined && server.max_users !== undefined;
+        const loadText = hasLoadData
             ? `${server.current_users} из ${server.max_users}`
             : 'Неизвестно';
 
+        const countryFlag = this.getCountryFlag(server.country || server.name);
+        const serverName = server.name || server.country || 'VPN Сервер';
+
+        // Определяем цвет статуса
+        let statusColor = 'unknown';
+        if (hasLoadData) {
+            if (loadPercentage >= 80) {
+                statusColor = 'high';
+            } else if (loadPercentage >= 50) {
+                statusColor = 'medium';
+            } else {
+                statusColor = 'low';
+            }
+        }
+
         return `
-            <div class="server-item">
-                <div class="server-info">
-                    <div class="server-flag">${this.getCountryFlag(server.country || server.name)}</div>
-                    <div class="server-details">
-                        <h4 class="server-name">${server.name || server.country || 'VPN Сервер'}</h4>
-                        <div class="server-load">
-                            <span class="server-load-text">Нагрузка: ${loadText}</span>
-                            <div class="server-load-bar">
-                                <div class="server-load-fill ${loadColor}" style="width: ${loadPercentage}%"></div>
-                            </div>
+            <div class="server-card" data-server-id="${server.server_id || server.id}">
+                <div class="server-card-content">
+                    <div class="server-card-header">
+                        <div class="server-flag-wrapper">
+                            <div class="server-flag-large">${countryFlag}</div>
+                        </div>
+                        <div class="server-title-section">
+                            <h3 class="server-card-name">${serverName}</h3>
                         </div>
                     </div>
-                </div>
-                <div class="server-status ${loadColor}">
-                    <i class="fas fa-circle"></i>
+                    
+                    <div class="server-card-body">
+                        <div class="server-load-section">
+                            ${hasLoadData ? `
+                                <div class="server-load-info">
+                                    <span class="server-load-text">Нагрузка: ${loadText}</span>
+                                    <div class="server-load-bar-container">
+                                        <div class="server-load-bar">
+                                            <div class="server-load-fill ${statusColor}" style="width: ${loadPercentage}%">
+                                                <div class="server-load-shine"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : `
+                                <div class="server-load-unknown">
+                                    <span class="server-load-text">Нагрузка: <span class="unknown-text">${loadText}</span></span>
+                                </div>
+                            `}
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
