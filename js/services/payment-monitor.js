@@ -3,7 +3,7 @@ window.PaymentMonitor = {
     pendingPayments: new Map(),
     processedSuccessfulPayments: new Set(),
     isActive: false,
-    checkInterval: 8000,
+    checkInterval: 30000,
 
     /**
      * Добавить платеж в мониторинг
@@ -130,7 +130,6 @@ window.PaymentMonitor = {
                 const user = await window.UserAPI.getCurrentUser();
                 userId = user.telegram_id || user.user_id;
             } catch (error) {
-                Utils.log('error', 'Failed to get user ID:', error);
             }
 
             if (!userId) {

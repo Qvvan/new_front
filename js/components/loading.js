@@ -251,16 +251,20 @@ window.Loading = {
 
             const startTime = Date.now();
             const updateProgress = () => {
+                if (document.hidden || !this.isVisible) {
+                    this.hide();
+                    resolve();
+                    return;
+                }
+
                 const elapsed = Date.now() - startTime;
                 const progress = Math.min((elapsed / duration) * 100, 100);
 
                 this.updateProgress(progress);
 
                 if (progress >= 100) {
-                    setTimeout(() => {
-                        this.hide();
-                        resolve();
-                    }, 300);
+                    this.hide();
+                    resolve();
                 } else {
                     requestAnimationFrame(updateProgress);
                 }
@@ -361,7 +365,6 @@ window.Loading = {
                     const user = await window.UserAPI.getCurrentUser();
                     userId = user.telegram_id || user.user_id;
                 } catch (error) {
-                    Utils.log('error', 'Failed to get user ID:', error);
                 }
 
                 if (!userId) {

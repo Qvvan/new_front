@@ -238,7 +238,6 @@ window.Utils = {
                 return result;
             }
         } catch (error) {
-            Utils.log('error', 'Failed to copy text:', error);
             return false;
         }
     },
@@ -278,53 +277,10 @@ window.Utils = {
     },
 
     /**
-     * Логирование с разными уровнями
-     * @param {string} level - Уровень ('info', 'warn', 'error', 'debug')
-     * @param {string} message - Сообщение
-     * @param {any} data - Дополнительные данные
+     * Логирование - полностью отключено для производительности
      */
-    log(level, message, data = null) {
-        // ✅ ОПТИМИЗАЦИЯ: Логируем только в dev режиме или для критичных ошибок
-        const isDev = window.location.hostname === 'localhost' || 
-                     window.location.hostname === '127.0.0.1' ||
-                     window.location.search.includes('debug=true');
-        
-        // В продакшене логируем только критические ошибки
-        if (!isDev) {
-            // Только критические ошибки в продакшене
-            if (level !== 'error') {
-                return;
-            }
-            // Даже для ошибок - только если это действительно критично
-            // Убираем избыточные логи инициализации
-            if (message && (
-                message.includes('initialization') ||
-                message.includes('Initializing') ||
-                message.includes('loaded') ||
-                message.includes('Loaded')
-            )) {
-                return;
-            }
-        }
-
-        // ✅ ОПТИМИЗАЦИЯ: Не создаем timestamp если не логируем
-        if (isDev) {
-            const timestamp = new Date().toISOString();
-            const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
-
-            if (data) {
-                console[level](`${prefix} ${message}`, data);
-            } else {
-                console[level](`${prefix} ${message}`);
-            }
-        } else {
-            // В продакшене - только ошибки без timestamp для производительности
-            if (data) {
-                console.error(message, data);
-            } else {
-                console.error(message);
-            }
-        }
+    log() {
+        // Логи полностью удалены для снижения нагрузки
     },
 
 };

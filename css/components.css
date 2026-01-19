@@ -370,8 +370,6 @@
     transition: all var(--transition-normal);
     position: relative;
     overflow: hidden;
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-    backdrop-filter: blur(5px);
 
     /* 🔥 КЛЮЧЕВОЕ: ПРИНУДИТЕЛЬНЫЙ квадрат */
     aspect-ratio: 1/1;           /* ← ВСЕГДА квадрат! */
@@ -507,8 +505,6 @@
         rgba(255, 255, 255, 0.1) 50%,
         rgba(255, 255, 255, 0.05) 100%
     );
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-    backdrop-filter: blur(5px);
 }
 
 /* ✅ ОПТИМИЗАЦИЯ: Убрали hover эффекты и ::before анимацию для снижения нагрузки */
@@ -569,8 +565,6 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-    backdrop-filter: blur(5px);
     z-index: var(--z-modal);
     display: flex;
     align-items: center;
@@ -598,8 +592,6 @@
     overflow: hidden;
     transform: translateY(20px) scale(0.95);
     transition: transform var(--transition-normal), opacity var(--transition-normal);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-backdrop-filter: blur(10px);
     box-shadow: var(--shadow-xl);
     display: flex;
     flex-direction: column;
@@ -712,8 +704,6 @@ backdrop-filter: blur(10px);
     color: var(--text-primary);
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-medium);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-backdrop-filter: blur(10px);
     box-shadow: var(--shadow-lg);
     display: flex;
     align-items: center;
@@ -755,8 +745,6 @@ backdrop-filter: blur(10px);
     width: 100%;
     height: 100%;
     background: rgba(13, 13, 13, 0.9);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-    backdrop-filter: blur(5px);
     z-index: var(--z-modal);
     display: flex;
     flex-direction: column;
@@ -772,6 +760,22 @@ backdrop-filter: blur(10px);
     border-top: 3px solid var(--accent-white);
     border-radius: 50%;
     animation: spin 1s linear infinite;
+}
+
+/* ✅ ОПТИМИЗАЦИЯ: Останавливаем анимации при скрытой странице */
+body.page-hidden .loading-spinner,
+body.page-hidden .gift-animate,
+body.page-hidden .loading-bounce,
+body.page-hidden .trial-glow,
+body.page-hidden .sparkle,
+body.page-hidden .pulse-glow,
+body.page-hidden .bonusPulse,
+body.page-hidden .blinking,
+body.page-hidden .nextCardGlow,
+body.page-hidden .pulseText,
+body.page-hidden .bounce,
+body.page-hidden .loadShine {
+    animation-play-state: paused !important;
 }
 
 .loading-text {
@@ -1658,8 +1662,6 @@ backdrop-filter: blur(10px);
     text-align: center;
     line-height: 1.5;
     position: relative;
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-    backdrop-filter: blur(5px);
 }
 
 .service-explanation::before {
@@ -1917,8 +1919,6 @@ backdrop-filter: blur(10px);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-2xl);
     margin-bottom: var(--spacing-xl);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-    backdrop-filter: blur(5px);
     position: relative;
 }
 
@@ -1981,8 +1981,6 @@ backdrop-filter: blur(10px);
     position: relative;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-    backdrop-filter: blur(5px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -2380,8 +2378,6 @@ backdrop-filter: blur(10px);
 
 .stat-card {
     background: var(--gradient-card);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-backdrop-filter: blur(10px);
     border: 1px solid var(--glass-border);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-lg);
@@ -2488,8 +2484,6 @@ backdrop-filter: blur(10px);
 /* Referral Link Card */
 .referral-link-card {
     background: var(--gradient-card);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-backdrop-filter: blur(10px);
     border: 1px solid var(--glass-border);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-xl);
@@ -2912,7 +2906,6 @@ backdrop-filter: blur(10px);
    height: 100%;
    background: radial-gradient(circle at center, rgba(76, 175, 80, 0.15) 0%, rgba(13, 13, 13, 0.95) 70%);
    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-backdrop-filter: blur(8px);
    z-index: var(--z-modal);
    display: flex;
    align-items: center;
@@ -3002,8 +2995,6 @@ backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-lg);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-    backdrop-filter: blur(5px);
     transition: all var(--transition-normal);
 }
 
@@ -3211,8 +3202,6 @@ backdrop-filter: blur(8px);
         rgba(0, 0, 0, 0.15) 100%
     );
     border: 1px solid rgba(255, 255, 255, 0.08);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-backdrop-filter: blur(10px);
 }
 
 .empty-state-bg::before {
@@ -3314,8 +3303,6 @@ backdrop-filter: blur(10px);
     );
     border: 2px solid rgba(138, 43, 226, 0.4);
     border-radius: var(--border-radius-xl);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-backdrop-filter: blur(10px);
     transition: all var(--transition-normal);
 }
 
@@ -3399,8 +3386,6 @@ backdrop-filter: blur(10px);
     position: relative;
     background: rgba(255, 255, 255, 0.15);
     border-radius: var(--border-radius-md);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-    backdrop-filter: blur(5px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     transition: all var(--transition-normal);
 }
@@ -3554,8 +3539,6 @@ backdrop-filter: blur(10px);
     );
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--border-radius-lg);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-backdrop-filter: blur(10px);
     transition: all var(--transition-normal);
 }
 
@@ -3655,8 +3638,6 @@ backdrop-filter: blur(10px);
     );
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--border-radius-md);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-    backdrop-filter: blur(5px);
 }
 
 .trial-benefit i {
@@ -3854,8 +3835,6 @@ backdrop-filter: blur(10px);
         rgba(255, 255, 255, 0.08) 0%,
         rgba(255, 255, 255, 0.03) 100%
     );
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 20px;
     padding: var(--spacing-lg) var(--spacing-xl);
@@ -3956,7 +3935,6 @@ backdrop-filter: blur(10px);
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
     /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-backdrop-filter: blur(8px);
     box-shadow: 
         inset 0 0 15px rgba(255, 255, 255, 0.02),
         0 4px 12px rgba(0, 0, 0, 0.15);
@@ -4104,8 +4082,6 @@ backdrop-filter: blur(8px);
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.15);
     color: var(--text-primary);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-backdrop-filter: blur(10px);
 }
 
 .btn-action-secondary:hover {
@@ -4603,8 +4579,6 @@ backdrop-filter: blur(10px);
     background: linear-gradient(135deg, 
         rgba(255, 255, 255, 0.1) 0%, 
         rgba(255, 255, 255, 0.05) 100%);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-    backdrop-filter: blur(5px);
     transition: all var(--transition-normal);
     pointer-events: none;
 }
@@ -5626,10 +5600,6 @@ button:disabled:hover {
     border-radius: var(--border-radius-xl);
     box-shadow: none;
     border: none;
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-backdrop-filter: blur(10px);
-    -webkit-/* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-backdrop-filter: blur(10px);
     animation: bonusPulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -5807,8 +5777,6 @@ backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-lg);
-    /* ✅ ОПТИМИЗАЦИЯ: Уменьшен blur для снижения нагрузки на GPU */
-backdrop-filter: blur(10px);
     transition: all var(--transition-normal);
     overflow: hidden;
     box-shadow: 

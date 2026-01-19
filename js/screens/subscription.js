@@ -116,7 +116,7 @@ window.SubscriptionScreen = {
 
             if (target.hasAttribute('data-processing')) return;
             target.setAttribute('data-processing', 'true');
-            setTimeout(() => target.removeAttribute('data-processing'), 300);
+            requestAnimationFrame(() => target.removeAttribute('data-processing'));
 
             const action = target.dataset.action;
             const subscriptionId = target.dataset.subscriptionId;
@@ -192,7 +192,7 @@ window.SubscriptionScreen = {
             e.preventDefault();
 
             compactAutoRenewal.setAttribute('data-processing', 'true');
-            setTimeout(() => compactAutoRenewal.removeAttribute('data-processing'), 300);
+            requestAnimationFrame(() => compactAutoRenewal.removeAttribute('data-processing'));
 
             const subscriptionId = compactAutoRenewal.dataset.subscriptionId;
             if (subscriptionId) {

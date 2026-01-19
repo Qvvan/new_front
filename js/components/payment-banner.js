@@ -10,7 +10,6 @@ window.PaymentBanner = {
     init() {
         this.element = document.getElementById('paymentBanner');
         if (!this.element) {
-            Utils.log('error', 'Payment banner element not found');
             return;
         }
     },
@@ -45,8 +44,6 @@ window.PaymentBanner = {
 
         // ✅ Если это pending платеж, но нет URL - не показываем баннер
         if (!payment.payment_url && !payment.url && !payment.receipt_link) {
-            Utils.log('error', `Pending payment ${payment.id} has no payment URL, cannot show banner`);
-
             // Удаляем этот платеж из мониторинга, так как он некорректный
             if (window.PaymentMonitor) {
                 window.PaymentMonitor.removePayment(payment.id);
@@ -348,8 +345,6 @@ window.PaymentBanner = {
                 window.open(paymentUrl, '_blank');
             }
         } else {
-            Utils.log('error', 'No payment URL found in payment:', this.currentPayment);
-
             if (window.Toast) {
                 window.Toast.warning('Ссылка на оплату недоступна');
             }
@@ -365,25 +360,37 @@ window.PaymentBanner = {
      * Запуск таймера
      */
     startTimer() {
-        this.stopTimer(); // Останавливаем предыдущий
+        this.stopTimer();
 
-        // ✅ ОПТИМИЗАЦИЯ: Используем setInterval вместо RAF для таймера (меньше нагрузка)
-        // RAF нужен только для плавных анимаций, для таймера достаточно setInterval
+        if (!this.visibilityHandler) {
+            this.visibilityHandler = () => {
+                if (document.hidden) {
+                    this.stopTimer();
+                } else if (this.isVisible && this.currentPayment) {
+                    this.startTimer();
+                }
+            };
+            document.addEventListener('visibilitychange', this.visibilityHandler);
+        }
+
+        if (document.hidden || !this.isVisible || !this.currentPayment) {
+            return;
+        }
+
         this.timerInterval = setInterval(() => {
-            // ✅ ОПТИМИЗАЦИЯ: Не обновляем если страница скрыта или баннер не видим
             if (document.hidden || !this.isVisible || !this.currentPayment) {
+                this.stopTimer();
                 return;
             }
 
             const timeLeft = this.getTimeLeft();
-
             if (timeLeft <= 0) {
                 this.handlePaymentExpired();
                 return;
             }
 
             this.updateTimer();
-        }, 1000); // Обновляем раз в секунду
+        }, 1000);
     },
 
     /**
@@ -394,10 +401,17 @@ window.PaymentBanner = {
             clearInterval(this.timerInterval);
             this.timerInterval = null;
         }
-        // ✅ ОПТИМИЗАЦИЯ: Отменяем requestAnimationFrame (если был)
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
+        }
+    },
+
+    cleanup() {
+        this.stopTimer();
+        if (this.visibilityHandler) {
+            document.removeEventListener('visibilitychange', this.visibilityHandler);
+            this.visibilityHandler = null;
         }
     },
 

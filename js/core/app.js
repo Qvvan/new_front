@@ -54,7 +54,6 @@ window.DragonVPNApp = {
             // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог успешной инициализации
 
         } catch (error) {
-            Utils.log('error', 'App initialization failed:', error);
             await this.handleInitializationError(error);
         }
     },
@@ -78,7 +77,6 @@ window.DragonVPNApp = {
                 this.createFallbackLoading();
             }
         } catch (error) {
-            Utils.log('error', 'Failed to show initial loading:', error);
         }
     },
 
@@ -117,8 +115,6 @@ window.DragonVPNApp = {
                         // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
                         resolve();
                     } else if (attempts >= maxAttempts) {
-                        // ✅ ОПТИМИЗАЦИЯ: Логируем только предупреждения в dev режиме
-                        Utils.log('warn', 'Telegram WebApp initialization timeout');
                         resolve();
                     } else {
                         setTimeout(checkReady, checkInterval);
@@ -136,8 +132,6 @@ window.DragonVPNApp = {
 
                     // Проверяем что настройки применились
                     if (!window.TelegramApp.webApp.isExpanded) {
-                        // ✅ ОПТИМИЗАЦИЯ: Логируем только предупреждения
-                        Utils.log('warn', 'App expansion may have failed');
                         // Повторная попытка
                         setTimeout(() => {
                             window.TelegramApp.forceExpand();
@@ -156,8 +150,6 @@ window.DragonVPNApp = {
      * Инициализация системы хранилища
      */
     async initializeStorage() {
-        Utils.log('info', 'Initializing Storage System with cleanup');
-
         if (window.Storage) {
             await window.Storage.init();
         }
@@ -209,7 +201,6 @@ window.DragonVPNApp = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to parse referral data:', error);
         }
     },
 
@@ -272,8 +263,6 @@ window.DragonVPNApp = {
      * Инициализация роутера
      */
     async initializeRouter() {
-        Utils.log('info', 'Initializing router');
-
         if (window.Router) {
             window.Router.init();
         }
@@ -302,11 +291,9 @@ window.DragonVPNApp = {
                 const user = await window.UserAPI.getCurrentUser();
                 userId = user.telegram_id || user.user_id;
             } catch (error) {
-                Utils.log('error', 'Failed to get user ID:', error);
             }
 
             if (!userId) {
-                Utils.log('warn', 'User ID not available, skipping pending payments check');
                 return;
             }
 
@@ -364,7 +351,6 @@ window.DragonVPNApp = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to check pending payments:', error);
             // Очищаем при ошибке
             if (window.Storage) {
                 await window.Storage.clearPendingPayments();
@@ -412,7 +398,6 @@ window.DragonVPNApp = {
                 fallbackLoading.remove();
             }
         } catch (error) {
-            Utils.log('error', 'Failed to hide loading:', error);
         }
     },
 
@@ -438,7 +423,6 @@ window.DragonVPNApp = {
                 }
             }
         } catch (error) {
-            Utils.log('error', 'User registration failed:', error);
         }
     },
 
@@ -515,8 +499,6 @@ window.DragonVPNApp = {
      * Обработка ошибки инициализации
      */
     async handleInitializationError(error) {
-        Utils.log('error', 'Critical initialization error:', error);
-
         if (window.Loading) {
             window.Loading.hide();
         }
@@ -546,8 +528,6 @@ window.DragonVPNApp = {
             await this.init();
 
         } catch (error) {
-            Utils.log('error', 'Recovery failed:', error);
-
             if (window.TelegramApp) {
                 const restart = await window.TelegramApp.showConfirm(
                     'Не удалось восстановить приложение. Перезагрузить страницу?'
@@ -673,7 +653,6 @@ window.DragonVPNApp = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to refresh app data:', error);
         }
     },
 
@@ -681,8 +660,6 @@ window.DragonVPNApp = {
      * Обработка глобальных ошибок
      */
     handleGlobalError(error) {
-        Utils.log('error', 'Global error caught:', error);
-
         if (error.message && error.message.includes('Network')) {
             if (window.Toast) {
                 window.Toast.networkError();
@@ -743,6 +720,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         await window.DragonVPNApp.init();
         window.DragonVPNApp.handleLifecycleEvents();
     } catch (error) {
-        Utils.log('error', 'Failed to start Dragon VPN App:', error);
     }
 });

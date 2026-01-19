@@ -10,7 +10,6 @@ window.Navigation = {
      */
     init() {
         if (this.isInitialized) {
-            Utils.log('warn', 'Navigation already initialized');
             return;
         }
 
@@ -39,7 +38,6 @@ window.Navigation = {
      */
     async navigateTo(screen) {
         if (!this.isValidScreen(screen)) {
-            Utils.log('error', `Invalid screen: ${screen}`);
             return;
         }
 
@@ -64,7 +62,6 @@ window.Navigation = {
 
 
         } catch (error) {
-            Utils.log('error', 'Navigation failed:', error);
             if (window.Toast) {
                 window.Toast.error('Ошибка навигации');
             }
@@ -220,7 +217,6 @@ window.Navigation = {
             await this.checkSubscriptionNotifications();
 
         } catch (error) {
-            Utils.log('error', 'Failed to update navigation state:', error);
         }
     },
 
@@ -238,7 +234,6 @@ window.Navigation = {
                 this.setNotificationIndicator('payments', false);
             }
         } catch (error) {
-            Utils.log('error', 'Failed to check pending payments:', error);
         }
     },
 
@@ -258,7 +253,6 @@ window.Navigation = {
                 this.setNotificationIndicator('referrals', false);
             }
         } catch (error) {
-            Utils.log('error', 'Failed to check new referrals:', error);
         }
     },
 
@@ -279,7 +273,6 @@ window.Navigation = {
                 this.setNotificationIndicator('subscription', false);
             }
         } catch (error) {
-            Utils.log('error', 'Failed to check subscription notifications:', error);
         }
     },
 
