@@ -586,11 +586,12 @@
     max-width: 400px;
     min-width: 280px;
     max-height: 85vh;
-    background: var(--bg-secondary);
+    background: #0a0a0a !important; /* ✅ Прямой непрозрачный цвет вместо переменной */
     border: 1px solid var(--border-dark);
     border-radius: var(--border-radius-xl);
     overflow: hidden;
     transform: translateY(20px) scale(0.95);
+    opacity: 1 !important; /* ✅ Явно устанавливаем непрозрачность */
     transition: transform var(--transition-normal), opacity var(--transition-normal);
     box-shadow: var(--shadow-xl);
     display: flex;
@@ -606,6 +607,8 @@
 
 .modal-overlay.active .modal {
     transform: translateY(0) scale(1);
+    opacity: 1 !important; /* ✅ Явно устанавливаем непрозрачность для активного модального окна */
+    background: var(--bg-secondary) !important; /* ✅ Гарантируем непрозрачный фон */
 }
 
 .modal-header {
@@ -613,7 +616,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--gradient-card);
+    background: #0a0a0a !important; /* ✅ Прямой непрозрачный цвет вместо прозрачного градиента */
     border-bottom: 1px solid var(--border-dark);
 }
 
@@ -652,6 +655,7 @@
     flex: 1;
     min-height: 0;
     max-height: calc(85vh - 150px);
+    background: #0a0a0a !important; /* ✅ Прямой непрозрачный цвет */
     -webkit-overflow-scrolling: touch;
     contain: layout style; /* Изоляция для предотвращения дергания */
 }
@@ -663,6 +667,7 @@
     gap: var(--spacing-md);
     justify-content: space-between;
     align-items: center;
+    background: #0a0a0a !important; /* ✅ Прямой непрозрачный цвет */
 }
 
 .modal-actions-left {
@@ -1206,10 +1211,14 @@ body.page-hidden .loadShine {
 .modal-services {
     max-width: 440px;
     width: 95%;
+    background: #0a0a0a !important; /* ✅ Прямой непрозрачный цвет */
+    opacity: 1 !important; /* ✅ Полная непрозрачность */
 }
 
-.modal-services .modal-body {
-    padding: var(--spacing-lg);
+.modal-services .modal-header,
+.modal-services .modal-body,
+.modal-services .modal-actions {
+    background: #0a0a0a !important; /* ✅ Прямой непрозрачный цвет для всех частей */
 }
 
 /* Компактная сетка услуг 2x2 */
@@ -1706,6 +1715,14 @@ body.page-hidden .loadShine {
 .modal-instructions {
     max-width: 500px;
     width: 95%;
+    background: #0a0a0a !important; /* ✅ Прямой непрозрачный цвет */
+    opacity: 1 !important; /* ✅ Полная непрозрачность */
+}
+
+.modal-instructions .modal-header,
+.modal-instructions .modal-body,
+.modal-instructions .modal-actions {
+    background: #0a0a0a !important; /* ✅ Прямой непрозрачный цвет для всех частей */
 }
 
 @media (max-width: 400px) {
@@ -2180,6 +2197,14 @@ body.page-hidden .loadShine {
 .modal-support {
     max-width: 400px;
     width: 95%;
+    background: #0a0a0a !important; /* ✅ Прямой непрозрачный цвет */
+    opacity: 1 !important; /* ✅ Полная непрозрачность */
+}
+
+.modal-support .modal-header,
+.modal-support .modal-body,
+.modal-support .modal-actions {
+    background: #0a0a0a !important; /* ✅ Прямой непрозрачный цвет для всех частей */
 }
 
 .modal-support .modal-body {
