@@ -38,7 +38,7 @@ window.ReferralAPI = {
 
     /**
      * Генерация реферальной ссылки
-     * @returns {Promise<string>} Реферальная ссылка
+     * @returns {Promise<Object>} Объект с реферальной ссылкой и кодом
      */
     async generateReferralLink() {
         const telegramUser = window.TelegramApp?.getUserInfo();
@@ -49,7 +49,11 @@ window.ReferralAPI = {
         // Генерируем ссылку с Telegram bot URL
         const botUsername = 'skydragonvpnbot';
         const startParam = `${telegramUser.id}`;
+        const link = `https://t.me/${botUsername}?start=${startParam}`;
 
-        return `https://t.me/${botUsername}?start=${startParam}`;
+        return {
+            link: link,
+            shortCode: telegramUser.id.toString()
+        };
     }
 };

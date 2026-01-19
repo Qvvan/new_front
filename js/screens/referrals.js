@@ -94,34 +94,38 @@ window.ReferralsScreen = {
 
     /**
      * Поделиться в Telegram
-     * Использует правильный метод для открытия диалога выбора друзей с предпросмотром
-     * Вместо switchInlineQuery используем openTelegramLink, который открывает диалог выбора
-     * и показывает предпросмотр сообщения перед отправкой
+     * Использует openTelegramLink с правильным форматом URL для показа предпросмотра и выбора друзей
+     * Работает БЕЗ бэкенда - использует встроенный функционал Telegram
      */
     async shareToTelegram() {
         try {
             const message = this.generateShareMessage();
+            
+            // Формируем правильный URL для шаринга с предпросмотром
+            // Важно: используем /share/url (не просто /share) для правильной работы
             const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(this.referralLink.link)}&text=${encodeURIComponent(message)}`;
 
-            // Используем openTelegramLink для правильного открытия диалога выбора друзей
-            // Этот метод открывает ссылку внутри Telegram и показывает предпросмотр сообщения
-            // Пользователь может выбрать друзей и увидеть предпросмотр перед отправкой
-            if (window.Telegram?.WebApp?.openTelegramLink) {
-                // Прямой вызов Telegram.WebApp API - правильный способ
-                window.Telegram.WebApp.openTelegramLink(shareUrl);
-            } else if (window.TelegramApp?.webApp?.openTelegramLink) {
-                // Через обертку TelegramApp
-                window.TelegramApp.webApp.openTelegramLink(shareUrl);
+            // Используем openTelegramLink - это откроет диалог выбора друзей с предпросмотром
+            // НЕ используем openLink, так как он может открыть во внешнем браузере
+            const webApp = window.Telegram?.WebApp || window.TelegramApp?.webApp;
+            
+            if (webApp?.openTelegramLink) {
+                // Правильный метод - открывает внутри Telegram с предпросмотром
+                webApp.openTelegramLink(shareUrl);
             } else if (window.TelegramApp?.openTelegramLink) {
-                // Альтернативный способ через обертку
+                // Через обертку TelegramApp
                 window.TelegramApp.openTelegramLink(shareUrl);
+            } else if (window.Telegram?.WebApp?.openTelegramLink) {
+                // Прямой вызов через Telegram.WebApp
+                window.Telegram.WebApp.openTelegramLink(shareUrl);
             } else {
-                // Fallback - используем openLink, но это может открыть во внешнем браузере
-                window.TelegramApp?.openLink(shareUrl);
+                // Последний fallback - используем прямой переход
+                // Это должно работать, но может закрыть мини-апп
+                window.location.href = shareUrl;
             }
 
         } catch (error) {
-            
+            console.error('Ошибка при отправке приглашения:', error);
             if (window.Toast) {
                 window.Toast.error('Ошибка отправки приглашения');
             }
