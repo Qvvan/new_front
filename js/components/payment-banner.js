@@ -2,7 +2,7 @@
 window.PaymentBanner = {
     currentPayment: null,
     timerInterval: null,
-    animationFrameId: null, // ✅ ОПТИМИЗАЦИЯ: ID для requestAnimationFrame
+    animationFrameId: null, // Для совместимости (если где-то используется)
     isVisible: false,
     element: null,
     servicesCache: new Map(), // Кеш сервисов
@@ -30,7 +30,6 @@ window.PaymentBanner = {
         }
 
         if (!payment.payment_url && !payment.url && !payment.receipt_link) {
-            Utils.log('warn', 'Payment URL missing, trying to get from storage');
 
             // Пытаемся получить URL из pending платежей в Storage
             const pendingPayments = await window.Storage?.getPendingPayments() || [];
@@ -111,7 +110,7 @@ window.PaymentBanner = {
                 this.servicesCache.set(service.service_id || service.id, service);
             });
         } catch (error) {
-            Utils.log('warn', 'Could not load services for payment banner:', error);
+            // Игнорируем ошибки загрузки сервисов
         }
     },
 
@@ -368,32 +367,23 @@ window.PaymentBanner = {
     startTimer() {
         this.stopTimer(); // Останавливаем предыдущий
 
-        // ✅ ОПТИМИЗАЦИЯ: Используем requestAnimationFrame вместо setInterval
-        // Это более эффективно и не блокирует основной поток
-        let lastUpdate = Date.now();
-        const updateLoop = () => {
-            // Обновляем только раз в секунду, но используем RAF для плавности
-            const now = Date.now();
-            if (now - lastUpdate >= 1000) {
-                lastUpdate = now;
-                
-                const timeLeft = this.getTimeLeft();
-
-                if (timeLeft <= 0) {
-                    this.handlePaymentExpired();
-                    return;
-                }
-
-                this.updateTimer();
+        // ✅ ОПТИМИЗАЦИЯ: Используем setInterval вместо RAF для таймера (меньше нагрузка)
+        // RAF нужен только для плавных анимаций, для таймера достаточно setInterval
+        this.timerInterval = setInterval(() => {
+            // ✅ ОПТИМИЗАЦИЯ: Не обновляем если страница скрыта или баннер не видим
+            if (document.hidden || !this.isVisible || !this.currentPayment) {
+                return;
             }
 
-            // Продолжаем только если баннер видим
-            if (this.isVisible && this.currentPayment) {
-                this.animationFrameId = requestAnimationFrame(updateLoop);
-            }
-        };
+            const timeLeft = this.getTimeLeft();
 
-        this.animationFrameId = requestAnimationFrame(updateLoop);
+            if (timeLeft <= 0) {
+                this.handlePaymentExpired();
+                return;
+            }
+
+            this.updateTimer();
+        }, 1000); // Обновляем раз в секунду
     },
 
     /**
@@ -404,7 +394,7 @@ window.PaymentBanner = {
             clearInterval(this.timerInterval);
             this.timerInterval = null;
         }
-        // ✅ ОПТИМИЗАЦИЯ: Отменяем requestAnimationFrame
+        // ✅ ОПТИМИЗАЦИЯ: Отменяем requestAnimationFrame (если был)
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;

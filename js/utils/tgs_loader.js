@@ -142,7 +142,6 @@ window.TGSLoader = {
      * ✅ ОПТИМИЗАЦИЯ: Анимации загружаются только при открытии экрана
      */
     async initialize() {
-        Utils.log('info', 'TGS Loader initialized (lazy loading mode)');
         // ✅ ОПТИМИЗАЦИЯ: Не предзагружаем все анимации - они загрузятся по требованию
         // Это значительно снижает нагрузку при старте приложения
     },
@@ -153,7 +152,6 @@ window.TGSLoader = {
     async preloadTGSToBlob(tgsPath) {
         // Проверяем кэш
         if (this.blobCache.has(tgsPath)) {
-            Utils.log('debug', `TGS already cached: ${tgsPath}`);
             return this.blobCache.get(tgsPath);
         }
 
@@ -198,7 +196,6 @@ window.TGSLoader = {
             this.blobCache.set(tgsPath, cacheEntry);
             this.lottieDataCache.set(tgsPath, lottieData);
 
-            Utils.log('debug', `✅ Cached TGS: ${tgsPath} (${blob.size} bytes)`);
             return cacheEntry;
 
         } catch (error) {
@@ -225,7 +222,6 @@ window.TGSLoader = {
         }
 
         if (!tgsPath.endsWith('.tgs')) {
-            Utils.log('warn', `Unsupported file type: ${tgsPath}`);
             this.setFallbackIcon(container, fallbackIcon);
             return;
         }
@@ -260,7 +256,6 @@ window.TGSLoader = {
             });
 
             container.lottieAnimation = animation;
-            Utils.log('debug', `✅ TGS animation loaded: ${containerId}`);
 
         } catch (error) {
             Utils.log('error', `Failed to load TGS ${tgsPath}:`, error);
@@ -295,8 +290,6 @@ window.TGSLoader = {
                     img.onerror = reject;
                 });
             }
-
-            Utils.log('debug', `✅ Static image loaded: ${imagePath}`);
 
         } catch (error) {
             Utils.log('error', `Failed to load static image ${imagePath}:`, error);
@@ -369,19 +362,6 @@ window.TGSLoader = {
         }
     },
 
-    /**
-     * 📊 Получение статистики кэша
-     */
-    getCacheStats() {
-        const totalSize = Array.from(this.blobCache.values())
-            .reduce((sum, cache) => sum + cache.size, 0);
-
-        return {
-            cachedFiles: this.blobCache.size,
-            totalSizeKB: Math.round(totalSize / 1024),
-            blobUrls: Array.from(this.blobCache.values()).map(cache => cache.blobUrl)
-        };
-    },
 
     /**
      * 🧹 Очистка кэша и освобождение памяти
@@ -412,7 +392,7 @@ window.TGSLoader = {
                     container.lottieAnimation.destroy();
                     delete container.lottieAnimation;
                 } catch (error) {
-                    Utils.log('warn', `Failed to cleanup animation ${containerId}:`, error);
+                    // Игнорируем ошибки очистки
                 }
             }
         });
@@ -420,14 +400,6 @@ window.TGSLoader = {
         this.activeAnimations.delete(screenName);
     },
 
-    /**
-     * 🧹 Очистка всех анимаций
-     */
-    cleanupAll() {
-        this.activeAnimations.forEach((containerIds, screenName) => {
-            this.cleanupScreen(screenName);
-        });
-    },
 
     /**
      * Установка fallback иконки

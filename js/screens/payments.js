@@ -87,7 +87,6 @@ window.PaymentsScreen = {
     async showGiftDetails(giftId) {
         try {
             if (!giftId) {
-                Utils.log('warn', 'showGiftDetails called without giftId');
                 return;
             }
 
@@ -97,7 +96,6 @@ window.PaymentsScreen = {
             });
 
             if (!gift) {
-                Utils.log('warn', 'Gift not found:', giftId);
                 if (window.Toast) {
                     window.Toast.warning('Подарок не найден');
                 }
@@ -242,7 +240,6 @@ window.PaymentsScreen = {
     async showTransactionDetails(transactionId) {
         try {
             if (!transactionId) {
-                Utils.log('warn', 'showTransactionDetails called without transactionId');
                 return;
             }
 
@@ -252,7 +249,6 @@ window.PaymentsScreen = {
             });
 
             if (!transaction) {
-                Utils.log('warn', 'Transaction not found:', transactionId);
                 if (window.Toast) {
                     window.Toast.warning('Транзакция не найдена');
                 }
@@ -537,7 +533,6 @@ window.PaymentsScreen = {
     enrichPaymentsWithServiceData() {
         this.payments.forEach(payment => {
             if (!payment.service_id) {
-                Utils.log('warn', 'Payment has no service_id:', payment);
                 // Пытаемся извлечь данные из описания
                 this.enrichPaymentFromDescription(payment);
                 return;
@@ -1049,7 +1044,6 @@ window.PaymentsScreen = {
     async showPaymentDetails(paymentId) {
         try {
             if (!paymentId) {
-                Utils.log('warn', 'showPaymentDetails called without paymentId');
                 return;
             }
 
@@ -1061,7 +1055,6 @@ window.PaymentsScreen = {
             });
 
             if (!payment) {
-                Utils.log('warn', 'Payment not found:', paymentId);
                 if (window.Toast) {
                     window.Toast.warning('Платеж не найден');
                 }

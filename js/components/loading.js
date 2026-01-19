@@ -75,15 +75,12 @@ window.Loading = {
      */
     updateText(text) {
         if (!this.overlay) {
-            Utils.log('warn', 'Loading overlay not initialized');
             return;
         }
 
         const textElement = this.overlay.querySelector('.loading-text');
         if (textElement) {
             textElement.textContent = text;
-        } else {
-            Utils.log('warn', 'Loading text element not found');
         }
     },
 

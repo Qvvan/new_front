@@ -113,7 +113,6 @@ window.Storage = {
         try {
             const cached = this.session.get('referral_data');
             if (cached) {
-                Utils.log('debug', 'Using cached referral data from session');
                 return cached;
             }
 
@@ -128,7 +127,6 @@ window.Storage = {
                 last_updated: null
             };
 
-            Utils.log('debug', 'Using default referral data structure');
             return defaultData;
         } catch (error) {
             Utils.log('error', 'Failed to get referral data:', error);
@@ -174,7 +172,6 @@ window.Storage = {
     async setReferralData(data) {
         try {
             if (!data) {
-                Utils.log('warn', 'Attempted to set null referral data');
                 return false;
             }
 
@@ -205,7 +202,6 @@ window.Storage = {
                 }));
 
                 await this.setReferralData(data);
-                Utils.log('debug', 'Marked all referrals as viewed');
                 return true;
             }
             return false;
@@ -244,7 +240,6 @@ window.Storage = {
             if (value && typeof value === 'object' && value._timestamp) {
                 if ((now - value._timestamp) > maxAge) {
                     this.session.delete(key);
-                    Utils.log('debug', `Cleaned up expired session data: ${key}`);
                 }
             }
         }
@@ -392,49 +387,4 @@ window.Storage = {
         });
     },
 
-    /**
-     * МЕТОДЫ ДЛЯ ОТЛАДКИ И МОНИТОРИНГА
-     */
-
-    // Получение статистики хранилища
-    getStorageStats() {
-        const sessionKeys = this.getSessionKeys();
-        const localStorageKeys = [];
-
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith(this.prefix)) {
-                localStorageKeys.push(key.replace(this.prefix, ''));
-            }
-        }
-
-        return {
-            sessionSize: this.session.size,
-            sessionKeys: sessionKeys,
-            persistentKeys: localStorageKeys,
-            pendingPaymentsCount: (this.session.get('pending_payments') || []).length
-        };
-    },
-
-    // Валидация состояния (для отладки)
-    validateState() {
-        const stats = this.getStorageStats();
-        const issues = [];
-
-        // Проверяем что pending платежи не попали в localStorage
-        if (stats.persistentKeys.includes('pending_payments')) {
-            issues.push('CRITICAL: pending_payments found in localStorage!');
-        }
-
-        // Проверяем размер сессии
-        if (stats.sessionSize > 50) {
-            issues.push(`Session cache is large: ${stats.sessionSize} items`);
-        }
-
-        return {
-            isValid: issues.length === 0,
-            issues: issues,
-            stats: stats
-        };
-    }
 };

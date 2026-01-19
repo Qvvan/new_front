@@ -119,26 +119,6 @@ window.Utils = {
     },
 
     /**
-     * Глубокое клонирование объекта
-     * @param {Object} obj - Объект для клонирования
-     * @returns {Object} Клонированный объект
-     */
-    deepClone(obj) {
-        if (obj === null || typeof obj !== 'object') return obj;
-        if (obj instanceof Date) return new Date(obj.getTime());
-        if (obj instanceof Array) return obj.map(item => this.deepClone(item));
-        if (typeof obj === 'object') {
-            const clonedObj = {};
-            for (const key in obj) {
-                if (obj.hasOwnProperty(key)) {
-                    clonedObj[key] = this.deepClone(obj[key]);
-                }
-            }
-            return clonedObj;
-        }
-    },
-
-    /**
      * Проверка валидности email
      * @param {string} email - Email для проверки
      * @returns {boolean} Валиден ли email
@@ -232,89 +212,6 @@ window.Utils = {
         return `<div class="content-wrapper">${content}</div>`;
     },
 
-    /**
-     * Анимация числа с эффектом подсчета
-     * @param {HTMLElement} element - Элемент для анимации
-     * @param {number} start - Начальное значение
-     * @param {number} end - Конечное значение
-     * @param {number} duration - Длительность анимации в мс
-     * @param {Function} callback - Callback после завершения
-     */
-    animateNumber(element, start, end, duration = 1000, callback = null) {
-        const startTime = performance.now();
-        const change = end - start;
-
-        function updateNumber(currentTime) {
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-
-            // Easing function (easeOutQuart)
-            const eased = 1 - Math.pow(1 - progress, 4);
-            const current = Math.round(start + change * eased);
-
-            element.textContent = current;
-
-            if (progress < 1) {
-                requestAnimationFrame(updateNumber);
-            } else if (callback) {
-                callback();
-            }
-        }
-
-        requestAnimationFrame(updateNumber);
-    },
-
-    /**
-     * Получение цвета статуса подписки
-     * @param {string} status - Статус подписки
-     * @returns {string} CSS класс цвета
-     */
-    getSubscriptionStatusColor(status) {
-        const statusColors = {
-            'active': 'text-green',
-            'expired': 'text-red',
-            'trial': 'text-blue',
-            'pending': 'text-orange',
-            'cancelled': 'text-muted'
-        };
-        return statusColors[status] || 'text-muted';
-    },
-
-    /**
-     * Получение иконки для типа файла или устройства
-     * @param {string} type - Тип устройства или файла
-     * @returns {string} CSS класс иконки
-     */
-    getIcon(type) {
-        const icons = {
-            // Устройства
-            'android': 'fab fa-android',
-            'ios': 'fab fa-apple',
-            'windows': 'fab fa-windows',
-            'macos': 'fab fa-apple',
-            'linux': 'fab fa-linux',
-
-            // Статусы
-            'active': 'fas fa-check-circle',
-            'expired': 'fas fa-times-circle',
-            'trial': 'fas fa-clock',
-            'pending': 'fas fa-hourglass-half',
-
-            // Действия
-            'download': 'fas fa-download',
-            'share': 'fas fa-share-alt',
-            'settings': 'fas fa-cog',
-            'support': 'fas fa-life-ring',
-
-            // Социальные сети
-            'telegram': 'fab fa-telegram-plane',
-            'whatsapp': 'fab fa-whatsapp',
-            'vk': 'fab fa-vk',
-            'facebook': 'fab fa-facebook',
-            'twitter': 'fab fa-twitter'
-        };
-        return icons[type] || 'fas fa-circle';
-    },
 
     /**
      * Копирование текста в буфер обмена
@@ -387,51 +284,47 @@ window.Utils = {
      * @param {any} data - Дополнительные данные
      */
     log(level, message, data = null) {
-        // ✅ ОПТИМИЗАЦИЯ: Логируем только в dev режиме или для ошибок
+        // ✅ ОПТИМИЗАЦИЯ: Логируем только в dev режиме или для критичных ошибок
         const isDev = window.location.hostname === 'localhost' || 
                      window.location.hostname === '127.0.0.1' ||
                      window.location.search.includes('debug=true');
         
-        // Всегда логируем ошибки, остальное только в dev
-        if (!isDev && level !== 'error') {
-            return;
+        // В продакшене логируем только критические ошибки
+        if (!isDev) {
+            // Только критические ошибки в продакшене
+            if (level !== 'error') {
+                return;
+            }
+            // Даже для ошибок - только если это действительно критично
+            // Убираем избыточные логи инициализации
+            if (message && (
+                message.includes('initialization') ||
+                message.includes('Initializing') ||
+                message.includes('loaded') ||
+                message.includes('Loaded')
+            )) {
+                return;
+            }
         }
 
-        const timestamp = new Date().toISOString();
-        const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
+        // ✅ ОПТИМИЗАЦИЯ: Не создаем timestamp если не логируем
+        if (isDev) {
+            const timestamp = new Date().toISOString();
+            const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
 
-        if (data) {
-            console[level](`${prefix} ${message}`, data);
+            if (data) {
+                console[level](`${prefix} ${message}`, data);
+            } else {
+                console[level](`${prefix} ${message}`);
+            }
         } else {
-            console[level](`${prefix} ${message}`);
+            // В продакшене - только ошибки без timestamp для производительности
+            if (data) {
+                console.error(message, data);
+            } else {
+                console.error(message);
+            }
         }
     },
 
-    /**
-     * Проверка, является ли объект пустым
-     * @param {Object} obj - Объект для проверки
-     * @returns {boolean} Пустой ли объект
-     */
-    isEmpty(obj) {
-        if (obj === null || obj === undefined) return true;
-        if (Array.isArray(obj)) return obj.length === 0;
-        if (typeof obj === 'object') return Object.keys(obj).length === 0;
-        if (typeof obj === 'string') return obj.trim().length === 0;
-        return false;
-    },
-
-    /**
-     * Создание Promise с timeout
-     * @param {Promise} promise - Исходный Promise
-     * @param {number} timeout - Timeout в мс
-     * @returns {Promise} Promise с timeout
-     */
-    withTimeout(promise, timeout) {
-        return Promise.race([
-            promise,
-            new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Operation timed out')), timeout)
-            )
-        ]);
-    },
 };

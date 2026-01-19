@@ -315,11 +315,9 @@ p {
 }
 
 /* ✅ ОПТИМИЗАЦИЯ: Останавливаем анимацию фона когда страница скрыта */
-@media (prefers-reduced-motion: no-preference) {
-    /* Анимация работает только когда страница видна */
-    body:not(:has(.screen.active)) .background-glow {
-        animation-play-state: paused;
-    }
+body.page-hidden .background-glow,
+body:not(:has(.screen.active)) .background-glow {
+    animation-play-state: paused !important;
 }
 
 @keyframes float {
@@ -333,21 +331,6 @@ p {
     display: none !important;
 }
 
-.invisible {
-    visibility: hidden;
-}
-
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
 
 /* Text Utilities */
 .text-center { text-align: center; }
@@ -537,42 +520,6 @@ p {
     display: none;
 }
 
-/* 🔥 Центрированный контент для пустых состояний */
-.empty-state-centered {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--spacing-xl);
-    overflow: hidden;
-}
-
-.empty-state-centered .empty-state-content {
-    max-width: 320px;
-    width: 100%;
-    text-align: center;
-}
-
-/* 🔥 Специальные utility классы для полуполноэкранного режима */
-.fullscreen-safe {
-    /* Учитывает safe area для полноэкранного контента */
-    padding-top: var(--safe-area-top);
-    padding-bottom: var(--safe-area-bottom);
-    padding-left: var(--safe-area-left);
-    padding-right: var(--safe-area-right);
-}
-
-.no-safe-area {
-    /* Убирает safe area отступы */
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-}
 
 /* 🔥 Производительность и анимации */
 .screen {

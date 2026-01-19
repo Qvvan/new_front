@@ -48,12 +48,41 @@ window.PaymentMonitor = {
 
         this.isActive = true;
 
-        this.monitoringInterval = setInterval(() => {
+        // ✅ ОПТИМИЗАЦИЯ: Останавливаем мониторинг когда страница скрыта
+        const startMonitoring = () => {
+            if (document.hidden || document.visibilityState === 'hidden') {
+                return;
+            }
+            
+            if (this.monitoringInterval) {
+                clearInterval(this.monitoringInterval);
+            }
+            
+            this.monitoringInterval = setInterval(() => {
+                this.checkPaymentStatuses();
+            }, this.checkInterval);
+            
+            // Проверяем сразу
             this.checkPaymentStatuses();
-        }, this.checkInterval);
+        };
 
-        // Проверяем сразу
-        this.checkPaymentStatuses();
+        // Запускаем мониторинг
+        startMonitoring();
+
+        // ✅ ОПТИМИЗАЦИЯ: Управление мониторингом при изменении видимости страницы
+        if (!this.visibilityHandler) {
+            this.visibilityHandler = () => {
+                if (document.hidden || document.visibilityState === 'hidden') {
+                    if (this.monitoringInterval) {
+                        clearInterval(this.monitoringInterval);
+                        this.monitoringInterval = null;
+                    }
+                } else if (this.isActive && this.pendingPayments.size > 0) {
+                    startMonitoring();
+                }
+            };
+            document.addEventListener('visibilitychange', this.visibilityHandler);
+        }
     },
 
     /**
@@ -68,19 +97,26 @@ window.PaymentMonitor = {
             clearInterval(this.monitoringInterval);
             this.monitoringInterval = null;
         }
+
+        // ✅ ОПТИМИЗАЦИЯ: Удаляем обработчик видимости
+        if (this.visibilityHandler) {
+            document.removeEventListener('visibilitychange', this.visibilityHandler);
+            this.visibilityHandler = null;
+        }
     },
 
     /**
      * Проверка статусов платежей
      */
     async checkPaymentStatuses() {
+        // ✅ ОПТИМИЗАЦИЯ: Останавливаем если нет платежей
         if (this.pendingPayments.size === 0) {
             this.stop();
             return;
         }
 
         // ✅ ОПТИМИЗАЦИЯ: Не проверяем если страница не видна
-        if (document.hidden) {
+        if (document.hidden || document.visibilityState === 'hidden') {
             return;
         }
 

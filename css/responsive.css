@@ -274,16 +274,11 @@
         box-shadow: none;
     }
 
-    .action-card:hover,
-    .card-hover:hover {
+    .action-card:hover {
         transform: none;
         box-shadow: var(--shadow-md);
     }
 
-    .btn:hover {
-        transform: none;
-        box-shadow: none;
-    }
 
     /* Increase touch targets for better usability */
     .nav-item {
@@ -318,10 +313,6 @@
     }
 
     .animate-fade-in,
-    .animate-slide-in-right,
-    .animate-slide-in-left,
-    .animate-scale-in,
-    .animate-bounce,
     .animate-success {
         animation: none;
         opacity: 1;
@@ -343,14 +334,6 @@
         transform: none;
     }
 
-    .page-transition-enter,
-    .page-transition-enter-active,
-    .page-transition-exit,
-    .page-transition-exit-active {
-        transition: none;
-        opacity: 1;
-        transform: none;
-    }
 }
 
 /* Print styles (if needed) */

@@ -20,7 +20,7 @@ window.DragonVPNApp = {
      */
     async _performInit() {
         try {
-            Utils.log('info', 'Dragon VPN App initialization started');
+            // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог инициализации
 
             if (window.Loading) {
                 window.Loading.init();
@@ -51,7 +51,7 @@ window.DragonVPNApp = {
             this.isInitialized = true;
             this.isReady = true;
 
-            Utils.log('info', 'Dragon VPN App initialized successfully');
+            // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог успешной инициализации
 
         } catch (error) {
             Utils.log('error', 'App initialization failed:', error);
@@ -86,23 +86,11 @@ window.DragonVPNApp = {
      * Fallback загрузка если основная не работает
      */
     createFallbackLoading() {
+        // ✅ ОПТИМИЗАЦИЯ: Упрощенный fallback без inline стилей
         const loadingEl = document.createElement('div');
         loadingEl.id = 'fallbackLoading';
-        loadingEl.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0d0d0d;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            color: white;
-            font-family: system-ui;
-        `;
-        loadingEl.innerHTML = '<div>Загрузка Dragon VPN...</div>';
+        loadingEl.className = 'loading-overlay';
+        loadingEl.innerHTML = '<div>Загрузка...</div>';
         document.body.appendChild(loadingEl);
     },
 
@@ -110,7 +98,7 @@ window.DragonVPNApp = {
      * Инициализация Telegram WebApp
      */
     async initializeTelegram() {
-        Utils.log('info', 'Initializing Telegram WebApp in semi-fullscreen mode');
+        // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
 
         if (window.TelegramApp) {
             // Инициализируем базовый функционал
@@ -126,9 +114,10 @@ window.DragonVPNApp = {
                     attempts++;
 
                     if (window.TelegramApp.isInitialized) {
-                        Utils.log('info', 'Telegram WebApp initialized successfully');
+                        // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
                         resolve();
                     } else if (attempts >= maxAttempts) {
+                        // ✅ ОПТИМИЗАЦИЯ: Логируем только предупреждения в dev режиме
                         Utils.log('warn', 'Telegram WebApp initialization timeout');
                         resolve();
                     } else {
@@ -146,9 +135,8 @@ window.DragonVPNApp = {
                     window.TelegramApp.forceExpand();
 
                     // Проверяем что настройки применились
-                    if (window.TelegramApp.webApp.isExpanded) {
-                        Utils.log('info', 'App successfully expanded');
-                    } else {
+                    if (!window.TelegramApp.webApp.isExpanded) {
+                        // ✅ ОПТИМИЗАЦИЯ: Логируем только предупреждения
                         Utils.log('warn', 'App expansion may have failed');
                         // Повторная попытка
                         setTimeout(() => {
@@ -183,7 +171,7 @@ window.DragonVPNApp = {
      * Парсинг реферальных данных
      */
     async parseReferralData() {
-        Utils.log('info', 'Parsing referral data from all sources');
+        // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
 
         try {
             let referrerId = null;
@@ -211,7 +199,7 @@ window.DragonVPNApp = {
             }
 
             if (referrerId) {
-                Utils.log('info', `Referrer detected: ${referrerId}`);
+                // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
                 this.pendingReferrerId = referrerId;
 
                 // Сохраняем для передачи при регистрации
@@ -238,43 +226,15 @@ window.DragonVPNApp = {
             return startParam;
         }
 
-        Utils.log('warn', `Invalid referral format: ${startParam}`);
         return null;
     },
 
-    /**
-     * Обработка реферальной ссылки
-     */
-    async handleReferralLink(startParam) {
-        try {
-            let referrerId = null;
-
-            if (startParam.startsWith('ref_')) {
-                referrerId = startParam.substring(4);
-            } else if (/^\d+$/.test(startParam)) {
-                referrerId = startParam;
-            }
-
-            if (referrerId) {
-                Utils.log('info', `Referral detected: ${referrerId}`);
-
-                if (window.Storage) {
-                    await window.Storage.set('referrer_id', referrerId);
-                }
-
-                this.pendingReferrerId = referrerId;
-            }
-
-        } catch (error) {
-            Utils.log('error', 'Failed to handle referral link:', error);
-        }
-    },
 
     /**
      * Инициализация компонентов
      */
     async initializeComponents() {
-        Utils.log('info', 'Initializing components');
+        // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
 
         // ✅ Инициализируем в правильном порядке
         if (window.Toast) window.Toast.init();
@@ -298,7 +258,7 @@ window.DragonVPNApp = {
      * Инициализация экранов
      */
     async initializeScreens() {
-        Utils.log('info', 'Initializing screens');
+        // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
         if (window.SubscriptionScreen) {
             await window.SubscriptionScreen.init();
         }
@@ -334,7 +294,7 @@ window.DragonVPNApp = {
                 await window.Storage.clearPendingPayments();
             }
 
-            Utils.log('info', 'Checking for actual pending payments from API...');
+            // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
 
             // Получаем user_id из текущего пользователя
             let userId = null;
@@ -358,7 +318,7 @@ window.DragonVPNApp = {
                 payment.status === 'pending'
             );
 
-            Utils.log('info', `Found ${actualPendingPayments.length} pending payments`);
+            // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
 
             if (actualPendingPayments.length > 0) {
                 // Сохраняем в сессионный кеш с правильными полями
@@ -424,26 +384,17 @@ window.DragonVPNApp = {
 
         this.setupPeriodicTasks();
 
-        Utils.log('info', 'App finalization completed');
+        // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
     },
 
     /**
      * Анимация появления приложения
      */
     animateAppearance() {
-        const screens = document.querySelectorAll('.screen');
-        const navigation = document.querySelector('.bottom-nav');
-
-        screens.forEach(screen => {
-            screen.classList.add('animate-fade-in');
-        });
-
-        if (navigation) {
-            navigation.style.transform = 'translateY(100%)';
-            setTimeout(() => {
-                navigation.style.transition = 'transform 0.3s ease';
-                navigation.style.transform = 'translateY(0)';
-            }, 200);
+        // ✅ ОПТИМИЗАЦИЯ: Упрощенная анимация без лишних таймеров
+        const activeScreen = document.querySelector('.screen.active');
+        if (activeScreen) {
+            activeScreen.classList.add('animate-fade-in');
         }
     },
 
@@ -474,7 +425,7 @@ window.DragonVPNApp = {
             const telegramUser = window.TelegramApp?.getUserInfo();
 
             if (!userData && telegramUser) {
-                Utils.log('info', 'Registering new user');
+                // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
 
                 const registrationData = {
                     referrer_id: this.pendingReferrerId || null
@@ -497,47 +448,67 @@ window.DragonVPNApp = {
     setupPeriodicTasks() {
         // ✅ ОПТИМИЗАЦИЯ: Останавливаем задачи когда страница не видна
         let subscriptionInterval, navigationInterval, storageInterval;
+        let isTasksRunning = false;
 
         const startTasks = () => {
-            // Проверка истекших подписок каждые 5 минут
+            // Не запускаем если уже запущены или страница скрыта
+            if (isTasksRunning || document.hidden) return;
+            isTasksRunning = true;
+
+            // ✅ ОПТИМИЗАЦИЯ: Увеличиваем интервалы для снижения нагрузки
+            // Проверка истекших подписок каждые 10 минут (было 5)
             subscriptionInterval = setInterval(() => {
-                if (!document.hidden && window.SubscriptionScreen) {
+                if (!document.hidden && window.SubscriptionScreen && window.SubscriptionScreen.isLoaded) {
                     window.SubscriptionScreen.checkExpiredSubscriptions();
                 }
-            }, 5 * 60 * 1000);
+            }, 10 * 60 * 1000);
 
-            // Обновление навигации каждые 2 минуты
+            // Обновление навигации каждые 5 минут (было 2)
             navigationInterval = setInterval(() => {
                 if (!document.hidden && window.Navigation) {
                     window.Navigation.updateNavigationState();
                 }
-            }, 2 * 60 * 1000);
+            }, 5 * 60 * 1000);
 
-            // Синхронизация Storage каждые 10 минут
+            // Синхронизация Storage каждые 15 минут (было 10)
             storageInterval = setInterval(() => {
                 if (!document.hidden && window.Storage) {
                     window.Storage.sync();
                 }
-            }, 10 * 60 * 1000);
+            }, 15 * 60 * 1000);
         };
 
         const stopTasks = () => {
-            if (subscriptionInterval) clearInterval(subscriptionInterval);
-            if (navigationInterval) clearInterval(navigationInterval);
-            if (storageInterval) clearInterval(storageInterval);
+            if (subscriptionInterval) {
+                clearInterval(subscriptionInterval);
+                subscriptionInterval = null;
+            }
+            if (navigationInterval) {
+                clearInterval(navigationInterval);
+                navigationInterval = null;
+            }
+            if (storageInterval) {
+                clearInterval(storageInterval);
+                storageInterval = null;
+            }
+            isTasksRunning = false;
         };
 
-        // Управление задачами в зависимости от видимости страницы
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
+        // ✅ ОПТИМИЗАЦИЯ: Управление задачами в зависимости от видимости страницы
+        const handleVisibilityChange = () => {
+            if (document.hidden || document.visibilityState === 'hidden') {
                 stopTasks();
             } else {
                 startTasks();
             }
-        });
+        };
 
-        // Запускаем задачи при старте
-        startTasks();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        // Запускаем задачи при старте (только если страница видна)
+        if (!document.hidden) {
+            startTasks();
+        }
     },
 
     /**
@@ -566,7 +537,7 @@ window.DragonVPNApp = {
      */
     async attemptRecovery() {
         try {
-            Utils.log('info', 'Attempting app recovery');
+            // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
 
             this.isInitialized = false;
             this.isReady = false;
@@ -620,11 +591,24 @@ window.DragonVPNApp = {
      * ✅ ОПТИМИЗАЦИЯ: Остановка бесконечных CSS анимаций когда страница скрыта
      */
     pauseAnimations() {
-        const animatedElements = document.querySelectorAll('[style*="animation"], .animate-glow, .animate-heartbeat, .background-glow, [class*="infinite"]');
+        // Добавляем класс на body для CSS селекторов
+        document.body.classList.add('page-hidden');
+        
+        // Останавливаем все элементы с бесконечными анимациями
+        const animatedElements = document.querySelectorAll(
+            '.background-glow, .skeleton, [class*="infinite"], [style*="animation"]'
+        );
+        
         animatedElements.forEach(el => {
-            if (el.style.animationPlayState !== 'paused') {
-                el.dataset.animationState = el.style.animationPlayState || 'running';
-                el.style.animationPlayState = 'paused';
+            const computedStyle = window.getComputedStyle(el);
+            const animation = computedStyle.animation || computedStyle.webkitAnimation;
+            
+            // Проверяем что анимация бесконечная
+            if (animation && animation.includes('infinite')) {
+                if (el.style.animationPlayState !== 'paused') {
+                    el.dataset.animationState = el.style.animationPlayState || 'running';
+                    el.style.animationPlayState = 'paused';
+                }
             }
         });
     },
@@ -633,6 +617,10 @@ window.DragonVPNApp = {
      * ✅ ОПТИМИЗАЦИЯ: Возобновление CSS анимаций когда страница видна
      */
     resumeAnimations() {
+        // Убираем класс с body
+        document.body.classList.remove('page-hidden');
+        
+        // Возобновляем все остановленные анимации
         const animatedElements = document.querySelectorAll('[data-animation-state]');
         animatedElements.forEach(el => {
             el.style.animationPlayState = el.dataset.animationState || 'running';
@@ -644,7 +632,7 @@ window.DragonVPNApp = {
      * Приложение стало активным
      */
     async onAppResume() {
-        Utils.log('info', 'App resumed');
+        // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
 
         try {
             await this.refreshAppData();
@@ -664,7 +652,7 @@ window.DragonVPNApp = {
      * Приложение уходит в фон
      */
     onAppPause() {
-        Utils.log('info', 'App paused');
+        // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
 
         if (window.Storage) {
             window.Storage.updateLastActivity();
@@ -709,25 +697,12 @@ window.DragonVPNApp = {
         return this.isReady;
     },
 
-    /**
-     * Получение статуса приложения
-     */
-    getAppStatus() {
-        return {
-            isInitialized: this.isInitialized,
-            isReady: this.isReady,
-            currentScreen: window.Router?.getCurrentScreen(),
-            hasActiveModals: window.Modal?.hasActiveModals(),
-            pendingPayments: window.Storage?.getPendingPayments().length || 0,
-            lastActivity: window.Storage?.getLastActivity()
-        };
-    },
 
     /**
      * Перезапуск приложения
      */
     async restart() {
-        Utils.log('info', 'Restarting application');
+        // ✅ ОПТИМИЗАЦИЯ: Убрали избыточный лог
 
         try {
             this.cleanup();
@@ -761,21 +736,6 @@ window.DragonVPNApp = {
     },
 
 
-    async processReferralAfterRegistration() {
-        try {
-            const pendingReferral = await window.Storage?.get('pending_referral');
-
-            if (pendingReferral && window.ReferralParser) {
-                const success = await window.ReferralParser.submitReferral(pendingReferral);
-
-                if (success) {
-                    await window.Storage?.remove('pending_referral');
-                }
-            }
-        } catch (error) {
-            Utils.log('error', 'Failed to process referral after registration:', error);
-        }
-    }
 };
 
 document.addEventListener('DOMContentLoaded', async () => {

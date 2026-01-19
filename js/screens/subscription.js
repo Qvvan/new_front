@@ -171,8 +171,6 @@ window.SubscriptionScreen = {
             if (subscriptionId) {
                 Utils.log('info', 'Auto renewal toggle clicked:', subscriptionId);
                 this.handleAutoRenewalToggle(subscriptionId);
-            } else {
-                Utils.log('warn', 'Auto renewal clicked but no subscriptionId found');
             }
         }, true); // Используем capture phase для более раннего перехвата
 
@@ -200,8 +198,6 @@ window.SubscriptionScreen = {
             if (subscriptionId) {
                 Utils.log('info', 'Compact auto renewal toggle clicked:', subscriptionId);
                 this.handleAutoRenewalToggle(subscriptionId);
-            } else {
-                Utils.log('warn', 'Compact auto renewal clicked but no subscriptionId found');
             }
         }, true); // Используем capture phase для более раннего перехвата
     },
@@ -493,7 +489,6 @@ window.SubscriptionScreen = {
             Utils.log('info', 'Telegram confirmation result:', result);
             return result;
         } else {
-            Utils.log('warn', 'No confirmation method available, defaulting to true');
             return true; // Fallback - разрешаем изменение
         }
     },
@@ -1591,8 +1586,6 @@ window.SubscriptionScreen = {
                 toggle.classList.remove('active');
             }
             Utils.log('info', 'Toggle updated:', { hasActive: toggle.classList.contains('active') });
-        } else {
-            Utils.log('warn', 'Toggle not found for subscriptionId:', idStr);
         }
 
         if (statusText) {
@@ -1607,8 +1600,6 @@ window.SubscriptionScreen = {
                     ? `Продление ${renewalDate}`
                     : `Завершится ${renewalDate}`;
                 Utils.log('info', 'Status text updated');
-            } else {
-                Utils.log('warn', 'Subscription not found for UI update');
             }
         }
 
