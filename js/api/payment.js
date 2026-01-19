@@ -95,7 +95,7 @@ window.PaymentAPI = {
             const response = await window.APIClient.get(`/payments/user/${userId}/pending`);
             return response.payments || [];
         } catch (error) {
-            Utils.log('warn', 'Pending payments endpoint not available:', error);
+            
             return [];
         }
     },

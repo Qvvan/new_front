@@ -17,7 +17,7 @@ window.GiftFlow = {
      * Показать процесс подарка
      */
     async show() {
-        Utils.log('info', 'Showing gift flow');
+        
 
         try {
             this.currentStep = 1;
@@ -27,14 +27,14 @@ window.GiftFlow = {
             if (window.ServiceSelector) {
                 await window.ServiceSelector.show('gift');
             } else {
-                Utils.log('error', 'ServiceSelector component not available');
+                
                 if (window.Toast) {
                     window.Toast.error('Компонент выбора услуг недоступен');
                 }
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to show gift flow:', error);
+            
             if (window.Toast) {
                 window.Toast.error('Ошибка загрузки услуг');
             }
@@ -58,10 +58,10 @@ window.GiftFlow = {
                     popular: service.is_featured || false
                 }));
 
-                Utils.log('info', `Loaded ${this.services.length} services for gift`);
+                
             }
         } catch (error) {
-            Utils.log('error', 'Failed to load services:', error);
+            
             throw error;
         }
     },
@@ -608,7 +608,7 @@ window.GiftFlow = {
                 window.Loading.hide();
             }
 
-            Utils.log('error', 'Failed to create gift:', error);
+            
             if (window.Toast) {
                 const message = error.message || 'Ошибка создания подарка';
                 window.Toast.error(message);

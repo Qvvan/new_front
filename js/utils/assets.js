@@ -27,9 +27,9 @@ class Assets {
         if (window.TGSLoader) {
             // Только проверяем доступность библиотек, но не загружаем все файлы
             if (!window.TGSLoader.isLibrariesAvailable()) {
-                Utils.log('warn', 'TGS libraries not available');
+                
             } else {
-                Utils.log('info', 'TGS Loader ready for lazy loading');
+                
             }
         }
 
@@ -48,7 +48,7 @@ class Assets {
             });
         }
 
-        Utils.log('info', 'Assets initialization completed');
+        
     }
 }
 

@@ -11,7 +11,7 @@ window.SubscriptionScreen = {
      * Инициализация экрана подписки
      */
     async init() {
-        Utils.log('info', 'Initializing Subscription Screen');
+        
 
         await this.loadUserData();
         await this.loadServices();
@@ -31,10 +31,10 @@ window.SubscriptionScreen = {
             if (window.UserAPI) {
                 const response = await window.UserAPI.getCurrentUser();
                 this.userData = response.user || response;
-                Utils.log('info', 'User data loaded for subscription screen:', this.userData);
+                
             }
         } catch (error) {
-            Utils.log('error', 'Failed to load user data:', error);
+            
             this.userData = { trial_activated: false }; // Fallback
         }
     },
@@ -60,10 +60,10 @@ window.SubscriptionScreen = {
                     }
                 });
 
-                Utils.log('info', `Cached ${services.length} services`);
+                
             }
         } catch (error) {
-            Utils.log('error', 'Failed to load services for caching:', error);
+            
         }
     },
 
@@ -80,10 +80,10 @@ window.SubscriptionScreen = {
                 window.Storage.setSubscriptions(this.currentSubscriptions);
             }
 
-            Utils.log('info', `Loaded ${this.currentSubscriptions.length} subscriptions`);
+            
 
         } catch (error) {
-            Utils.log('error', 'Failed to load subscriptions:', error);
+            
 
             if (window.Storage) {
                 this.currentSubscriptions = await window.Storage.getSubscriptions();
@@ -196,7 +196,7 @@ window.SubscriptionScreen = {
                     this.handleNewsChannel();
                     break;
                 default:
-                    Utils.log('warn', 'Unknown action:', action);
+                    
             }
         } finally {
             setTimeout(() => {
@@ -209,7 +209,7 @@ window.SubscriptionScreen = {
      * Продление подписки
      */
     async handleRenewSubscription(subscriptionId) {
-        Utils.log('info', 'Renewing subscription:', subscriptionId);
+        
 
         if (window.ServiceSelector) {
             await window.ServiceSelector.show('renew', subscriptionId);
@@ -220,7 +220,7 @@ window.SubscriptionScreen = {
      * Покупка новой подписки
      */
     async handleBuyNewSubscription() {
-        Utils.log('info', 'Buying new subscription');
+        
 
         if (window.ServiceSelector) {
             await window.ServiceSelector.show('buy');
@@ -232,7 +232,7 @@ window.SubscriptionScreen = {
      */
     async handleActivateTrial() {
         try {
-            Utils.log('info', 'Requesting trial activation');
+            
 
             // Показываем красивое модальное окно подтверждения
             const confirmed = await this.showTrialConfirmationModal();
@@ -269,7 +269,7 @@ window.SubscriptionScreen = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to activate trial:', error);
+            
 
             if (window.Loading) {
                 window.Loading.hide();
@@ -352,7 +352,7 @@ window.SubscriptionScreen = {
      * Переключение автопродления
      */
     async handleAutoRenewalToggle(subscriptionId) {
-        Utils.log('info', 'handleAutoRenewalToggle called with subscriptionId:', subscriptionId);
+        
         
         // Преобразуем subscriptionId в число, если это строка
         const id = typeof subscriptionId === 'string' ? parseInt(subscriptionId, 10) : subscriptionId;
@@ -363,33 +363,30 @@ window.SubscriptionScreen = {
         });
         
         if (!subscription) {
-            Utils.log('error', 'Subscription not found:', { subscriptionId, id, subscriptions: this.currentSubscriptions });
+            
             return;
         }
 
-        Utils.log('info', 'Found subscription:', { 
-            subscription_id: subscription.subscription_id || subscription.id,
-            current_auto_renewal: subscription.auto_renewal 
-        });
+        
 
         const newAutoRenewal = !subscription.auto_renewal;
-        Utils.log('info', 'New auto renewal value:', newAutoRenewal);
+        
 
         try {
             const confirmed = await this.showAutoRenewalConfirmation(newAutoRenewal);
-            Utils.log('info', 'Confirmation result:', confirmed);
+            
             
             if (!confirmed) {
-                Utils.log('info', 'User cancelled auto renewal change');
+                
                 return;
             }
 
-            Utils.log('info', 'Updating auto renewal via API...');
+            
             await window.SubscriptionAPI.updateAutoRenewal(id || subscriptionId, newAutoRenewal);
 
             subscription.auto_renewal = newAutoRenewal;
 
-            Utils.log('info', 'Updating UI...');
+            
             this.updateAutoRenewalUI(id || subscriptionId, newAutoRenewal);
 
             if (window.Toast) {
@@ -404,7 +401,7 @@ window.SubscriptionScreen = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to update auto renewal:', error);
+            
 
             if (window.Toast) {
                 const message = error.data?.comment || error.message || 'Ошибка изменения автопродления';
@@ -422,15 +419,15 @@ window.SubscriptionScreen = {
             ? 'При включении автопродления ваша подписка будет автоматически продлеваться за день до окончания действующего периода. Вы всегда можете отключить эту функцию.'
             : 'При отключении автопродления ваша подписка завершится в указанную дату. Вам потребуется продлить её вручную.';
 
-        Utils.log('info', 'Showing auto renewal confirmation:', { enable, title });
+        
 
         if (window.Modal && window.Modal.showConfirm) {
             try {
                 const result = await window.Modal.showConfirm(title, message);
-                Utils.log('info', 'Modal confirmation result:', result);
+                
                 return result;
             } catch (error) {
-                Utils.log('error', 'Error showing modal confirmation:', error);
+                
                 // Fallback to Telegram
                 if (window.TelegramApp && window.TelegramApp.showConfirm) {
                     return await window.TelegramApp.showConfirm(`${title}\n\n${message}`);
@@ -439,7 +436,7 @@ window.SubscriptionScreen = {
             }
         } else if (window.TelegramApp && window.TelegramApp.showConfirm) {
             const result = await window.TelegramApp.showConfirm(`${title}\n\n${message}`);
-            Utils.log('info', 'Telegram confirmation result:', result);
+            
             return result;
         } else {
             return true; // Fallback - разрешаем изменение
@@ -468,14 +465,11 @@ window.SubscriptionScreen = {
      * Подарок подписки
      */
     async handleGiftSubscription() {
-        Utils.log('info', 'Starting gift subscription flow');
+        
         
         // Проверяем доступность компонента
         if (typeof window.GiftFlow === 'undefined' || !window.GiftFlow) {
-            Utils.log('error', 'GiftFlow component not available', {
-                type: typeof window.GiftFlow,
-                exists: typeof window.GiftFlow !== 'undefined'
-            });
+            
             if (window.Toast) {
                 window.Toast.error('Компонент подарков недоступен');
             }
@@ -485,7 +479,7 @@ window.SubscriptionScreen = {
         try {
             await window.GiftFlow.show();
         } catch (error) {
-            Utils.log('error', 'Failed to show gift flow:', error);
+            
             if (window.Toast) {
                 window.Toast.error('Ошибка открытия подарка');
             }
@@ -496,7 +490,7 @@ window.SubscriptionScreen = {
      * Активация кода подарка
      */
     async handleActivateCode() {
-        Utils.log('info', 'Opening code activation modal');
+        
         
         if (window.Modal) {
             await this.showCodeActivationModal();
@@ -889,7 +883,7 @@ window.SubscriptionScreen = {
         if (window.TGSLoader) {
             window.TGSLoader.initializeScreen('subscription');
         } else {
-            Utils.log('error', 'TGSLoader not available');
+            
         }
     },
 
@@ -1248,7 +1242,7 @@ window.SubscriptionScreen = {
                 }
             }
         } catch (error) {
-            Utils.log('error', 'Failed to load daily bonus status:', error);
+            
             this.dailyBonusStatus = null;
         }
     },
@@ -1266,7 +1260,7 @@ window.SubscriptionScreen = {
                 }
             }
         } catch (error) {
-            Utils.log('error', 'Failed to load currency balance:', error);
+            
             this.currencyBalance = null;
         }
     },
@@ -1280,7 +1274,7 @@ window.SubscriptionScreen = {
                 this.dailyBonusList = await window.CurrencyAPI.getDailyBonusList();
             }
         } catch (error) {
-            Utils.log('error', 'Failed to load daily bonus list:', error);
+            
             this.dailyBonusList = null;
         }
     },
@@ -1332,7 +1326,7 @@ window.SubscriptionScreen = {
                 }
             }
         } catch (error) {
-            Utils.log('error', 'Failed to check pending gifts:', error);
+            
         }
     },
 
@@ -1395,7 +1389,7 @@ window.SubscriptionScreen = {
                                         window.Loading.hide();
                                     }
 
-                                    Utils.log('error', 'Failed to activate gift:', error);
+                                    
                                     if (window.Toast) {
                                         window.Toast.error(error.data?.comment || error.message || 'Ошибка активации подарка');
                                     }
@@ -1516,7 +1510,7 @@ window.SubscriptionScreen = {
      * Обновление UI автопродления
      */
     updateAutoRenewalUI(subscriptionId, autoRenewal) {
-        Utils.log('info', 'updateAutoRenewalUI called:', { subscriptionId, autoRenewal });
+        
         
         // Преобразуем subscriptionId в строку для селектора
         const idStr = String(subscriptionId);
@@ -1526,11 +1520,7 @@ window.SubscriptionScreen = {
         const toggle = autoRenewalElement ? autoRenewalElement.querySelector('.toggle-switch') : null;
         const statusText = autoRenewalElement ? autoRenewalElement.querySelector('.auto-renewal-status') : null;
 
-        Utils.log('info', 'Found elements:', { 
-            autoRenewalElement: !!autoRenewalElement,
-            toggle: !!toggle,
-            statusText: !!statusText
-        });
+        
 
         if (toggle) {
             if (autoRenewal) {
@@ -1538,7 +1528,6 @@ window.SubscriptionScreen = {
             } else {
                 toggle.classList.remove('active');
             }
-            Utils.log('info', 'Toggle updated:', { hasActive: toggle.classList.contains('active') });
         }
 
         if (statusText) {
@@ -1552,7 +1541,7 @@ window.SubscriptionScreen = {
                 statusText.textContent = autoRenewal
                     ? `Продление ${renewalDate}`
                     : `Завершится ${renewalDate}`;
-                Utils.log('info', 'Status text updated');
+                
             }
         }
 
@@ -1566,7 +1555,7 @@ window.SubscriptionScreen = {
             } else {
                 compactToggle.classList.remove('active');
             }
-            Utils.log('info', 'Compact toggle updated');
+            
         }
     },
 
@@ -1942,7 +1931,7 @@ window.SubscriptionScreen = {
                 window.Loading.hide();
             }
 
-            Utils.log('error', 'Failed to claim daily bonus:', error);
+            
             if (window.Toast) {
                 window.Toast.error(error.data?.comment || error.message || 'Ошибка получения бонуса');
             }

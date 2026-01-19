@@ -32,7 +32,7 @@ window.KeysScreen = {
 
                     this.allKeys.push(...keys);
                 } catch (error) {
-                    Utils.log('error', 'Failed to load keys for subscription:', error);
+                    
                 }
             }
 
@@ -43,12 +43,12 @@ window.KeysScreen = {
                     this.servers = Array.isArray(serversResponse) ? serversResponse : (serversResponse.servers || []);
                 }
             } catch (error) {
-                Utils.log('error', 'Failed to load servers:', error);
+                
                 this.servers = [];
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to load data:', error);
+            
             this.subscriptions = [];
             this.allKeys = [];
             this.servers = [];

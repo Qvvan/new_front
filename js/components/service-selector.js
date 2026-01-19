@@ -16,7 +16,7 @@ window.ServiceSelector = {
         this.mode = mode;
         this.subscriptionId = subscriptionId;
 
-        Utils.log('info', `Showing service selector in ${mode} mode`, { subscriptionId });
+        
 
         try {
             await this.loadServices();
@@ -40,7 +40,7 @@ window.ServiceSelector = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to show service selector:', error);
+            
             if (window.Toast) {
                 window.Toast.show('Ошибка загрузки услуг', 'error');
             }
@@ -95,10 +95,10 @@ window.ServiceSelector = {
             // Загружаем данные пользователя для пробного периода
             await this.loadUserData();
 
-            Utils.log('info', 'Services loaded:', this.services);
+            
 
         } catch (error) {
-            Utils.log('error', 'Failed to load services:', error);
+            
             throw error;
         } finally {
         }
@@ -109,12 +109,12 @@ window.ServiceSelector = {
             if (window.UserAPI) {
                 const response = await window.UserAPI.getCurrentUser();
                 this.userData = response.user || response;
-                Utils.log('info', 'User data loaded:', this.userData);
+                
             } else {
                 this.userData = { trial_activated: false }; // Fallback
             }
         } catch (error) {
-            Utils.log('error', 'Failed to load user data:', error);
+            
             this.userData = { trial_activated: false };
         }
     },
@@ -344,7 +344,7 @@ window.ServiceSelector = {
         const modal = this.getModalElement();
 
         if (!modal) {
-            Utils.log('error', 'Modal element not found in setupEventListeners');
+            
             return;
         }
 
@@ -429,7 +429,7 @@ window.ServiceSelector = {
         } else {
             const service = this.services.find(s => s.service_id === parseInt(serviceId));
             if (!service) {
-                Utils.log('error', 'Service not found:', serviceId);
+                
                 return;
             }
             this.selectedService = service;
@@ -448,7 +448,7 @@ window.ServiceSelector = {
         if (selectedCard) {
             selectedCard.classList.add('selected');
         } else {
-            Utils.log('error', 'Selected card not found:', serviceId);
+            
         }
 
         // Активируем кнопку продолжения
@@ -457,7 +457,7 @@ window.ServiceSelector = {
             continueBtn.disabled = false;
         }
 
-        Utils.log('info', 'Service selected:', this.selectedService);
+        
     },
 
     /**
@@ -467,11 +467,7 @@ window.ServiceSelector = {
         if (!this.selectedService) return;
 
         try {
-            Utils.log('info', 'Processing service selection:', {
-                service: this.selectedService,
-                mode: this.mode,
-                subscriptionId: this.subscriptionId
-            });
+            
 
             // ✅ Для режима подарка переходим к следующему шагу
             if (this.mode === 'gift') {
@@ -487,7 +483,7 @@ window.ServiceSelector = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to process service selection:', error);
+            
             if (window.Toast) {
                 window.Toast.show('Ошибка создания платежа', 'error');
             }
@@ -535,7 +531,7 @@ window.ServiceSelector = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to activate trial:', error);
+            
             if (window.Toast) {
                 window.Toast.error(error.message || 'Ошибка активации пробного периода');
             }
@@ -554,7 +550,7 @@ window.ServiceSelector = {
                 const user = await window.UserAPI.getCurrentUser();
                 userId = user.telegram_id || user.user_id;
             } catch (error) {
-                Utils.log('error', 'Failed to get user ID:', error);
+                
             }
 
             let response;
@@ -618,7 +614,7 @@ window.ServiceSelector = {
                     window.open(confirmationUrl, '_blank');
                 }
             } else {
-                Utils.log('error', 'No confirmation URL in payment response:', response);
+                
                 if (window.Toast) {
                     window.Toast.error('Ссылка на оплату недоступна');
                 }
@@ -629,10 +625,10 @@ window.ServiceSelector = {
                 window.PaymentBanner.show(paymentWithUrl);
             }
 
-            Utils.log('info', 'Payment created and monitoring started:', payment.payment_id || payment.id);
+            
 
         } catch (error) {
-            Utils.log('error', 'Failed to create payment:', error);
+            
             if (window.Toast) {
                 window.Toast.error(error.message || 'Ошибка создания платежа');
             }

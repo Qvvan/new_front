@@ -39,7 +39,7 @@ window.GiftAPI = {
             return Array.isArray(response) ? response : (response.gifts || []);
         } catch (error) {
             // Если эндпоинт не найден, возвращаем пустой массив
-            Utils.log('warn', 'Pending gifts endpoint not available:', error);
+            
             return [];
         }
     },

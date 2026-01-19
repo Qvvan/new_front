@@ -12,7 +12,7 @@ window.TelegramApp = {
      */
     init() {
         if (typeof window.Telegram === 'undefined' || !window.Telegram.WebApp) {
-            Utils.log('error', 'Telegram WebApp not available');
+            
             // Fallback для разработки
             this.initFallback();
             return;
@@ -50,7 +50,7 @@ window.TelegramApp = {
             this.isInitialized = true;
 
         } catch (error) {
-            Utils.log('error', 'Failed to initialize Telegram WebApp', error);
+            
             this.initFallback();
         }
     },
@@ -63,7 +63,7 @@ window.TelegramApp = {
      * Fallback инициализация для разработки
      */
     initFallback() {
-        Utils.log('warn', 'Using fallback mode for development');
+        
         this.user = {
             id: 123456789,
             first_name: 'Test',
@@ -91,12 +91,12 @@ window.TelegramApp = {
 
             // Отслеживаем изменения темы
             this.webApp.onEvent('themeChanged', () => {
-                Utils.log('info', 'Theme changed');
+                
                 this.applyThemeColors();
             });
 
         } catch (error) {
-            Utils.log('error', 'Failed to setup theme', error);
+            
         }
     },
 
@@ -155,7 +155,7 @@ window.TelegramApp = {
             this.preventSwipeToClose();
 
         } catch (error) {
-            Utils.log('error', 'Failed to setup interface', error);
+            
         }
     },
 
@@ -235,7 +235,7 @@ window.TelegramApp = {
             }, 500);
 
         } catch (error) {
-            Utils.log('error', 'Failed to force expand', error);
+            
         }
     },
 
@@ -262,7 +262,7 @@ window.TelegramApp = {
 
         // Обработка закрытия приложения
         this.webApp.onEvent('mainButtonClicked', () => {
-            Utils.log('debug', 'Main button clicked');
+            
         });
     },
 

@@ -571,10 +571,8 @@ window.DragonVPNApp = {
      * ✅ ОПТИМИЗАЦИЯ: Остановка бесконечных CSS анимаций когда страница скрыта
      */
     pauseAnimations() {
-        // Добавляем класс на body для CSS селекторов
         document.body.classList.add('page-hidden');
         
-        // Останавливаем все элементы с бесконечными анимациями
         const animatedElements = document.querySelectorAll(
             '.background-glow, .skeleton, [class*="infinite"], [style*="animation"]'
         );
@@ -583,12 +581,17 @@ window.DragonVPNApp = {
             const computedStyle = window.getComputedStyle(el);
             const animation = computedStyle.animation || computedStyle.webkitAnimation;
             
-            // Проверяем что анимация бесконечная
             if (animation && animation.includes('infinite')) {
                 if (el.style.animationPlayState !== 'paused') {
                     el.dataset.animationState = el.style.animationPlayState || 'running';
                     el.style.animationPlayState = 'paused';
                 }
+            }
+        });
+
+        document.querySelectorAll('[lottie-animation], [data-lottie]').forEach(container => {
+            if (container.lottieAnimation) {
+                container.lottieAnimation.pause();
             }
         });
     },
@@ -597,14 +600,18 @@ window.DragonVPNApp = {
      * ✅ ОПТИМИЗАЦИЯ: Возобновление CSS анимаций когда страница видна
      */
     resumeAnimations() {
-        // Убираем класс с body
         document.body.classList.remove('page-hidden');
         
-        // Возобновляем все остановленные анимации
         const animatedElements = document.querySelectorAll('[data-animation-state]');
         animatedElements.forEach(el => {
             el.style.animationPlayState = el.dataset.animationState || 'running';
             delete el.dataset.animationState;
+        });
+
+        document.querySelectorAll('[lottie-animation], [data-lottie]').forEach(container => {
+            if (container.lottieAnimation) {
+                container.lottieAnimation.play();
+            }
         });
     },
 
@@ -624,7 +631,6 @@ window.DragonVPNApp = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to handle app resume:', error);
         }
     },
 
@@ -691,7 +697,7 @@ window.DragonVPNApp = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Restart failed:', error);
+            
             window.location.reload();
         }
     },

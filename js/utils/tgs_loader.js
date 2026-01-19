@@ -161,7 +161,6 @@ window.TGSLoader = {
         }
 
         try {
-            Utils.log('debug', `📥 Preloading TGS: ${tgsPath}`);
 
             const response = await fetch(tgsPath);
             if (!response.ok) {
@@ -199,7 +198,6 @@ window.TGSLoader = {
             return cacheEntry;
 
         } catch (error) {
-            Utils.log('error', `❌ Failed to preload TGS ${tgsPath}:`, error.message);
             throw error; // Пробрасываем ошибку выше
         }
     },
@@ -210,7 +208,6 @@ window.TGSLoader = {
     async loadTGSAnimation(containerId, tgsPath, fallbackIcon = 'fas fa-gift') {
         const container = document.getElementById(containerId);
         if (!container) {
-            Utils.log('warn', `Container not found: ${containerId}`);
             return;
         }
 
@@ -237,7 +234,6 @@ window.TGSLoader = {
 
             // Если нет в кэше - загружаем TGS
             if (!cachedData) {
-                Utils.log('debug', `Loading TGS on demand: ${tgsPath}`);
                 cachedData = await this.preloadTGSToBlob(tgsPath);
             }
 
@@ -251,14 +247,17 @@ window.TGSLoader = {
                 container: container,
                 renderer: 'svg',
                 loop: true,
-                autoplay: true,
+                autoplay: !document.hidden,
                 animationData: lottieData
             });
 
             container.lottieAnimation = animation;
+            
+            if (document.hidden) {
+                animation.pause();
+            }
 
         } catch (error) {
-            Utils.log('error', `Failed to load TGS ${tgsPath}:`, error);
             this.setFallbackIcon(container, fallbackIcon);
         }
     },
@@ -269,7 +268,6 @@ window.TGSLoader = {
      */
     async loadStaticImage(container, imagePath, fallbackIcon) {
         try {
-            Utils.log('debug', `📷 Loading static image: ${imagePath}`);
 
             const img = document.createElement('img');
             img.style.width = '100%';
@@ -292,7 +290,6 @@ window.TGSLoader = {
             }
 
         } catch (error) {
-            Utils.log('error', `Failed to load static image ${imagePath}:`, error);
             this.setFallbackIcon(container, fallbackIcon);
         }
     },
@@ -303,7 +300,6 @@ window.TGSLoader = {
     async initializeScreen(screenName, customConfig = {}) {
         const preset = this.presets[screenName];
         if (!preset) {
-            Utils.log('warn', `No TGS preset found for screen: ${screenName}`);
             return;
         }
 
@@ -358,7 +354,7 @@ window.TGSLoader = {
             this.activeAnimations.set(screenName, animationsToLoad.map(a => a.containerId));
 
         } catch (error) {
-            Utils.log('error', `Failed to initialize TGS animations for ${screenName}:`, error);
+            
         }
     },
 
@@ -416,7 +412,6 @@ window.TGSLoader = {
         const available = typeof lottie !== 'undefined' && typeof pako !== 'undefined';
 
         if (!available) {
-            Utils.log('error', 'Required libraries not loaded (lottie/pako)');
         }
 
         return available;

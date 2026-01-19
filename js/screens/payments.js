@@ -70,7 +70,7 @@ window.PaymentsScreen = {
                     }
                 }
             } catch (error) {
-                Utils.log('error', 'Error in payment item click handler:', error);
+                
                 if (window.Toast) {
                     window.Toast.error('Ошибка при открытии деталей');
                 }
@@ -103,7 +103,7 @@ window.PaymentsScreen = {
             }
 
             if (!window.Modal) {
-                Utils.log('error', 'Modal component not available');
+                
                 if (window.Toast) {
                     window.Toast.error('Модальное окно недоступно');
                 }
@@ -168,7 +168,7 @@ window.PaymentsScreen = {
                                     window.Modal.hide();
                                 }
                             } catch (error) {
-                                Utils.log('error', 'Error handling gift refund:', error);
+                                
                             }
                         }
                     }] : []),
@@ -181,7 +181,7 @@ window.PaymentsScreen = {
             });
 
         } catch (error) {
-            Utils.log('error', 'Error showing gift details:', error);
+            
             if (window.Toast) {
                 window.Toast.error('Ошибка при открытии деталей подарка');
             }
@@ -226,7 +226,7 @@ window.PaymentsScreen = {
                 window.Loading.hide();
             }
 
-            Utils.log('error', 'Failed to refund gift:', error);
+            
             if (window.Toast) {
                 window.Toast.error(error.data?.comment || error.message || 'Ошибка возврата средств');
             }
@@ -256,7 +256,7 @@ window.PaymentsScreen = {
             }
 
             if (!window.Modal) {
-                Utils.log('error', 'Modal component not available');
+                
                 if (window.Toast) {
                     window.Toast.error('Модальное окно недоступно');
                 }
@@ -374,7 +374,7 @@ window.PaymentsScreen = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Error showing transaction details:', error);
+            
             if (window.Toast) {
                 window.Toast.error('Ошибка при открытии деталей транзакции');
             }
@@ -403,9 +403,9 @@ window.PaymentsScreen = {
                 }
             });
             
-            Utils.log('info', `Loaded ${this.services.size} services for payments`);
+            
         } catch (error) {
-            Utils.log('error', 'Failed to load services:', error);
+            
             // Продолжаем работу даже без сервисов
         }
     },
@@ -421,7 +421,7 @@ window.PaymentsScreen = {
                 const user = await window.UserAPI.getCurrentUser();
                 userId = user.telegram_id || user.user_id;
             } catch (error) {
-                Utils.log('error', 'Failed to get user ID:', error);
+                
             }
 
             if (!userId) {
@@ -453,7 +453,7 @@ window.PaymentsScreen = {
             this.currencyTransactions = response.transactions || [];
         } catch (error) {
             this.currencyTransactions = [];
-            Utils.log('error', 'Failed to load currency transactions:', error);
+            
         }
     },
 
@@ -468,7 +468,7 @@ window.PaymentsScreen = {
                 const user = await window.UserAPI.getCurrentUser();
                 userId = user.telegram_id || user.user_id;
             } catch (error) {
-                Utils.log('error', 'Failed to get user ID:', error);
+                
             }
 
             if (!userId) {
@@ -486,7 +486,7 @@ window.PaymentsScreen = {
             this.gifts = [...pendingGifts, ...sentGifts];
         } catch (error) {
             this.gifts = [];
-            Utils.log('error', 'Failed to load gifts:', error);
+            
         }
     },
 
@@ -565,10 +565,10 @@ window.PaymentsScreen = {
                     payment.price = service.price || payment.amount || 0;
                 }
                 
-                Utils.log('info', `Enriched payment ${payment.payment_id || payment.id} with service: ${service.name}`);
+                
             } else {
                 // Fallback: пытаемся извлечь данные из описания
-                Utils.log('warn', `Service not found for payment ${payment.payment_id || payment.id}, service_id: ${payment.service_id}`);
+                
                 this.enrichPaymentFromDescription(payment);
             }
         });
@@ -1069,7 +1069,7 @@ window.PaymentsScreen = {
             this.showPaymentModal(payment);
 
         } catch (error) {
-            Utils.log('error', 'Error showing payment details:', error);
+            
             if (window.Toast) {
                 window.Toast.error('Ошибка при открытии деталей платежа');
             }
@@ -1083,12 +1083,12 @@ window.PaymentsScreen = {
     showPaymentModal(payment) {
         try {
             if (!payment) {
-                Utils.log('error', 'showPaymentModal called without payment');
+                
                 return;
             }
 
             if (!window.Modal) {
-                Utils.log('error', 'Modal component not available');
+                
                 if (window.Toast) {
                     window.Toast.error('Модальное окно недоступно');
                 }
@@ -1128,7 +1128,7 @@ window.PaymentsScreen = {
                         payment.service_name = service.name;
                         payment.service_duration = this.formatDuration(service.duration_days);
                         payment.service_price = service.price;
-                        Utils.log('info', `Enriched payment ${payment.payment_id || payment.id} with service: ${service.name}`);
+                        
                     } else {
                         // Пытаемся извлечь из описания
                         this.enrichPaymentFromDescription(payment);
@@ -1260,7 +1260,7 @@ window.PaymentsScreen = {
                                     }
                                 }
                             } catch (error) {
-                                Utils.log('error', 'Error continuing payment:', error);
+                                
                                 if (window.Toast) {
                                     window.Toast.error('Ошибка при открытии оплаты');
                                 }
@@ -1309,7 +1309,7 @@ window.PaymentsScreen = {
                                     }
                                 }
                             } catch (error) {
-                                Utils.log('error', 'Error opening receipt:', error);
+                                
                                 if (window.Toast) {
                                     window.Toast.error('Ошибка при открытии чека');
                                 }
@@ -1325,7 +1325,7 @@ window.PaymentsScreen = {
             });
 
         } catch (error) {
-            Utils.log('error', 'Error showing payment modal:', error);
+            
             if (window.Toast) {
                 window.Toast.error('Ошибка при открытии деталей платежа');
             }

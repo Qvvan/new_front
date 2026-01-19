@@ -129,7 +129,7 @@ window.Storage = {
 
             return defaultData;
         } catch (error) {
-            Utils.log('error', 'Failed to get referral data:', error);
+            
             return {
                 referrals: [],
                 stats: { total_count: 0, invited: 0, partners: 0 }
@@ -183,10 +183,10 @@ window.Storage = {
             };
 
             this.session.set('referral_data', dataWithTimestamp);
-            Utils.log('debug', `Cached referral data: ${data.referrals?.length || 0} referrals`);
+            
             return true;
         } catch (error) {
-            Utils.log('error', 'Failed to set referral data:', error);
+            
             return false;
         }
     },
@@ -206,14 +206,14 @@ window.Storage = {
             }
             return false;
         } catch (error) {
-            Utils.log('error', 'Failed to mark referrals as viewed:', error);
+            
             return false;
         }
     },
 
     async sync() {
         try {
-            Utils.log('debug', 'Syncing storage data');
+            
 
             // Можно добавить логику синхронизации с API
             // Например, периодическое обновление данных
@@ -221,10 +221,10 @@ window.Storage = {
             // Очистка старых данных сессии
             this.cleanupSessionData();
 
-            Utils.log('debug', 'Storage sync completed');
+            
             return true;
         } catch (error) {
-            Utils.log('error', 'Storage sync failed:', error);
+            
             return false;
         }
     },

@@ -9,7 +9,7 @@ window.ReferralsScreen = {
      * Инициализация экрана рефералов
      */
     async init() {
-        Utils.log('info', 'Initializing Referrals Screen');
+        
 
         await this.loadData();
         this.setupEventListeners();
@@ -34,7 +34,7 @@ window.ReferralsScreen = {
             this.referralLink = linkData;
 
         } catch (error) {
-            Utils.log('error', 'Failed to load referrals data:', error);
+            
             this.referrals = [];
             this.stats = { total_count: 0, invited: 0, partners: 0 };
             this.referralLink = await window.ReferralAPI.generateReferralLink();
@@ -88,7 +88,7 @@ window.ReferralsScreen = {
                 await this.shareToStory();
                 break;
             default:
-                Utils.log('warn', 'Unknown referral action:', action);
+                
         }
     },
 
@@ -113,7 +113,7 @@ window.ReferralsScreen = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to share to Telegram:', error);
+            
             if (window.Toast) {
                 window.Toast.error('Ошибка отправки приглашения');
             }
@@ -140,7 +140,7 @@ window.ReferralsScreen = {
 
         } catch (error) {
             if (error.name !== 'AbortError') {
-                Utils.log('error', 'Share failed:', error);
+                
             }
         }
     },
@@ -179,7 +179,7 @@ window.ReferralsScreen = {
             }
 
         } catch (error) {
-            Utils.log('error', 'Failed to share to story:', error);
+            
             await this.shareToTelegram(); // Fallback
         }
     },
