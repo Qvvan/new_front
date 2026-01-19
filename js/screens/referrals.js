@@ -94,22 +94,30 @@ window.ReferralsScreen = {
 
     /**
      * Поделиться в Telegram
+     * Использует правильный метод для открытия диалога выбора друзей с предпросмотром
+     * Вместо switchInlineQuery используем openTelegramLink, который открывает диалог выбора
+     * и показывает предпросмотр сообщения перед отправкой
      */
     async shareToTelegram() {
         try {
             const message = this.generateShareMessage();
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(this.referralLink.link)}&text=${encodeURIComponent(message)}`;
 
-            // Используем switchInlineQuery для отправки нескольким пользователям
-            if (window.TelegramApp?.webApp?.switchInlineQuery) {
-                window.TelegramApp.webApp.switchInlineQuery(message, ['users', 'groups']);
+            // Используем openTelegramLink для правильного открытия диалога выбора друзей
+            // Этот метод открывает ссылку внутри Telegram и показывает предпросмотр сообщения
+            // Пользователь может выбрать друзей и увидеть предпросмотр перед отправкой
+            if (window.Telegram?.WebApp?.openTelegramLink) {
+                // Прямой вызов Telegram.WebApp API - правильный способ
+                window.Telegram.WebApp.openTelegramLink(shareUrl);
+            } else if (window.TelegramApp?.webApp?.openTelegramLink) {
+                // Через обертку TelegramApp
+                window.TelegramApp.webApp.openTelegramLink(shareUrl);
+            } else if (window.TelegramApp?.openTelegramLink) {
+                // Альтернативный способ через обертку
+                window.TelegramApp.openTelegramLink(shareUrl);
             } else {
-                // Fallback - обычная отправка
-                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(this.referralLink.link)}&text=${encodeURIComponent(message)}`;
-                window.TelegramApp.openLink(shareUrl);
-            }
-
-            if (window.Toast) {
-                window.Toast.success('Выберите контакты для отправки');
+                // Fallback - используем openLink, но это может открыть во внешнем браузере
+                window.TelegramApp?.openLink(shareUrl);
             }
 
         } catch (error) {
