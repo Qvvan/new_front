@@ -12,14 +12,40 @@ window.Utils = {
         const now = new Date();
 
         if (format === 'relative') {
-            const diffTime = Math.abs(d - now);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            // ✅ ИСПРАВЛЕНИЕ: Сравниваем именно даты (год, месяц, день), а не количество часов
+            const dateStr = d.toDateString();
+            const todayStr = now.toDateString();
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toDateString();
 
-            if (diffDays === 0) return 'сегодня';
-            if (diffDays === 1) return 'вчера';
-            if (diffDays <= 7) return `${diffDays} дн. назад`;
-            if (diffDays <= 30) return `${Math.ceil(diffDays / 7)} нед. назад`;
-            return `${Math.ceil(diffDays / 30)} мес. назад`;
+            // Сегодня - если дата совпадает с сегодняшней
+            if (dateStr === todayStr) {
+                return 'сегодня';
+            }
+            
+            // Вчера - если дата совпадает со вчерашней
+            if (dateStr === yesterdayStr) {
+                return 'вчера';
+            }
+
+            // Для остальных дат считаем разницу в днях
+            const diffTime = d - now;
+            const diffDays = Math.floor(Math.abs(diffTime) / (1000 * 60 * 60 * 24));
+
+            if (diffDays <= 7) {
+                return `${diffDays} ${this.pluralize(diffDays, ['день', 'дня', 'дней'])} назад`;
+            }
+            if (diffDays <= 30) {
+                const weeks = Math.floor(diffDays / 7);
+                return `${weeks} ${this.pluralize(weeks, ['неделю', 'недели', 'недель'])} назад`;
+            }
+            if (diffDays <= 365) {
+                const months = Math.floor(diffDays / 30);
+                return `${months} ${this.pluralize(months, ['месяц', 'месяца', 'месяцев'])} назад`;
+            }
+            const years = Math.floor(diffDays / 365);
+            return `${years} ${this.pluralize(years, ['год', 'года', 'лет'])} назад`;
         }
 
         const options = format === 'long'

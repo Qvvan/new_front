@@ -949,16 +949,23 @@ window.PaymentsScreen = {
      * Форматирование даты для заголовка
      */
     formatDateLabel(date) {
+        // ✅ ИСПРАВЛЕНИЕ: Правильное сравнение дат с учетом часовых поясов
+        const dateObj = date instanceof Date ? date : new Date(date);
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
 
-        if (date.toDateString() === today.toDateString()) {
+        // Нормализуем даты до начала дня для корректного сравнения
+        const dateStr = dateObj.toDateString();
+        const todayStr = today.toDateString();
+        const yesterdayStr = yesterday.toDateString();
+
+        if (dateStr === todayStr) {
             return 'Сегодня';
-        } else if (date.toDateString() === yesterday.toDateString()) {
+        } else if (dateStr === yesterdayStr) {
             return 'Вчера';
         } else {
-            return Utils.formatDate(date, 'long');
+            return Utils.formatDate(dateObj, 'long');
         }
     },
 
