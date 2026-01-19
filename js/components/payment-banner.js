@@ -210,8 +210,8 @@ window.PaymentBanner = {
 
         this.isVisible = false;
         this.currentPayment = null;
+        this._cachedElements = null;
 
-        // Убираем offset
         const mainContent = document.getElementById('mainContent');
         if (mainContent) {
             mainContent.classList.remove('with-payment-banner');
@@ -220,7 +220,6 @@ window.PaymentBanner = {
         this.stopTimer();
         this.clearBadge();
 
-        // Скрываем баннер
         this.element.classList.add('hidden');
     },
 
@@ -238,43 +237,54 @@ window.PaymentBanner = {
         const serviceDuration = this.currentPayment.service_duration || '';
         const paymentPrice = this.currentPayment.price || 0;
 
-        // ✅ Определяем текст кнопки по статусу
         const isSucceeded = this.currentPayment.status === 'succeeded';
         const buttonText = isSucceeded ? 'Чек' : 'Продолжить';
         const buttonIcon = isSucceeded ? 'fa-receipt' : 'fa-credit-card';
 
-        this.element.innerHTML = `
-            <div class="payment-banner-content">
-                <div class="payment-info">
-                    <div class="payment-timer">
-                        <div class="timer-circle">
-                            <svg class="timer-progress" width="44" height="44">
-                                <circle cx="22" cy="22" r="20"
-                                       stroke-width="3"
-                                       stroke-dasharray="125.6"
-                                       stroke-dashoffset="${125.6 - (125.6 * progressPercent / 100)}"
-                                       class="${timeLeft > 0 ? 'active' : ''}"></circle>
-                            </svg>
-                            <span class="timer-text">${isSucceeded ? '✓' : formattedTime}</span>
-                        </div>
-                        <div class="payment-text">
-                            <div class="payment-title">${serviceName}</div>
-                            <div class="payment-subtitle">
-                                ${Utils.formatPrice(paymentPrice)}
-                                ${serviceDuration ? ` • ${serviceDuration}` : ''}
-                                ${isSucceeded ? ' • Оплачено' : ''}
+        if (!this._cachedElements || !this.element.querySelector('.payment-banner-content')) {
+            this.element.innerHTML = `
+                <div class="payment-banner-content">
+                    <div class="payment-info">
+                        <div class="payment-timer">
+                            <div class="timer-circle">
+                                <svg class="timer-progress" width="44" height="44">
+                                    <circle cx="22" cy="22" r="20"
+                                           stroke-width="3"
+                                           stroke-dasharray="125.6"
+                                           stroke-dashoffset="${125.6 - (125.6 * progressPercent / 100)}"
+                                           class="${timeLeft > 0 ? 'active' : ''}"></circle>
+                                </svg>
+                                <span class="timer-text">${isSucceeded ? '✓' : formattedTime}</span>
+                            </div>
+                            <div class="payment-text">
+                                <div class="payment-title">${serviceName}</div>
+                                <div class="payment-subtitle">
+                                    ${Utils.formatPrice(paymentPrice)}
+                                    ${serviceDuration ? ` • ${serviceDuration}` : ''}
+                                    ${isSucceeded ? ' • Оплачено' : ''}
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <button class="btn btn-sm btn-primary" id="continuePaymentBtn">
+                        <i class="fas ${buttonIcon}"></i>
+                        ${buttonText}
+                    </button>
                 </div>
-                <button class="btn btn-sm btn-primary" id="continuePaymentBtn">
-                    <i class="fas ${buttonIcon}"></i>
-                    ${buttonText}
-                </button>
-            </div>
-        `;
-
-        this.setupEventListeners();
+            `;
+            this._cachedElements = null;
+            this.setupEventListeners();
+        } else {
+            const title = this.element.querySelector('.payment-title');
+            const subtitle = this.element.querySelector('.payment-subtitle');
+            const btn = this.element.querySelector('#continuePaymentBtn');
+            
+            if (title) title.textContent = serviceName;
+            if (subtitle) subtitle.textContent = `${Utils.formatPrice(paymentPrice)}${serviceDuration ? ` • ${serviceDuration}` : ''}${isSucceeded ? ' • Оплачено' : ''}`;
+            if (btn) {
+                btn.innerHTML = `<i class="fas ${buttonIcon}"></i> ${buttonText}`;
+            }
+        }
     },
 
     /**
@@ -419,20 +429,26 @@ window.PaymentBanner = {
      * Обновление таймера
      */
     updateTimer() {
+        if (!this.element || document.hidden) return;
+
         const timeLeft = this.getTimeLeft();
         const formattedTime = this.formatTime(timeLeft);
         const progressPercent = this.getProgressPercent();
 
-        const timerText = document.querySelector('.timer-text');
-        const progressCircle = document.querySelector('.timer-progress circle');
-
-        if (timerText) {
-            timerText.textContent = formattedTime;
+        if (!this._cachedElements) {
+            this._cachedElements = {
+                timerText: this.element.querySelector('.timer-text'),
+                progressCircle: this.element.querySelector('.timer-progress circle')
+            };
         }
 
-        if (progressCircle) {
+        if (this._cachedElements.timerText) {
+            this._cachedElements.timerText.textContent = formattedTime;
+        }
+
+        if (this._cachedElements.progressCircle) {
             const offset = 125.6 - (125.6 * progressPercent / 100);
-            progressCircle.style.strokeDashoffset = offset;
+            this._cachedElements.progressCircle.style.strokeDashoffset = offset;
         }
     },
 

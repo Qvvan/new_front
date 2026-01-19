@@ -143,11 +143,12 @@ window.SimpleLazy = {
 
         const mutationObserver = new MutationObserver((mutations) => {
             // ✅ Накапливаем мутации и обрабатываем батчами
-            pendingMutations.push(...mutations);
-            processMutations();
+            if (!document.hidden) {
+                pendingMutations.push(...mutations);
+                processMutations();
+            }
         });
 
-        // ✅ ОПТИМИЗАЦИЯ: Останавливаем наблюдение когда страница не видна
         const handleVisibilityChange = () => {
             if (document.hidden) {
                 mutationObserver.disconnect();
@@ -161,11 +162,12 @@ window.SimpleLazy = {
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
-        // Наблюдаем за изменениями в document.body
-        mutationObserver.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
+        if (!document.hidden) {
+            mutationObserver.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
     },
 
     // Обработка новых изображений после динамического рендеринга

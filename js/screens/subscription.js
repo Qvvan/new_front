@@ -102,12 +102,31 @@ window.SubscriptionScreen = {
      * Настройка обработчиков событий
      */
     setupEventListeners() {
-        document.addEventListener('click', (e) => {
+        if (this._clickHandler) {
+            document.removeEventListener('click', this._clickHandler, true);
+        }
+
+        this._clickHandler = (e) => {
             const subscriptionScreen = e.target.closest('#subscriptionScreen');
             if (!subscriptionScreen) return;
 
-            // Пропускаем клики на автопродление - они обрабатываются отдельным обработчиком
-            if (e.target.closest('.auto-renewal') || e.target.closest('.subscription-compact-auto-renewal')) {
+            let autoRenewal = e.target.closest('.auto-renewal');
+            const compactAutoRenewal = e.target.closest('.subscription-compact-auto-renewal');
+
+            if (autoRenewal || compactAutoRenewal) {
+                const target = autoRenewal || compactAutoRenewal;
+                if (target.hasAttribute('data-processing')) return;
+
+                e.stopPropagation();
+                e.preventDefault();
+
+                target.setAttribute('data-processing', 'true');
+                requestAnimationFrame(() => target.removeAttribute('data-processing'));
+
+                const subscriptionId = target.dataset.subscriptionId;
+                if (subscriptionId) {
+                    this.handleAutoRenewalToggle(subscriptionId);
+                }
                 return;
             }
 
@@ -121,7 +140,6 @@ window.SubscriptionScreen = {
             const action = target.dataset.action;
             const subscriptionId = target.dataset.subscriptionId;
 
-            // Обработка действий верхней панели
             if (action === 'show-daily-bonus-modal') {
                 this.showDailyBonusModal();
                 return;
@@ -132,74 +150,9 @@ window.SubscriptionScreen = {
             }
 
             this.handleAction(action, subscriptionId);
-        });
+        };
 
-        document.addEventListener('click', (e) => {
-            const subscriptionScreen = e.target.closest('#subscriptionScreen');
-            if (!subscriptionScreen) return;
-
-            // Проверяем клик на .auto-renewal или на элементы внутри него (включая toggle-switch)
-            let autoRenewal = e.target.closest('.auto-renewal');
-            
-            // Если клик был на toggle-switch или его дочерних элементах, находим родительский .auto-renewal
-            if (!autoRenewal) {
-                const clickedElement = e.target;
-                // Проверяем, является ли кликнутый элемент частью toggle-switch
-                if (clickedElement.closest('.toggle-switch') || 
-                    clickedElement.classList.contains('toggle-switch') || 
-                    clickedElement.classList.contains('toggle-slider')) {
-                    const toggleSwitch = clickedElement.closest('.toggle-switch') || clickedElement;
-                    autoRenewal = toggleSwitch.closest('.auto-renewal');
-                }
-            }
-            
-            if (!autoRenewal) return;
-
-            // Предотвращаем обработку если уже обрабатывается
-            if (autoRenewal.hasAttribute('data-processing')) {
-                return;
-            }
-
-            // Останавливаем всплытие, чтобы другие обработчики не сработали
-            e.stopPropagation();
-            e.preventDefault();
-
-            autoRenewal.setAttribute('data-processing', 'true');
-            setTimeout(() => autoRenewal.removeAttribute('data-processing'), 300);
-
-            const subscriptionId = autoRenewal.dataset.subscriptionId;
-            if (subscriptionId) {
-                Utils.log('info', 'Auto renewal toggle clicked:', subscriptionId);
-                this.handleAutoRenewalToggle(subscriptionId);
-            }
-        }, true); // Используем capture phase для более раннего перехвата
-
-        document.addEventListener('click', (e) => {
-            const subscriptionScreen = e.target.closest('#subscriptionScreen');
-            if (!subscriptionScreen) return;
-
-            // Проверяем клик на компактный автопродление или на элементы внутри него
-            const compactAutoRenewal = e.target.closest('.subscription-compact-auto-renewal');
-            if (!compactAutoRenewal) return;
-
-            // Предотвращаем обработку если уже обрабатывается
-            if (compactAutoRenewal.hasAttribute('data-processing')) {
-                return;
-            }
-
-            // Останавливаем всплытие, чтобы другие обработчики не сработали
-            e.stopPropagation();
-            e.preventDefault();
-
-            compactAutoRenewal.setAttribute('data-processing', 'true');
-            requestAnimationFrame(() => compactAutoRenewal.removeAttribute('data-processing'));
-
-            const subscriptionId = compactAutoRenewal.dataset.subscriptionId;
-            if (subscriptionId) {
-                Utils.log('info', 'Compact auto renewal toggle clicked:', subscriptionId);
-                this.handleAutoRenewalToggle(subscriptionId);
-            }
-        }, true); // Используем capture phase для более раннего перехвата
+        document.addEventListener('click', this._clickHandler, true);
     },
 
     /**
