@@ -148,6 +148,7 @@ window.TGSLoader = {
 
     /**
      * 🎯 Предзагрузка TGS файла в blob URL
+     * ✅ ОПТИМИЗАЦИЯ: Загружаем TGS как blob (как PNG), затем декомпрессируем
      */
     async preloadTGSToBlob(tgsPath) {
         // Проверяем кэш
@@ -161,34 +162,50 @@ window.TGSLoader = {
         }
 
         try {
-
-            const response = await fetch(tgsPath);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            // ✅ Загружаем TGS файл как blob (используем MediaCache если доступен)
+            let originalBlob;
+            let blobUrl;
+            
+            if (window.MediaCache) {
+                // Используем MediaCache для загрузки blob (как для PNG)
+                blobUrl = await window.MediaCache.load(tgsPath);
+                // Получаем оригинальный blob из blob URL
+                const response = await fetch(blobUrl);
+                originalBlob = await response.blob();
+            } else {
+                // Fallback: прямая загрузка через fetch
+                const response = await fetch(tgsPath);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                originalBlob = await response.blob();
+                blobUrl = URL.createObjectURL(originalBlob);
             }
 
-            const arrayBuffer = await response.arrayBuffer();
-
-            if (arrayBuffer.byteLength === 0) {
+            if (originalBlob.size === 0) {
                 throw new Error(`❌ Empty TGS file: ${tgsPath}`);
             }
 
-            // Декомпрессия TGS (это gzip архив с JSON)
+            // ✅ Декомпрессия TGS из blob (это gzip архив с JSON)
+            const arrayBuffer = await originalBlob.arrayBuffer();
             const uint8Array = new Uint8Array(arrayBuffer);
             const decompressed = pako.ungzip(uint8Array, { to: 'string' });
             const lottieData = JSON.parse(decompressed);
 
-            // Создаем blob URL
-            const blob = new Blob([JSON.stringify(lottieData)], {
+            // ✅ Создаем blob URL для декомпрессированных данных
+            const decompressedBlob = new Blob([JSON.stringify(lottieData)], {
                 type: 'application/json'
             });
-            const blobUrl = URL.createObjectURL(blob);
+            const decompressedBlobUrl = URL.createObjectURL(decompressedBlob);
 
             const cacheEntry = {
-                blobUrl,
-                blob,
+                blobUrl: decompressedBlobUrl, // Blob URL для декомпрессированных данных
+                originalBlobUrl: blobUrl, // Blob URL для оригинального TGS файла
+                originalBlob, // Оригинальный blob TGS файла
+                blob: decompressedBlob, // Декомпрессированный blob
                 lottieData,
-                size: blob.size,
+                size: originalBlob.size, // Размер оригинального файла
+                decompressedSize: decompressedBlob.size, // Размер декомпрессированных данных
                 loadTime: Date.now()
             };
 
@@ -387,7 +404,12 @@ window.TGSLoader = {
     cleanupCache() {
         // Освобождаем все blob URLs
         this.blobCache.forEach((cache, tgsPath) => {
-            URL.revokeObjectURL(cache.blobUrl);
+            if (cache.blobUrl) {
+                URL.revokeObjectURL(cache.blobUrl);
+            }
+            if (cache.originalBlobUrl) {
+                URL.revokeObjectURL(cache.originalBlobUrl);
+            }
         });
 
         // Очищаем кэши
