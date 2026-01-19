@@ -1,6 +1,9 @@
 // User API for Dragon VPN Mini App
 
 window.UserAPI = {
+    // ✅ Кеш для getCurrentUser - предотвращает дублирующиеся запросы
+    _currentUserCache: null,
+    _currentUserPromise: null,
     /**
      * Создание или получение пользователя (регистрация)
      * @param {number} referrerId - ID реферера (опционально)
@@ -99,9 +102,24 @@ window.UserAPI = {
     /**
      * Получение текущего пользователя из Telegram контекста
      * Теперь использует POST запрос и отправляет referrer_id если пользователь зашел через реферальную ссылку
+     * ✅ Оптимизация: использует кеш и дедупликацию для предотвращения множественных запросов
+     * @param {boolean} forceRefresh - Принудительно обновить данные (игнорировать кеш)
      * @returns {Promise<Object>} Данные текущего пользователя
      */
-    async getCurrentUser() {
+    async getCurrentUser(forceRefresh = false) {
+        // ✅ Если есть активный запрос, возвращаем его (дедупликация)
+        if (!forceRefresh && this._currentUserPromise) {
+            return this._currentUserPromise;
+        }
+        
+        // ✅ Если есть кешированные данные и они свежие (менее 30 секунд), возвращаем их
+        if (!forceRefresh && this._currentUserCache) {
+            const cacheAge = Date.now() - this._currentUserCache.timestamp;
+            if (cacheAge < 30000) { // 30 секунд
+                return Promise.resolve(this._currentUserCache.data);
+            }
+        }
+        
         const requestData = {};
         
         // Получаем реферальный ID из различных источников
@@ -110,7 +128,29 @@ window.UserAPI = {
             requestData.referrer_id = referrerId;
         }
 
-        return await window.APIClient.post('/user/user', requestData);
+        // ✅ Создаем запрос и сохраняем Promise для дедупликации
+        this._currentUserPromise = window.APIClient.post('/user/user', requestData);
+        
+        // ✅ Сохраняем результат в кеш
+        try {
+            const result = await this._currentUserPromise;
+            this._currentUserCache = {
+                data: result,
+                timestamp: Date.now()
+            };
+            return result;
+        } finally {
+            // Очищаем Promise после завершения (но оставляем кеш)
+            this._currentUserPromise = null;
+        }
+    },
+    
+    /**
+     * Очистка кеша текущего пользователя
+     */
+    clearUserCache() {
+        this._currentUserCache = null;
+        this._currentUserPromise = null;
     },
 
     /**

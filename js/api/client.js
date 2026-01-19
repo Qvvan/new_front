@@ -3,9 +3,34 @@
 window.APIClient = {
     baseURL: '/api/v1',
     defaultTimeout: 10000,
+    
+    // ✅ Кеш для предотвращения дублирующихся запросов
+    _requestCache: new Map(), // Кеш активных запросов (Promise)
+    _responseCache: new Map(), // Кеш результатов запросов (временно)
+    _cacheTTL: 5000, // Время жизни кеша (5 секунд)
+    
+    /**
+     * Генерация ключа кеша для запроса
+     */
+    _getCacheKey(endpoint, method, data) {
+        const dataStr = data ? JSON.stringify(data) : '';
+        return `${method}:${endpoint}:${dataStr}`;
+    },
+    
+    /**
+     * Очистка устаревших записей из кеша
+     */
+    _cleanExpiredCache() {
+        const now = Date.now();
+        for (const [key, value] of this._responseCache.entries()) {
+            if (value.expiresAt < now) {
+                this._responseCache.delete(key);
+            }
+        }
+    },
 
     /**
-     * Выполнение HTTP запроса
+     * Выполнение HTTP запроса с дедупликацией
      * @param {string} endpoint - Эндпоинт API
      * @param {string} method - HTTP метод
      * @param {Object} data - Данные для отправки
@@ -13,6 +38,45 @@ window.APIClient = {
      * @returns {Promise} Результат запроса
      */
     async request(endpoint, method = 'GET', data = null, options = {}) {
+        // ✅ Дедупликация: если запрос уже выполняется, возвращаем тот же Promise
+        const cacheKey = this._getCacheKey(endpoint, method, data);
+        const isCacheable = method === 'GET' || (method === 'POST' && options.cacheable !== false);
+        const shouldCacheResponse = method === 'GET' || (method === 'POST' && options.cacheable === true);
+        
+        // Проверяем активный запрос (дедупликация)
+        if (isCacheable && this._requestCache.has(cacheKey)) {
+            return this._requestCache.get(cacheKey);
+        }
+        
+        // Проверяем кеш результатов (для GET и POST с cacheable: true)
+        if (shouldCacheResponse) {
+            this._cleanExpiredCache();
+            const cached = this._responseCache.get(cacheKey);
+            if (cached && cached.expiresAt > Date.now()) {
+                return Promise.resolve(cached.data);
+            }
+        }
+        
+        // Создаем новый запрос
+        const requestPromise = this._performRequest(endpoint, method, data, options);
+        
+        // Сохраняем активный запрос для дедупликации
+        if (isCacheable) {
+            this._requestCache.set(cacheKey, requestPromise);
+            
+            // Удаляем из активных запросов после завершения
+            requestPromise.finally(() => {
+                this._requestCache.delete(cacheKey);
+            });
+        }
+        
+        return requestPromise;
+    },
+    
+    /**
+     * Выполнение фактического HTTP запроса
+     */
+    async _performRequest(endpoint, method = 'GET', data = null, options = {}) {
         let url = `${this.baseURL}${endpoint}`;
 
         const config = {
@@ -41,8 +105,20 @@ window.APIClient = {
             }
 
             const result = await response.json();
+            
+            // ✅ Кешируем результат для GET запросов и POST с cacheable: true
+            const cacheKey = this._getCacheKey(endpoint, method, data);
+            const shouldCache = method === 'GET' || options.cacheable === true;
+            
+            if (shouldCache) {
+                // Для POST /user/user используем более долгое кеширование (30 секунд)
+                const ttl = (method === 'POST' && endpoint === '/user/user') ? 30000 : this._cacheTTL;
+                this._responseCache.set(cacheKey, {
+                    data: result,
+                    expiresAt: Date.now() + ttl
+                });
+            }
 
-            // НЕ кешируем API ответы - всегда актуальные данные
             return result;
 
         } catch (error) {
@@ -178,6 +254,10 @@ window.APIClient = {
      * @returns {Promise} Результат запроса
      */
     async post(endpoint, data = {}, options = {}) {
+        // ✅ Для POST /user/user используем дедупликацию и кеширование результатов
+        if (endpoint === '/user/user') {
+            options.cacheable = true; // Включаем кеширование результатов на 30 секунд
+        }
         return this.request(endpoint, 'POST', data, options);
     },
 
@@ -401,5 +481,33 @@ window.APIClient = {
      */
     setTimeout(timeout) {
         this.defaultTimeout = timeout;
+    },
+    
+    /**
+     * Очистка кеша запросов
+     * @param {string} endpoint - Опционально: очистить только для конкретного эндпоинта
+     */
+    clearCache(endpoint = null) {
+        if (endpoint) {
+            // Очищаем кеш для конкретного эндпоинта
+            const keysToDelete = [];
+            for (const key of this._requestCache.keys()) {
+                if (key.includes(endpoint)) {
+                    keysToDelete.push(key);
+                }
+            }
+            keysToDelete.forEach(key => this._requestCache.delete(key));
+            
+            for (const key of this._responseCache.keys()) {
+                if (key.includes(endpoint)) {
+                    keysToDelete.push(key);
+                }
+            }
+            keysToDelete.forEach(key => this._responseCache.delete(key));
+        } else {
+            // Очищаем весь кеш
+            this._requestCache.clear();
+            this._responseCache.clear();
+        }
     }
 };
