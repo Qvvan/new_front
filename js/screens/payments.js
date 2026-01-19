@@ -118,7 +118,6 @@ window.PaymentsScreen = {
             const statusText = status === 'activated' ? 'Активирован' : 
                               status === 'pending' ? 'Ожидает активации' : 
                               status === 'canceled' ? 'Отменен' : 'Неизвестно';
-            const canRefund = status === 'pending' && !gift.activated_at && gift.gift_code;
             const createdAt = gift.created_at ? Utils.formatDate(gift.created_at, 'long') : 'Неизвестно';
             const activatedAt = gift.activated_at ? Utils.formatDate(gift.activated_at, 'long') : null;
 
@@ -135,7 +134,12 @@ window.PaymentsScreen = {
                         ${gift.gift_code ? `
                             <div class="payment-detail-item">
                                 <span class="detail-label">Код активации</span>
-                                <span class="detail-value">${this.escapeHtml(gift.gift_code)}</span>
+                                <div class="gift-code-container">
+                                    <span class="detail-value" id="gift-code-value">${this.escapeHtml(gift.gift_code)}</span>
+                                    <button type="button" class="btn-copy-code" data-code="${this.escapeHtml(gift.gift_code)}">
+                                        <i class="fas fa-copy"></i> Копировать
+                                    </button>
+                                </div>
                             </div>
                         ` : ''}
                         ${gift.recipient_user_id ? `
@@ -157,27 +161,52 @@ window.PaymentsScreen = {
                     </div>
                 `,
                 buttons: [
-                    ...(canRefund ? [{
-                        id: 'refund',
-                        text: 'Запросить возврат',
-                        type: 'warning',
-                        handler: async () => {
-                            try {
-                                await this.handleGiftRefund(gift);
-                                if (window.Modal) {
-                                    window.Modal.hide();
-                                }
-                            } catch (error) {
-                                
-                            }
-                        }
-                    }] : []),
                     {
                         id: 'close',
                         text: 'Закрыть',
                         action: 'close'
                     }
-                ]
+                ],
+                onShow: () => {
+                    // Настройка кнопки копирования кода
+                    const copyBtn = document.querySelector('.btn-copy-code');
+                    if (copyBtn) {
+                        copyBtn.addEventListener('click', async (e) => {
+                            const code = e.currentTarget.getAttribute('data-code');
+                            if (code) {
+                                try {
+                                    await navigator.clipboard.writeText(code);
+                                    if (window.Toast) {
+                                        window.Toast.success('Код скопирован!');
+                                    }
+                                    // Вибрация
+                                    if (window.TelegramApp && window.TelegramApp.haptic) {
+                                        window.TelegramApp.haptic.light();
+                                    }
+                                } catch (err) {
+                                    // Fallback для старых браузеров
+                                    const textArea = document.createElement('textarea');
+                                    textArea.value = code;
+                                    textArea.style.position = 'fixed';
+                                    textArea.style.opacity = '0';
+                                    document.body.appendChild(textArea);
+                                    textArea.select();
+                                    try {
+                                        document.execCommand('copy');
+                                        if (window.Toast) {
+                                            window.Toast.success('Код скопирован!');
+                                        }
+                                    } catch (fallbackErr) {
+                                        if (window.Toast) {
+                                            window.Toast.error('Не удалось скопировать код');
+                                        }
+                                    }
+                                    document.body.removeChild(textArea);
+                                }
+                            }
+                        });
+                    }
+                }
             });
 
         } catch (error) {

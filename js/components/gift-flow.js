@@ -218,33 +218,9 @@ window.GiftFlow = {
             <div class="gift-flow-step gift-step-2">
                 <div class="gift-step-content">
                     <p class="gift-step-description">
-                        <i class="fas fa-user"></i>
-                        Кому хотите подарить подписку?
+                        <i class="fas fa-gift"></i>
+                        Заполните информацию о подарке
                     </p>
-
-                    <div class="gift-recipient-options">
-                        <label class="gift-option-radio">
-                            <input type="radio" name="recipient_type" value="none" checked>
-                            <span class="gift-radio-content">
-                                <i class="fas fa-ticket-alt"></i>
-                                <div>
-                                    <strong>Без указания получателя</strong>
-                                    <span>Создастся код активации, который можно передать любому</span>
-                                </div>
-                            </span>
-                        </label>
-
-                        <label class="gift-option-radio">
-                            <input type="radio" name="recipient_type" value="specific">
-                            <span class="gift-radio-content">
-                                <i class="fas fa-user-plus"></i>
-                                <div>
-                                    <strong>Конкретному пользователю</strong>
-                                    <span>Подписка будет отправлена выбранному пользователю</span>
-                                </div>
-                            </span>
-                        </label>
-                    </div>
 
                     <div class="gift-form-fields">
                         <div class="gift-field">
@@ -255,18 +231,6 @@ window.GiftFlow = {
                                    placeholder="Оставьте пустым для анонимного подарка"
                                    maxlength="100">
                             <small class="gift-field-hint">Только буквы и пробелы</small>
-                        </div>
-
-                        <div class="gift-field">
-                            <label for="gift-recipient-select">Получатель (если указан конкретный пользователь)</label>
-                            <button type="button" 
-                                    id="gift-select-friend-btn" 
-                                    class="btn btn-secondary gift-select-friend-btn"
-                                    disabled>
-                                <i class="fas fa-user-plus"></i>
-                                <span id="gift-selected-friend-text">Выбрать друга</span>
-                            </button>
-                            <input type="hidden" id="gift-recipient-id" value="">
                         </div>
 
                         <div class="gift-field">
@@ -327,16 +291,6 @@ window.GiftFlow = {
                             }
                         }
 
-                        // Проверка, если выбран конкретный получатель
-                        const recipientType = document.querySelector('input[name="recipient_type"]:checked')?.value;
-                        const recipientHiddenInput = document.getElementById('gift-recipient-id');
-                        if (recipientType === 'specific' && (!recipientHiddenInput || !recipientHiddenInput.value || !this.giftData.recipient_user_id)) {
-                            if (window.Toast) {
-                                window.Toast.error('Выберите друга для получения подарка');
-                            }
-                            return false;
-                        }
-
                         this.showStep3();
                         return false;
                     }
@@ -360,48 +314,6 @@ window.GiftFlow = {
      */
     setupStep2Handlers() {
         setTimeout(() => {
-            // Переключение типа получателя
-            const radios = document.querySelectorAll('input[name="recipient_type"]');
-            const selectFriendBtn = document.getElementById('gift-select-friend-btn');
-            const selectedFriendText = document.getElementById('gift-selected-friend-text');
-            const recipientHiddenInput = document.getElementById('gift-recipient-id');
-            const radioLabels = document.querySelectorAll('.gift-option-radio');
-
-            radios.forEach((radio, index) => {
-                radio.addEventListener('change', () => {
-                    // Обновляем стили радиокнопок
-                    radioLabels.forEach(label => {
-                        label.classList.remove('checked');
-                    });
-                    if (radio.checked) {
-                        radioLabels[index].classList.add('checked');
-                    }
-
-                    if (radio.value === 'specific') {
-                        selectFriendBtn.disabled = false;
-                    } else {
-                        selectFriendBtn.disabled = true;
-                        recipientHiddenInput.value = '';
-                        if (selectedFriendText) {
-                            selectedFriendText.textContent = 'Выбрать друга';
-                        }
-                        this.giftData.recipient_user_id = null;
-                    }
-                });
-
-                // Инициализируем стили для выбранной радиокнопки
-                if (radio.checked) {
-                    radioLabels[index].classList.add('checked');
-                }
-            });
-
-            // Обработчик кнопки выбора друга
-            if (selectFriendBtn) {
-                selectFriendBtn.addEventListener('click', () => {
-                    this.selectFriend();
-                });
-            }
-
             // Обновление данных
             const senderNameInput = document.getElementById('gift-sender-name');
             const messageInput = document.getElementById('gift-message');
@@ -425,23 +337,6 @@ window.GiftFlow = {
      */
     showStep3() {
         const service = this.selectedService;
-        const recipientType = this.giftData.recipient_user_id ? 'Конкретному пользователю' : 'Без указания получателя';
-        
-        // Получаем имя друга, если оно было выбрано
-        let recipientInfo = 'Будет создан код активации';
-        if (this.giftData.recipient_user_id) {
-            // Пытаемся получить текст из элемента, если он существует
-            try {
-                const selectedFriendTextEl = document.getElementById('gift-selected-friend-text');
-                if (selectedFriendTextEl && selectedFriendTextEl.textContent && selectedFriendTextEl.textContent !== 'Выбрать друга') {
-                    recipientInfo = selectedFriendTextEl.textContent;
-                } else {
-                    recipientInfo = `ID: ${this.giftData.recipient_user_id}`;
-                }
-            } catch (e) {
-                recipientInfo = `ID: ${this.giftData.recipient_user_id}`;
-            }
-        }
 
         const content = `
             <div class="gift-flow-step gift-step-3">
@@ -468,18 +363,12 @@ window.GiftFlow = {
                     <div class="gift-summary-section">
                         <h4 class="gift-summary-title">
                             <i class="fas fa-user"></i>
-                            Кому
+                            Информация о подарке
                         </h4>
                         <div class="gift-summary-item">
                             <span class="gift-summary-label">Тип:</span>
-                            <span class="gift-summary-value">${recipientType}</span>
+                            <span class="gift-summary-value">Будет создан код активации</span>
                         </div>
-                        ${this.giftData.recipient_user_id ? `
-                            <div class="gift-summary-item">
-                                <span class="gift-summary-label">Информация:</span>
-                                <span class="gift-summary-value">${recipientInfo}</span>
-                            </div>
-                        ` : ''}
                         ${this.giftData.sender_display_name ? `
                             <div class="gift-summary-item">
                                 <span class="gift-summary-label">От кого:</span>

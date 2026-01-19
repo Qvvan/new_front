@@ -777,25 +777,65 @@ window.SubscriptionScreen = {
      * Показ успешной активации подарка
      */
     async showGiftActivationSuccess(giftData) {
-        const serviceName = giftData.service_name || 'Подписка';
-        const days = giftData.duration_days || giftData.service?.duration_days || 0;
+        // ✅ ИСПРАВЛЕНИЕ: Правильно получаем данные сервиса и длительность
+        let serviceName = giftData.service_name || giftData.service?.name || 'Подписка';
+        let days = giftData.duration_days || giftData.service?.duration_days || 0;
+        
+        // Если duration_days не найден, пытаемся получить из сервиса по service_id
+        if (!days && (giftData.service_id || giftData.service?.service_id)) {
+            const serviceId = giftData.service_id || giftData.service?.service_id;
+            
+            // Проверяем кеш сервисов
+            if (this.servicesCache && this.servicesCache.has(serviceId)) {
+                const service = this.servicesCache.get(serviceId);
+                days = service.duration_days || 0;
+                if (!serviceName || serviceName === 'Подписка') {
+                    serviceName = service.name || serviceName;
+                }
+            } else {
+                // Загружаем сервис из API если нет в кеше
+                try {
+                    if (window.ServiceAPI) {
+                        const service = await window.ServiceAPI.getService(serviceId);
+                        days = service.duration_days || 0;
+                        if (!serviceName || serviceName === 'Подписка') {
+                            serviceName = service.name || serviceName;
+                        }
+                        // Сохраняем в кеш
+                        if (this.servicesCache) {
+                            this.servicesCache.set(serviceId, service);
+                        }
+                    }
+                } catch (error) {
+                    // Если не удалось загрузить, используем значения по умолчанию
+                }
+            }
+        }
+
+        // Форматируем длительность для отображения
+        const durationText = days > 0 
+            ? `${days} ${Utils.pluralize(days, ['день', 'дня', 'дней'])}`
+            : '';
 
         if (window.Modal) {
             window.Modal.show({
                 title: 'Подарок активирован!',
                 content: `
                     <div class="gift-activation-success">
-                        <div class="gift-success-icon">
-                            <i class="fas fa-check-circle" style="font-size: 64px; color: var(--color-success);"></i>
+                        <div class="gift-success-icon-wrapper">
+                            <div class="gift-success-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
                         </div>
-                        <h3>Вы получили подарок!</h3>
-                        <p class="gift-success-details">
-                            ${serviceName} на ${days} ${Utils.pluralize(days, ['день', 'дня', 'дней'])}
-                        </p>
+                        <h3 class="gift-success-title">Вы получили подарок!</h3>
+                        <div class="gift-success-subscription">
+                            <p class="gift-success-service">${Utils.escapeHtml(serviceName)}</p>
+                            ${durationText ? `<p class="gift-success-duration">Подписка на ${durationText}</p>` : ''}
+                        </div>
                         ${giftData.message ? `
-                            <div class="gift-message">
-                                <p><strong>Сообщение от дарителя:</strong></p>
-                                <p>${Utils.escapeHtml(giftData.message)}</p>
+                            <div class="gift-message-container">
+                                <p class="gift-message-label">Сообщение от дарителя:</p>
+                                <p class="gift-message-text">${Utils.escapeHtml(giftData.message)}</p>
                             </div>
                         ` : ''}
                     </div>
@@ -1372,13 +1412,18 @@ window.SubscriptionScreen = {
                                         window.Loading.show('Активация подарка...');
                                     }
 
-                                    await window.GiftAPI.activateGift(gift.gift_id);
+                                    const response = await window.GiftAPI.activateGift(gift.gift_id);
 
                                     if (window.Loading) {
                                         window.Loading.hide();
                                     }
 
-                                    await this.showGiftActivationSuccess(gift);
+                                    // ✅ Используем ответ API, если он содержит данные, иначе используем исходный gift
+                                    const giftData = response && (response.service_id || response.duration_days || response.service) 
+                                        ? response 
+                                        : { ...gift, ...response };
+                                    
+                                    await this.showGiftActivationSuccess(giftData);
                                     await this.refresh();
 
                                     if (window.TelegramApp) {
