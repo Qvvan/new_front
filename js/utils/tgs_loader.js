@@ -246,15 +246,37 @@ window.TGSLoader = {
             const animation = lottie.loadAnimation({
                 container: container,
                 renderer: 'svg',
-                loop: true,
+                loop: false, // ✅ ОПТИМИЗАЦИЯ: Убрали бесконечный цикл для снижения нагрузки
                 autoplay: !document.hidden,
                 animationData: lottieData
             });
 
             container.lottieAnimation = animation;
             
+            // ✅ ОПТИМИЗАЦИЯ: Автоматически останавливаем анимацию после первого проигрывания
+            animation.addEventListener('complete', () => {
+                animation.pause();
+            });
+            
             if (document.hidden) {
                 animation.pause();
+            }
+            
+            // ✅ ОПТИМИЗАЦИЯ: Останавливаем анимацию при скрытии страницы
+            const handleVisibilityChange = () => {
+                if (document.hidden) {
+                    animation.pause();
+                } else if (animation && !animation.isPaused) {
+                    // ✅ ОПТИМИЗАЦИЯ: Перезапускаем только если анимация не завершена
+                    if (animation.currentFrame < animation.totalFrames - 1) {
+                        animation.play();
+                    }
+                }
+            };
+            
+            if (!container._visibilityHandler) {
+                document.addEventListener('visibilitychange', handleVisibilityChange);
+                container._visibilityHandler = handleVisibilityChange;
             }
 
         } catch (error) {
@@ -385,6 +407,11 @@ window.TGSLoader = {
             const container = document.getElementById(containerId);
             if (container && container.lottieAnimation) {
                 try {
+                    // ✅ ОПТИМИЗАЦИЯ: Удаляем обработчик видимости перед уничтожением
+                    if (container._visibilityHandler) {
+                        document.removeEventListener('visibilitychange', container._visibilityHandler);
+                        delete container._visibilityHandler;
+                    }
                     container.lottieAnimation.destroy();
                     delete container.lottieAnimation;
                 } catch (error) {

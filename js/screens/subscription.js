@@ -907,10 +907,12 @@ window.SubscriptionScreen = {
             'assets/images/gifs/gift-animate.tgs' :
             'assets/images/gifs/gift-opened.png';
 
-        // ⚠️ Планируем инициализацию анимаций ПОСЛЕ рендера DOM
-        setTimeout(() => {
-            this.initializeTGSAnimations();
-        }, 100);
+        // ✅ ОПТИМИЗАЦИЯ: Инициализируем анимации только если страница видна
+        if (!document.hidden) {
+            requestAnimationFrame(() => {
+                this.initializeTGSAnimations();
+            });
+        }
 
         return `
             <div class="empty-state-card">
@@ -1801,10 +1803,12 @@ window.SubscriptionScreen = {
                     // Настройка умного скролла
                     this.setupSmartScroll();
                     
-                    // Обновление эффектов затухания
-                    requestAnimationFrame(() => {
-                        this.updateScrollFade();
-                    });
+                    // ✅ ОПТИМИЗАЦИЯ: Обновление эффектов затухания только если страница видна
+                    if (!document.hidden) {
+                        requestAnimationFrame(() => {
+                            this.updateScrollFade();
+                        });
+                    }
                 },
                 onHide: () => {
                     // Cleanup при закрытии
@@ -2108,8 +2112,11 @@ window.SubscriptionScreen = {
      * @param {boolean} instant - Если true, скролл мгновенный (без анимации)
      */
     scrollToCurrentDay(instant = false) {
-        // Небольшая задержка для рендера DOM
+        // ✅ ОПТИМИЗАЦИЯ: Уменьшена задержка для рендера DOM
+        const delay = instant ? 0 : 50;
+        if (document.hidden && !instant) return; // Не запускаем если страница скрыта
         setTimeout(() => {
+            if (document.hidden) return;
             const container = document.getElementById('dailyBonusScrollContainer');
             if (!container) return;
 
@@ -2177,11 +2184,14 @@ window.SubscriptionScreen = {
                     left: Math.max(0, scrollPosition),
                     behavior: 'smooth'
                 });
-                setTimeout(() => {
-                    this.updateScrollFade();
-                }, 300);
+                // ✅ ОПТИМИЗАЦИЯ: Обновляем только если страница видна
+                if (!document.hidden) {
+                    setTimeout(() => {
+                        this.updateScrollFade();
+                    }, 300);
+                }
             }
-        }, instant ? 50 : 150); // Меньшая задержка для мгновенного скролла
+        }, instant ? 0 : 100); // ✅ ОПТИМИЗАЦИЯ: Уменьшена задержка для мгновенного скролла
     },
 
     /**

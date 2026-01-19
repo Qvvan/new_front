@@ -1458,22 +1458,12 @@ body.page-hidden .loadShine {
 
 /* Анимация подарка */
 .gift-animate {
-    animation: giftBounce 2s ease-in-out infinite;
+    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация для снижения нагрузки */
+    transition: transform 0.3s ease;
 }
 
-@keyframes giftBounce {
-    0%, 100% {
-        transform: scale(1) rotate(0deg);
-    }
-    25% {
-        transform: scale(1.05) rotate(-2deg);
-    }
-    50% {
-        transform: scale(1.1) rotate(0deg);
-    }
-    75% {
-        transform: scale(1.05) rotate(2deg);
-    }
+.gift-animate:hover {
+    transform: scale(1.05);
 }
 
 .trial-info {
@@ -3317,19 +3307,10 @@ body.page-hidden .loadShine {
         rgba(75, 0, 130, 0.2) 40%,
         transparent 70%
     );
-    animation: trialGlow 3s ease-in-out infinite;
+    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация для снижения нагрузки */
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
     pointer-events: none;
-}
-
-@keyframes trialGlow {
-    0%, 100% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 0.5;
-    }
-    50% {
-        transform: translate(-50%, -50%) scale(1.1);
-        opacity: 0.7;
-    }
 }
 
 .btn-trial-shine {
@@ -3405,18 +3386,12 @@ body.page-hidden .loadShine {
     color: #fff;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     filter: drop-shadow(0 2px 8px rgba(138, 43, 226, 0.6));
-    animation: sparkle 2s ease-in-out infinite;
+    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация для снижения нагрузки */
+    transition: transform 0.3s ease;
 }
 
-@keyframes sparkle {
-    0%, 100% {
-        transform: scale(1) rotate(0deg);
-        opacity: 1;
-    }
-    50% {
-        transform: scale(1.1) rotate(180deg);
-        opacity: 0.9;
-    }
+.trial-icon-wrapper:hover i {
+    transform: scale(1.1);
 }
 
 .btn-trial-activation:hover .trial-icon-wrapper {
@@ -4520,18 +4495,8 @@ body.page-hidden .loadShine {
     height: 100%;
     background: radial-gradient(circle, rgba(74, 158, 255, 0.3) 0%, transparent 70%);
     border-radius: 50%;
-    animation: pulse-glow 2s ease-in-out infinite;
-}
-
-@keyframes pulse-glow {
-    0%, 100% {
-        opacity: 0.5;
-        transform: translate(-50%, -50%) scale(1);
-    }
-    50% {
-        opacity: 0.8;
-        transform: translate(-50%, -50%) scale(1.1);
-    }
+    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация для снижения нагрузки */
+    opacity: 0.65;
 }
 
 .code-activation-icon {
@@ -4881,7 +4846,7 @@ button:disabled:hover {
         0 0 0 2px rgba(255, 59, 48, 0.4),
         0 2px 8px rgba(255, 59, 48, 0.5);
     z-index: 999;
-    animation: bonusPulse 2s ease-in-out infinite;
+    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация для снижения нагрузки */
 }
 
 @keyframes bonusPulse {
@@ -4900,7 +4865,7 @@ button:disabled:hover {
 }
 
 .bonus-claim-indicator.blinking {
-    animation: bonusPulse 2s ease-in-out infinite, blink 1.5s ease-in-out infinite;
+    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация, используем статичный индикатор */
 }
 
 @keyframes blink {
@@ -5229,7 +5194,7 @@ button:disabled:hover {
                 0 0 0 1px rgba(255, 215, 0, 0.5) inset,
                 0 0 0 3px var(--bg-secondary),
                 0 0 30px rgba(255, 215, 0, 0.55);
-    animation: nextCardGlow 2s infinite;
+    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация для снижения нагрузки */
 }
 
 .daily-bonus-card-horizontal.next::before {
@@ -5239,23 +5204,6 @@ button:disabled:hover {
         rgba(255, 193, 7, 0.25) 50%,
         rgba(255, 215, 0, 0.15) 100%
     );
-}
-
-@keyframes nextCardGlow {
-    0%, 100% {
-        box-shadow: 0 6px 28px rgba(255, 215, 0, 0.65),
-                    0 3px 16px rgba(255, 215, 0, 0.5),
-                    0 0 0 1px rgba(255, 215, 0, 0.5) inset,
-                    0 0 0 3px var(--bg-secondary),
-                    0 0 30px rgba(255, 215, 0, 0.55);
-    }
-    50% {
-        box-shadow: 0 8px 36px rgba(255, 215, 0, 0.75),
-                    0 4px 20px rgba(255, 215, 0, 0.6),
-                    0 0 0 1px rgba(255, 215, 0, 0.6) inset,
-                    0 0 0 3px var(--bg-secondary),
-                    0 0 40px rgba(255, 215, 0, 0.65);
-    }
 }
 
 .bonus-card-header {
@@ -5351,12 +5299,12 @@ button:disabled:hover {
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-semibold);
     color: var(--color-success);
-    animation: pulseText 2s infinite;
+    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация для снижения нагрузки */
 }
 
 .status-available i {
     font-size: 12px;
-    animation: bounce 1s infinite;
+    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация для снижения нагрузки */
 }
 
 .status-locked {
@@ -5373,16 +5321,7 @@ button:disabled:hover {
     font-size: 11px;
 }
 
-@keyframes pulseText {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.8;
-        transform: scale(1.05);
-    }
-}
+/* ✅ ОПТИМИЗАЦИЯ: Удален keyframes pulseText - больше не используется */
 
 
 .streak-icon {
@@ -5917,16 +5856,8 @@ button:disabled:hover {
         rgba(255, 255, 255, 0.4),
         transparent
     );
-    animation: loadShine 2s infinite;
-}
-
-@keyframes loadShine {
-    0% {
-        left: -100%;
-    }
-    100% {
-        left: 100%;
-    }
+    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация для снижения нагрузки */
+    display: none; /* Скрываем shine эффект полностью */
 }
 
 /* Неизвестная нагрузка (компактный дизайн) */

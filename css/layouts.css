@@ -111,7 +111,7 @@
     align-items: center;
     justify-content: center;
     border: 2px solid var(--bg-secondary);
-    animation: pulse 1.5s infinite;
+    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация для снижения нагрузки */
 }
 
 /* ✅ ОПТИМИЗАЦИЯ: Останавливаем анимации при скрытой странице */

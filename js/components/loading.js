@@ -180,19 +180,32 @@ window.Loading = {
     showAnimated(baseText = 'Загрузка') {
         let dots = 0;
         const maxDots = 3;
+        let animationFrameId = null;
 
         const animate = () => {
-            if (!this.isVisible) return;
+            if (!this.isVisible || document.hidden) {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                return;
+            }
 
             dots = (dots + 1) % (maxDots + 1);
             const dotsText = '.'.repeat(dots);
             this.updateText(`${baseText}${dotsText}`);
 
-            setTimeout(animate, 500);
+            // ✅ ОПТИМИЗАЦИЯ: Используем requestAnimationFrame вместо setTimeout для лучшей производительности
+            animationFrameId = requestAnimationFrame(() => {
+                setTimeout(animate, 500);
+            });
         };
 
         this.show(baseText);
-        animate();
+        // ✅ ОПТИМИЗАЦИЯ: Запускаем только если страница видна
+        if (!document.hidden) {
+            animate();
+        }
     },
 
     /**
@@ -250,8 +263,13 @@ window.Loading = {
             this.showWithProgress(text, 0);
 
             const startTime = Date.now();
+            let animationFrameId = null;
+            
             const updateProgress = () => {
                 if (document.hidden || !this.isVisible) {
+                    if (animationFrameId) {
+                        cancelAnimationFrame(animationFrameId);
+                    }
                     this.hide();
                     resolve();
                     return;
@@ -263,14 +281,23 @@ window.Loading = {
                 this.updateProgress(progress);
 
                 if (progress >= 100) {
+                    if (animationFrameId) {
+                        cancelAnimationFrame(animationFrameId);
+                    }
                     this.hide();
                     resolve();
                 } else {
-                    requestAnimationFrame(updateProgress);
+                    // ✅ ОПТИМИЗАЦИЯ: Обновляем только если страница видна
+                    animationFrameId = requestAnimationFrame(updateProgress);
                 }
             };
 
-            updateProgress();
+            // ✅ ОПТИМИЗАЦИЯ: Запускаем только если страница видна
+            if (!document.hidden) {
+                updateProgress();
+            } else {
+                resolve();
+            }
         });
     },
 
