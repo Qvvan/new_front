@@ -86,6 +86,11 @@ window.Navigation = {
      * Обновление активного состояния
      */
     updateActiveState(screen = null) {
+        // ✅ Не обновляем состояние если активен deep link (защита от конфликтов)
+        if (window.Router && window.Router.isDeepLinkActive) {
+            return;
+        }
+
         const targetScreen = screen || (window.Router ? window.Router.getCurrentScreen() : this.currentScreen);
         this.currentScreen = targetScreen;
 

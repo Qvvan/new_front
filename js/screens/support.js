@@ -7,8 +7,16 @@ window.SupportScreen = {
 
     async show(params = {}) {
         this.isVisible = true;
-        this.currentView = 'main';
-        this.currentFAQ = null;
+        
+        // ✅ Обработка параметров из deep link
+        const faqParam = params.faq;
+        if (faqParam) {
+            this.currentView = 'faq';
+            this.currentFAQ = faqParam;
+        } else {
+            this.currentView = 'main';
+            this.currentFAQ = null;
+        }
 
         if (this.modal) {
             this.hide();
@@ -22,6 +30,13 @@ window.SupportScreen = {
         }, 10);
 
         this.render();
+
+        // ✅ Если есть FAQ параметр, показываем FAQ после рендеринга
+        if (faqParam) {
+            setTimeout(() => {
+                this.showFAQ(faqParam);
+            }, 300);
+        }
 
         if (window.TelegramApp) {
             window.TelegramApp.haptic.light();

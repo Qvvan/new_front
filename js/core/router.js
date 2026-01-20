@@ -6,6 +6,9 @@ window.Router = {
     history: [],
     maxHistoryLength: 10,
     isNavigating: false,
+    isDeepLinkActive: false, // ✅ Флаг для защиты deep link от перезаписи
+    deepLinkParams: null, // ✅ Параметры из deep link
+    _isInitialized: false, // ✅ Флаг инициализации для предотвращения повторной инициализации
 
     // Доступные экраны
     screens: {
@@ -32,14 +35,44 @@ window.Router = {
     /**
      * Инициализация роутера
      */
-    init() {
+    async init() {
+        // ✅ Проверяем, не инициализирован ли уже роутер
+        if (this._isInitialized) {
+            return;
+        }
+        this._isInitialized = true;
+
         this.ensureExpanded();
 
         this.setupFullViewport();
         this.setupTelegramBackButton();
         this.setupNavigationEvents();
-        this.restoreState();
-        this.navigate(this.currentScreen, false);
+        
+        // ✅ restoreState теперь async и должен быть вызван с await
+        await this.restoreState();
+        
+        // ✅ Передаем параметры из deep link если есть
+        // ✅ Добавляем флаг для защиты от перезаписи
+        if (this.deepLinkParams) {
+            console.log('[Deep Link] init - deepLinkParams found:', this.deepLinkParams);
+            this.isDeepLinkActive = true;
+            const params = this.deepLinkParams;
+            this.deepLinkParams = null; // Очищаем после использования
+            
+            // ✅ Навигация с deep link параметрами
+            console.log('[Deep Link] Navigating to:', this.currentScreen, 'with params:', params);
+            await this.navigate(this.currentScreen, false, params);
+            
+            // ✅ Снимаем флаг после задержки, чтобы другие компоненты не перезаписали
+            // Увеличиваем время для модальных окон (instructions, support)
+            const delay = this.modalScreens.includes(this.currentScreen) ? 2000 : 1000;
+            setTimeout(() => {
+                this.isDeepLinkActive = false;
+            }, delay);
+        } else {
+            // Обычная навигация без deep link
+            await this.navigate(this.currentScreen, false);
+        }
     },
 
     ensureExpanded() {
@@ -101,6 +134,18 @@ window.Router = {
             return;
         }
 
+        // ✅ Защита: если активен deep link и это не тот же экран, блокируем навигацию
+        // Разрешаем только если это навигация на тот же экран (например, инструкции с параметрами)
+        if (this.isDeepLinkActive && screenName !== this.currentScreen) {
+            // Разрешаем навигацию только если это модальный экран (instructions, support)
+            // или если это явная навигация пользователя (addToHistory === true)
+            const isModalScreen = this.modalScreens.includes(screenName);
+            if (!isModalScreen && !addToHistory) {
+                // Блокируем автоматическую навигацию во время deep link
+                return;
+            }
+        }
+
         this.isNavigating = true;
 
         try {
@@ -116,7 +161,7 @@ window.Router = {
             // Выполняем переход
             await this.performTransition(screenName, params);
 
-            // Обновляем навигацию
+            // Обновляем навигацию (с защитой от deep link)
             this.updateNavigation();
             this.updateTelegramBackButton();
             this.saveState();
@@ -194,6 +239,13 @@ window.Router = {
         if (handler) {
             // Если экран уже загружен - показываем его сразу без повторного рендеринга
             if (handler.isLoaded) {
+                // ✅ Если есть параметры action из deep link, выполняем действие
+                if (params && params.action) {
+                    // Задержка для завершения рендеринга
+                    setTimeout(async () => {
+                        await this.handleDeepLinkAction(screenName, params);
+                    }, 500);
+                }
                 // Не вызываем refresh чтобы избежать двойного рендеринга
                 // Данные обновятся при следующем явном обновлении
                 return; // Показываем экран сразу
@@ -203,6 +255,158 @@ window.Router = {
             if (typeof handler.init === 'function') {
                 await handler.init(params);
             }
+
+            // ✅ После инициализации выполняем действие из deep link если есть
+            if (params && params.action) {
+                // Увеличиваем задержку для завершения рендеринга и загрузки данных
+                setTimeout(async () => {
+                    await this.handleDeepLinkAction(screenName, params);
+                }, 800);
+            }
+        }
+    },
+
+    /**
+     * Обработка действий из deep link
+     */
+    async handleDeepLinkAction(screenName, params) {
+        try {
+            const action = params?.action;
+            if (!action) return;
+
+            switch (screenName) {
+                case 'subscription':
+                    await this.handleSubscriptionAction(action, params);
+                    break;
+                case 'support':
+                    await this.handleSupportAction(action, params);
+                    break;
+                default:
+                    // Для других экранов передаем параметры напрямую
+                    break;
+            }
+        } catch (error) {
+            // Логируем ошибку для отладки
+            console.error('Deep link action error:', error);
+        }
+    },
+
+    /**
+     * Обработка действий для экрана подписки
+     */
+    async handleSubscriptionAction(action, params) {
+        console.log('[Deep Link] handleSubscriptionAction:', action, params);
+        const handler = this.screenHandlers.subscription?.();
+        if (!handler) {
+            console.error('[Deep Link] Subscription handler not found');
+            return;
+        }
+
+        switch (action) {
+            case 'services':
+            case 'buy':
+                // Открываем селектор услуг для покупки
+                console.log('[Deep Link] Opening ServiceSelector with mode:', params.mode || 'buy');
+                if (window.ServiceSelector) {
+                    const mode = params.mode || 'buy';
+                    const subscriptionId = params.subscription_id || params.subscriptionId;
+                    const serviceId = params.service_id || params.serviceId;
+                    
+                    try {
+                        await window.ServiceSelector.show(mode, subscriptionId);
+                        console.log('[Deep Link] ServiceSelector opened');
+                        
+                        // Если указана конкретная услуга, выбираем её после загрузки
+                        if (serviceId) {
+                            setTimeout(() => {
+                                if (window.ServiceSelector && window.ServiceSelector.selectService) {
+                                    console.log('[Deep Link] Selecting service:', serviceId);
+                                    window.ServiceSelector.selectService(serviceId);
+                                }
+                            }, 1000); // Увеличиваем задержку для загрузки услуг
+                        }
+                    } catch (error) {
+                        console.error('[Deep Link] Error opening ServiceSelector:', error);
+                    }
+                } else {
+                    console.error('[Deep Link] ServiceSelector not available');
+                }
+                break;
+
+            case 'renew':
+                // Продление конкретной подписки
+                const subscriptionId = params.subscription_id || params.subscriptionId;
+                if (subscriptionId && handler.handleRenewSubscription) {
+                    await handler.handleRenewSubscription(subscriptionId);
+                } else if (window.ServiceSelector) {
+                    await window.ServiceSelector.show('renew', subscriptionId);
+                }
+                break;
+
+            case 'gift':
+                // Открываем процесс подарка
+                const serviceId = params.service_id || params.serviceId;
+                
+                if (serviceId && window.ServiceSelector) {
+                    // Если указана конкретная услуга, открываем ServiceSelector напрямую
+                    await window.ServiceSelector.show('gift');
+                    setTimeout(() => {
+                        if (window.ServiceSelector && window.ServiceSelector.selectService) {
+                            window.ServiceSelector.selectService(serviceId);
+                        }
+                    }, 800);
+                } else if (window.GiftFlow) {
+                    // Иначе открываем обычный процесс подарка
+                    await window.GiftFlow.show();
+                }
+                break;
+
+            case 'daily-bonus':
+                // Открываем модальное окно ежедневных бонусов
+                console.log('[Deep Link] Opening daily bonus modal');
+                if (handler.showDailyBonusModal) {
+                    try {
+                        await handler.showDailyBonusModal();
+                        console.log('[Deep Link] Daily bonus modal opened');
+                    } catch (error) {
+                        console.error('[Deep Link] Error opening daily bonus modal:', error);
+                    }
+                } else {
+                    console.error('[Deep Link] showDailyBonusModal method not found');
+                }
+                break;
+
+            case 'activate-code':
+                // ✅ Открываем активацию кода с предзаполнением (если код указан)
+                const code = params.code;
+                if (handler.handleActivateCode) {
+                    // Всегда показываем модальное окно, но если код указан - предзаполняем поле
+                    await handler.handleActivateCode(code);
+                }
+                break;
+
+            case 'news':
+                // Открываем новости
+                if (handler.handleNewsChannel) {
+                    handler.handleNewsChannel();
+                }
+                break;
+        }
+    },
+
+    /**
+     * Обработка действий для экрана поддержки
+     */
+    async handleSupportAction(action, params) {
+        const handler = this.screenHandlers.support?.();
+        if (!handler) return;
+
+        // Если указан FAQ, открываем его
+        const faq = params.faq;
+        if (faq && handler.showFAQ) {
+            setTimeout(() => {
+                handler.showFAQ(faq);
+            }, 300);
         }
     },
 
@@ -241,6 +445,11 @@ window.Router = {
      * Обновление нижней навигации
      */
     updateNavigation() {
+        // ✅ Не обновляем навигацию если активен deep link (защита от конфликтов)
+        if (this.isDeepLinkActive) {
+            return;
+        }
+
         const navItems = document.querySelectorAll('.nav-item');
 
         navItems.forEach(item => {
@@ -329,6 +538,11 @@ window.Router = {
      * Сохранение состояния роутера
      */
     saveState() {
+        // ✅ Не сохраняем состояние если активен deep link (защита от перезаписи)
+        if (this.isDeepLinkActive) {
+            return;
+        }
+
         const state = {
             currentScreen: this.currentScreen,
             previousScreen: this.previousScreen,
@@ -343,10 +557,197 @@ window.Router = {
     },
 
     /**
+     * Парсинг deep link из URL
+     * Возвращает объект { screen, params } или null
+     */
+    parseDeepLink() {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hashParams = window.location.hash ? new URLSearchParams(window.location.hash.substring(1)) : null;
+            
+            // Собираем все параметры (query имеет приоритет над hash)
+            const allParams = {};
+            if (hashParams) {
+                hashParams.forEach((value, key) => {
+                    allParams[key] = value;
+                });
+            }
+            urlParams.forEach((value, key) => {
+                allParams[key] = value;
+            });
+
+            // ✅ Отладка: логируем все параметры
+            if (Object.keys(allParams).length > 0) {
+                console.log('[Deep Link] Parsed params:', allParams);
+            }
+
+            let screen = null;
+            const params = {};
+
+            // ✅ Специальные deep links (без screen параметра)
+            // Проверяем наличие ключа (даже если значение пустое)
+            const hasKey = (key) => {
+                const exists = key in allParams;
+                if (exists) {
+                    console.log(`[Deep Link] Found key "${key}" with value:`, allParams[key]);
+                }
+                return exists;
+            };
+            
+            // ✅ Также проверяем все ключи для отладки
+            console.log('[Deep Link] All keys in params:', Object.keys(allParams));
+            
+            // 1. Активация кода (activate-code или activate-code=CODE)
+            if (hasKey('activate-code') || hasKey('activate_code')) {
+                screen = 'subscription';
+                params.action = 'activate-code';
+                const codeValue = allParams['activate-code'] || allParams.activate_code;
+                if (codeValue) {
+                    params.code = codeValue;
+                }
+                // Собираем остальные параметры
+                Object.keys(allParams).forEach(key => {
+                    if (key !== 'screen' && key !== 'activate-code' && key !== 'activate_code') {
+                        params[key] = allParams[key];
+                    }
+                });
+                return { screen, params };
+            }
+
+            // 2. Услуги (services)
+            if (hasKey('services') || hasKey('service')) {
+                screen = 'subscription';
+                params.action = 'services';
+                params.mode = allParams.mode || 'buy';
+                if (allParams.service_id || allParams.serviceId) {
+                    params.service_id = allParams.service_id || allParams.serviceId;
+                }
+                if (allParams.subscription_id || allParams.subscriptionId) {
+                    params.subscription_id = allParams.subscription_id || allParams.subscriptionId;
+                }
+                // Собираем остальные параметры
+                Object.keys(allParams).forEach(key => {
+                    if (key !== 'screen' && key !== 'services' && key !== 'service') {
+                        params[key] = allParams[key];
+                    }
+                });
+                return { screen, params };
+            }
+
+            // 3. Подарок (gift)
+            if (hasKey('gift')) {
+                screen = 'subscription';
+                params.action = 'gift';
+                if (allParams.service_id || allParams.serviceId) {
+                    params.service_id = allParams.service_id || allParams.serviceId;
+                }
+                // Собираем остальные параметры
+                Object.keys(allParams).forEach(key => {
+                    if (key !== 'screen' && key !== 'gift') {
+                        params[key] = allParams[key];
+                    }
+                });
+                return { screen, params };
+            }
+
+            // 4. Ежедневный бонус (daily-bonus)
+            if (hasKey('daily-bonus') || hasKey('daily_bonus') || hasKey('bonus')) {
+                screen = 'subscription';
+                params.action = 'daily-bonus';
+                // Собираем остальные параметры
+                Object.keys(allParams).forEach(key => {
+                    if (key !== 'screen' && key !== 'daily-bonus' && key !== 'daily_bonus' && key !== 'bonus') {
+                        params[key] = allParams[key];
+                    }
+                });
+                return { screen, params };
+            }
+
+            // 5. Новости (news)
+            if (hasKey('news')) {
+                screen = 'subscription';
+                params.action = 'news';
+                // Собираем остальные параметры
+                Object.keys(allParams).forEach(key => {
+                    if (key !== 'screen' && key !== 'news') {
+                        params[key] = allParams[key];
+                    }
+                });
+                return { screen, params };
+            }
+
+            // Проверяем screen параметр
+            if (allParams.screen && this.screens[allParams.screen]) {
+                screen = allParams.screen;
+            }
+
+            // Проверяем прямой hash: #keys
+            if (!screen && window.location.hash) {
+                const hash = window.location.hash.substring(1).split('?')[0]; // Берем только часть до ?
+                if (hash && this.screens[hash]) {
+                    screen = hash;
+                }
+            }
+
+            // Если есть параметр activate без screen, открываем инструкции
+            if (!screen && (allParams.activate || allParams.code)) {
+                screen = 'instructions';
+            }
+
+            // ✅ Обработка action параметра для существующих экранов
+            if (screen && allParams.action) {
+                params.action = allParams.action;
+                
+                // Специфичные параметры для разных действий
+                if (allParams.subscription_id || allParams.subscriptionId) {
+                    params.subscription_id = allParams.subscription_id || allParams.subscriptionId;
+                }
+                if (allParams.service_id || allParams.serviceId) {
+                    params.service_id = allParams.service_id || allParams.serviceId;
+                }
+                if (allParams.faq) {
+                    params.faq = allParams.faq;
+                }
+                if (allParams.code) {
+                    params.code = allParams.code;
+                }
+            }
+
+            // Собираем все остальные параметры
+            Object.keys(allParams).forEach(key => {
+                if (key !== 'screen' && !params[key]) {
+                    params[key] = allParams[key];
+                }
+            });
+
+            const result = screen ? { screen, params } : null;
+            if (result) {
+                console.log('[Deep Link] Result:', result);
+            }
+            return result;
+        } catch (error) {
+            return null;
+        }
+    },
+
+    /**
      * Восстановление состояния роутера
      */
     async restoreState() {
         try {
+            // ✅ Сначала проверяем deep link из URL (приоритет выше сохраненного состояния)
+            const deepLink = this.parseDeepLink();
+            console.log('[Deep Link] restoreState - deepLink:', deepLink);
+            if (deepLink) {
+                console.log('[Deep Link] Setting screen to:', deepLink.screen, 'with params:', deepLink.params);
+                this.currentScreen = deepLink.screen;
+                this.previousScreen = null;
+                this.history = [];
+                // Сохраняем параметры для передачи в navigate
+                this.deepLinkParams = deepLink.params;
+                return;
+            }
+
             let state;
 
             if (window.Storage) {

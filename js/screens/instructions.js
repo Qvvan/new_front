@@ -7,9 +7,43 @@ window.InstructionsScreen = {
     modal: null,
 
     async show(params = {}) {
+        // ✅ Флаг для защиты от автоматического закрытия при deep link
+        this.isDeepLinkOpen = !!(params.step !== undefined || params.device || params.activate || params.code || params.config_link);
+        
         this.isVisible = true;
-        this.currentStep = 0;
-        this.deviceType = null;
+        
+        // ✅ Обработка параметров из deep link
+        // step: номер шага (0, 1, 2)
+        const stepParam = params.step || params.step_number;
+        if (stepParam !== undefined) {
+            const stepNum = parseInt(stepParam, 10);
+            if (stepNum >= 0 && stepNum <= 2) {
+                this.currentStep = stepNum;
+            } else {
+                this.currentStep = 0;
+            }
+        } else {
+            this.currentStep = 0;
+        }
+
+        // device: тип устройства (android, ios, windows, macos)
+        const deviceParam = params.device || params.device_type;
+        if (deviceParam && ['android', 'ios', 'windows', 'macos'].includes(deviceParam)) {
+            this.deviceType = deviceParam;
+        } else {
+            this.deviceType = null;
+        }
+
+        // activate/code: код активации профиля
+        const activationCode = params.activate || params.code || params.config_link;
+        if (activationCode) {
+            // Если есть код активации, сразу переходим на шаг 3 (настройка профиля)
+            this.currentStep = 2;
+            // Сохраняем код для последующей активации
+            this.pendingActivationCode = activationCode;
+        } else {
+            this.pendingActivationCode = null;
+        }
 
         // Закрываем предыдущий модаль если есть
         if (this.modal) {
@@ -19,11 +53,24 @@ window.InstructionsScreen = {
         this.modal = this.createModal();
         document.body.appendChild(this.modal);
 
+        // ✅ Увеличиваем задержку для deep link, чтобы избежать конфликтов
+        const delay = this.isDeepLinkOpen ? 100 : 10;
         setTimeout(() => {
-            this.modal.classList.add('active');
-        }, 10);
+            if (this.modal) { // Проверяем что модальное окно еще существует
+                this.modal.classList.add('active');
+            }
+        }, delay);
 
         this.render();
+
+        // ✅ Если есть код активации, автоматически активируем профиль
+        if (this.pendingActivationCode) {
+            setTimeout(() => {
+                if (this.isVisible && this.modal) { // Проверяем что модальное окно еще открыто
+                    this.activateProfileByCode(this.pendingActivationCode);
+                }
+            }, 500); // Небольшая задержка для рендеринга
+        }
 
         // Вибрация открытия
         if (window.TelegramApp) {
@@ -192,6 +239,57 @@ window.InstructionsScreen = {
         `;
     },
 
+    /**
+     * Активация профиля по коду из deep link
+     */
+    async activateProfileByCode(code) {
+        try {
+            if (!code) {
+                return;
+            }
+
+            // Определяем тип устройства если не указан
+            if (!this.deviceType) {
+                // Пытаемся определить по user agent или используем android по умолчанию
+                const ua = navigator.userAgent.toLowerCase();
+                if (ua.includes('iphone') || ua.includes('ipad')) {
+                    this.deviceType = 'ios';
+                } else if (ua.includes('windows')) {
+                    this.deviceType = 'windows';
+                } else if (ua.includes('mac')) {
+                    this.deviceType = 'macos';
+                } else {
+                    this.deviceType = 'android';
+                }
+            }
+
+            // Генерируем ссылку для активации
+            const activationUrl = this.generateActivationUrl(code);
+
+            // Открываем ссылку
+            if (window.TelegramApp) {
+                window.TelegramApp.openLink(activationUrl);
+            } else {
+                window.open(activationUrl, '_blank');
+            }
+
+            // Показываем уведомление
+            if (window.Toast) {
+                window.Toast.success('Профиль отправлен в приложение!');
+            }
+
+            // Вибрация успеха
+            if (window.TelegramApp) {
+                window.TelegramApp.haptic.success();
+            }
+
+        } catch (error) {
+            if (window.Toast) {
+                window.Toast.error('Ошибка активации профиля. Попробуйте получить ключи вручную.');
+            }
+        }
+    },
+
     async activateProfile() {
         try {
             // Получаем активную подписку с config_link
@@ -268,6 +366,11 @@ window.InstructionsScreen = {
             'macos': 'macos'
         };
 
+        // Если configLink уже полная ссылка, возвращаем как есть
+        if (configLink && (configLink.startsWith('http://') || configLink.startsWith('https://'))) {
+            return configLink;
+        }
+
         const platform = platformMap[this.deviceType] || 'android';
         const baseUrl = 'http://skydragonvpn.ru/import';
 
@@ -314,6 +417,7 @@ window.InstructionsScreen = {
             closeBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                this._userRequestedClose = true; // ✅ Помечаем что пользователь явно закрыл
                 this.hide();
             });
         }
@@ -401,7 +505,11 @@ window.InstructionsScreen = {
         // Закрытие по клику вне модала
         this.modal.addEventListener('click', (e) => {
             if (e.target === this.modal) {
-                this.hide();
+                // ✅ Для deep link не закрываем по клику вне модала
+                if (!this.isDeepLinkOpen) {
+                    this._userRequestedClose = true;
+                    this.hide();
+                }
             }
         });
 
@@ -520,6 +628,20 @@ window.InstructionsScreen = {
     hide() {
         if (!this.modal) return;
 
+        // ✅ Если это deep link открытие, не закрываем автоматически
+        // Пользователь должен явно закрыть модальное окно
+        if (this.isDeepLinkOpen && this.isVisible) {
+            // Разрешаем закрытие только если пользователь явно нажал закрыть
+            // или если это не первое открытие
+            if (!this._userRequestedClose) {
+                // Сбрасываем флаг deep link после первого рендеринга
+                setTimeout(() => {
+                    this.isDeepLinkOpen = false;
+                }, 2000); // Через 2 секунды разрешаем обычное закрытие
+                return;
+            }
+        }
+
         this.modal.classList.remove('active');
         setTimeout(() => {
             if (this.modal && this.modal.parentNode) {
@@ -529,6 +651,7 @@ window.InstructionsScreen = {
         }, 300);
 
         this.isVisible = false;
+        this._userRequestedClose = false;
     },
 
     cleanup() {
@@ -541,5 +664,8 @@ window.InstructionsScreen = {
         this.modal = null;
         this.currentStep = 0;
         this.deviceType = null;
+        this.pendingActivationCode = null;
+        this.isDeepLinkOpen = false;
+        this._userRequestedClose = false;
     }
 };

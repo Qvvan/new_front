@@ -232,12 +232,10 @@ window.DragonVPNApp = {
         if (window.Modal) window.Modal.init();
         if (window.Loading) window.Loading.init();
 
-        // ✅ Сначала Router
-        if (window.Router) {
-            window.Router.init();
-        }
+        // ✅ Router НЕ инициализируем здесь - только в initializeRouter()
+        // Это предотвращает двойную инициализацию и конфликты с deep links
 
-        // ✅ Потом Navigation (без дублирования обработчиков)
+        // ✅ Navigation инициализируем без Router (Router будет инициализирован позже)
         if (window.Navigation) {
             window.Navigation.init();
         }
@@ -263,13 +261,20 @@ window.DragonVPNApp = {
      * Инициализация роутера
      */
     async initializeRouter() {
+        // ✅ Инициализируем Router (единственное место инициализации)
         if (window.Router) {
-            window.Router.init();
+            await window.Router.init();
         }
 
+        // ✅ Navigation обновляем только после инициализации Router
+        // ✅ И только если нет активного deep link
         if (window.Navigation) {
             window.Navigation.handleAppEvents();
-            await window.Navigation.updateNavigationState();
+            
+            // ✅ Не обновляем состояние навигации если активен deep link
+            if (!window.Router || !window.Router.isDeepLinkActive) {
+                await window.Navigation.updateNavigationState();
+            }
         }
     },
 

@@ -489,21 +489,59 @@ window.SubscriptionScreen = {
     /**
      * Активация кода подарка
      */
-    async handleActivateCode() {
+    async handleActivateCode(code = null) {
         
         
         if (window.Modal) {
-            await this.showCodeActivationModal();
+            // ✅ Всегда показываем модальное окно, но если код передан - предзаполняем поле
+            await this.showCodeActivationModal(code);
+        }
+    },
+
+    /**
+     * Активация кода подарка (для deep link)
+     */
+    async activateGiftCode(code) {
+        if (!code) return;
+
+        try {
+            if (window.Loading) {
+                window.Loading.show('Активация кода...');
+            }
+
+            const response = await window.GiftAPI.activateGiftByCode(code);
+
+            if (window.Loading) {
+                window.Loading.hide();
+            }
+
+            await this.showGiftActivationSuccess(response);
+            await this.refresh();
+
+        } catch (error) {
+            if (window.Loading) {
+                window.Loading.hide();
+            }
+
+            if (window.Toast) {
+                const errorMessage = error.message || 'Ошибка активации кода';
+                window.Toast.error(errorMessage);
+            }
         }
     },
 
     /**
      * Показ модального окна активации кода
+     * @param {string} prefillCode - Код для предзаполнения поля (опционально)
      */
-    async showCodeActivationModal() {
+    async showCodeActivationModal(prefillCode = null) {
         return new Promise((resolve) => {
             const self = this; // Сохраняем контекст
             let isProcessing = false;
+            
+            // ✅ Экранируем код для безопасной вставки в HTML
+            const escapedCode = prefillCode ? Utils.escapeHtml(prefillCode.toUpperCase().trim()) : '';
+            const inputValue = escapedCode ? `value="${escapedCode}"` : '';
             
             if (window.Modal) {
                 window.Modal.show({
@@ -530,7 +568,8 @@ window.SubscriptionScreen = {
                                            class="code-input" 
                                            placeholder="Введите код активации"
                                            autocomplete="off"
-                                           spellcheck="false">
+                                           spellcheck="false"
+                                           ${inputValue}>
                                     <div class="code-input-focus-line"></div>
                                 </div>
                                 <div class="code-input-hint">
@@ -560,7 +599,8 @@ window.SubscriptionScreen = {
                             handler: async () => {
                                 return await self.handleCodeActivation();
                             },
-                            disabled: true
+                            // ✅ Если код предзаполнен, кнопка сразу активна
+                            disabled: !prefillCode
                         }
                     ],
                     onCancel: () => {
@@ -571,9 +611,32 @@ window.SubscriptionScreen = {
                             const input = document.getElementById('giftCodeInput');
                             if (!input) return;
                             
+                            // ✅ Если код предзаполнен, устанавливаем его и включаем кнопку
+                            if (prefillCode) {
+                                const code = prefillCode.toUpperCase().trim();
+                                // Устанавливаем значение (если еще не установлено через value атрибут)
+                                if (!input.value) {
+                                    input.value = code;
+                                }
+                                input.classList.add('has-value');
+                                
+                                // Включаем кнопку активации
+                                const modal = input.closest('.modal');
+                                const activateBtn = modal ? modal.querySelector('button[data-button-id="activate"]') : null;
+                                if (activateBtn) {
+                                    activateBtn.disabled = false;
+                                    activateBtn.classList.remove('btn-disabled');
+                                    activateBtn.removeAttribute('disabled');
+                                }
+                            }
+                            
                             // Фокус с небольшой задержкой для плавности
                             setTimeout(() => {
                                 input.focus();
+                                // Если код предзаполнен, выделяем весь текст для удобства
+                                if (prefillCode) {
+                                    input.select();
+                                }
                             }, 100);
                             
                             const modal = input.closest('.modal');

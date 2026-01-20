@@ -415,8 +415,16 @@ window.ServiceSelector = {
      * Выбор услуги
      */
     selectService(serviceId) {
+        // ✅ Нормализуем serviceId (может быть строка или число)
+        const normalizedId = typeof serviceId === 'string' ? parseInt(serviceId, 10) : serviceId;
+        
+        if (isNaN(normalizedId)) {
+            return;
+        }
+
         // Проверяем, является ли это пробным периодом (по service_id)
-        const isTrialService = this.trialService && this.trialService.service_id === parseInt(serviceId);
+        const isTrialService = this.trialService && 
+            (this.trialService.service_id === normalizedId || this.trialService.id === normalizedId);
         
         if (isTrialService) {
             if (this.userData?.trial_activated) {
@@ -427,9 +435,11 @@ window.ServiceSelector = {
             }
             this.selectedService = this.trialService;
         } else {
-            const service = this.services.find(s => s.service_id === parseInt(serviceId));
+            // ✅ Ищем по service_id или id
+            const service = this.services.find(s => 
+                s.service_id === normalizedId || s.id === normalizedId
+            );
             if (!service) {
-                
                 return;
             }
             this.selectedService = service;
@@ -444,11 +454,13 @@ window.ServiceSelector = {
         });
 
         // ⚠️ ИСПРАВЛЯЕМ: Выделяем выбранный элемент
-        const selectedCard = modal.querySelector(`[data-service-id="${serviceId}"]`);
+        // ✅ Пробуем найти по разным вариантам ID
+        let selectedCard = modal.querySelector(`[data-service-id="${normalizedId}"]`);
+        if (!selectedCard) {
+            selectedCard = modal.querySelector(`[data-service-id="${serviceId}"]`);
+        }
         if (selectedCard) {
             selectedCard.classList.add('selected');
-        } else {
-            
         }
 
         // Активируем кнопку продолжения
