@@ -27,7 +27,9 @@ window.ReferralsScreen = {
                 window.ReferralAPI.generateReferralLink()
             ]);
 
-            this.referrals = referralsResponse.referrals || [];
+            // ✅ API возвращает массив напрямую, а не объект с полем referrals
+            const referralsArray = Array.isArray(referralsResponse) ? referralsResponse : (referralsResponse.referrals || []);
+            this.referrals = referralsArray;
 
             // ✅ Вычисляем статистику из полученных данных
             this.stats = this.calculateStatsFromReferrals(this.referrals, referralsResponse);
@@ -58,10 +60,20 @@ window.ReferralsScreen = {
     },
 
     calculateStatsFromReferrals(referrals, response) {
+        // ✅ Определяем статусы на основе данных из API
+        // Активными считаем тех, у кого trial_activated = true или bonus_granted = true
+        const partners = referrals.filter(r => {
+            const user = r.user || r;
+            return user.trial_activated === true || r.bonus_granted === true;
+        }).length;
+        
+        const total_count = referrals.length;
+        const invited = total_count - partners;
+        
         return {
-            total_count: response.total_count || referrals.length,
-            invited: referrals.filter(r => r.status === 'invited').length,
-            partners: referrals.filter(r => r.status === 'partner').length
+            total_count: total_count,
+            invited: invited,
+            partners: partners
         };
     },
 
@@ -391,21 +403,35 @@ ${this.referralLink.link}`;
      * Рендеринг элемента списка рефералов
      */
     renderReferralItem(referral) {
-        const statusIcon = referral.status === 'partner' ? 'fas fa-crown' : 'fas fa-user-plus';
-        const statusColor = referral.status === 'partner' ? 'text-green' : 'text-secondary';
-        const statusText = referral.status === 'partner' ? 'Активен' : 'Приглашен';
+        // ✅ Извлекаем данные пользователя из структуры API
+        const user = referral.user || referral;
+        const userName = user.name || user.fullname || user.username || 'Пользователь';
+        const isActive = user.trial_activated === true || referral.bonus_granted === true;
+        
+        const statusIcon = isActive ? 'fas fa-crown' : 'fas fa-user-plus';
+        const statusColor = isActive ? 'text-green' : 'text-secondary';
+        const statusText = isActive ? 'Активен' : 'Приглашен';
+        
+        // ✅ Используем created_at из referral или user
+        const createdAt = referral.created_at || user.created_at || referral.joined_at;
+
+        // ✅ Формируем аватар с fallback на иконку
+        const avatarHtml = user.photo_url 
+            ? `<img src="${user.photo_url}" alt="${Utils.escapeHtml(userName)}" class="referral-avatar-img" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
+               <i class="${statusIcon} ${statusColor}" style="display: none;"></i>`
+            : `<i class="${statusIcon} ${statusColor}"></i>`;
 
         return `
             <div class="referral-item">
                 <div class="referral-item-avatar">
-                    <i class="${statusIcon} ${statusColor}"></i>
+                    ${avatarHtml}
                 </div>
                 <div class="referral-item-info">
-                    <div class="referral-item-name">${referral.firstname || 'Пользователь'}</div>
+                    <div class="referral-item-name">${Utils.escapeHtml(userName)}</div>
                     <div class="referral-item-status ${statusColor}">${statusText}</div>
                 </div>
                 <div class="referral-item-date">
-                    ${Utils.formatDate(referral.joined_at, 'relative')}
+                    ${createdAt ? Utils.formatDate(createdAt, 'relative') : ''}
                 </div>
             </div>
         `;
