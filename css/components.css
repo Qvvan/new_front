@@ -2569,13 +2569,56 @@ body.page-hidden .loadShine {
 .referral-item-avatar {
     width: 40px;
     height: 40px;
+    min-width: 40px;
+    min-height: 40px;
     background: var(--gradient-card);
-    border-radius: var(--border-radius-full);
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     border: 1px solid var(--border-dark);
+    position: relative;
+    overflow: hidden;
+}
+
+.referral-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 50%;
+    display: block;
+}
+
+.referral-item-avatar > i:not(.referral-avatar-fallback) {
+    font-size: 18px;
+    color: var(--accent-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.referral-avatar-fallback {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--accent-white);
+    z-index: 1;
+}
+
+.referral-avatar-fallback.text-green {
+    color: var(--accent-green);
+}
+
+.referral-avatar-fallback.text-secondary {
+    color: var(--text-secondary);
 }
 
 .referral-item-info {

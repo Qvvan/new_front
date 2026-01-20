@@ -416,15 +416,15 @@ ${this.referralLink.link}`;
         const createdAt = referral.created_at || user.created_at || referral.joined_at;
 
         // ✅ Формируем аватар с fallback на иконку
-        const avatarHtml = user.photo_url 
-            ? `<img src="${user.photo_url}" alt="${Utils.escapeHtml(userName)}" class="referral-avatar-img" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
-               <i class="${statusIcon} ${statusColor}" style="display: none;"></i>`
+        const avatarContent = user.photo_url 
+            ? `<img src="${user.photo_url}" alt="${Utils.escapeHtml(userName)}" class="referral-avatar-img" onerror="this.onerror=null; this.style.display='none'; const fallback = this.nextElementSibling; if (fallback) { fallback.style.display='flex'; }">
+               <i class="${statusIcon} ${statusColor} referral-avatar-fallback"></i>`
             : `<i class="${statusIcon} ${statusColor}"></i>`;
 
         return `
             <div class="referral-item">
                 <div class="referral-item-avatar">
-                    ${avatarHtml}
+                    ${avatarContent}
                 </div>
                 <div class="referral-item-info">
                     <div class="referral-item-name">${Utils.escapeHtml(userName)}</div>
