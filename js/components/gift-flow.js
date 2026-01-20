@@ -23,6 +23,9 @@ window.GiftFlow = {
             this.currentStep = 1;
             this.resetGiftData();
 
+            // ✅ Обновляем URL при открытии процесса подарка
+            this.updateGiftURL();
+
             // Используем ServiceSelector для выбора услуги (как для продления/новой подписки)
             if (window.ServiceSelector) {
                 await window.ServiceSelector.show('gift');
@@ -83,6 +86,31 @@ window.GiftFlow = {
             message: null,
             sender_display_name: null
         };
+    },
+
+    /**
+     * Обновление URL для текущего шага подарка
+     */
+    updateGiftURL() {
+        if (!window.Router) return;
+        
+        const params = {
+            action: 'gift'
+        };
+        
+        if (this.selectedService) {
+            const serviceId = this.selectedService.service_id || this.selectedService.id;
+            if (serviceId) {
+                params.service_id = serviceId;
+            }
+        }
+        
+        // Добавляем шаг если он больше 1
+        if (this.currentStep > 1) {
+            params.step = this.currentStep;
+        }
+        
+        window.Router.updateURLForAction('gift', params);
     },
 
     /**
@@ -174,13 +202,22 @@ window.GiftFlow = {
             ],
             onShow: () => {
                 this.isVisible = true;
+                this.currentStep = 1;
                 this.setupServiceSelection();
+                
+                // ✅ Обновляем URL для шага 1
+                this.updateGiftURL();
             },
             onCancel: () => {
+                // ✅ При отмене очищаем URL
+                if (window.Router) {
+                    window.Router.clearActionURL();
+                }
                 this.hide();
             },
             onHide: () => {
                 this.isVisible = false;
+                // ✅ НЕ очищаем URL при onHide - это может быть переход между шагами
             }
         });
     },
@@ -214,6 +251,10 @@ window.GiftFlow = {
      * Шаг 2: Получатель и сообщение
      */
     showStep2() {
+        // ✅ Обновляем URL для шага 2
+        this.currentStep = 2;
+        this.updateGiftURL();
+        
         const content = `
             <div class="gift-flow-step gift-step-2">
                 <div class="gift-step-content">
@@ -264,6 +305,10 @@ window.GiftFlow = {
                     text: 'Назад',
                     action: 'custom',
                     handler: () => {
+                        // ✅ Обновляем URL при возврате на шаг 1
+                        this.currentStep = 1;
+                        this.updateGiftURL();
+                        
                         // Возвращаемся к выбору услуги через ServiceSelector
                         if (window.ServiceSelector) {
                             this.hide();
@@ -299,12 +344,20 @@ window.GiftFlow = {
             onShow: () => {
                 this.isVisible = true;
                 this.setupStep2Handlers();
+                
+                // ✅ URL уже обновлен выше, но убеждаемся что он актуален
+                this.updateGiftURL();
             },
             onCancel: () => {
+                // ✅ При отмене очищаем URL
+                if (window.Router) {
+                    window.Router.clearActionURL();
+                }
                 this.hide();
             },
             onHide: () => {
                 this.isVisible = false;
+                // ✅ НЕ очищаем URL при onHide - это может быть переход между шагами
             }
         });
     },
@@ -336,6 +389,10 @@ window.GiftFlow = {
      * Шаг 3: Сводка
      */
     showStep3() {
+        // ✅ Обновляем URL для шага 3
+        this.currentStep = 3;
+        this.updateGiftURL();
+        
         const service = this.selectedService;
 
         const content = `
@@ -408,6 +465,10 @@ window.GiftFlow = {
                     text: 'Назад',
                     action: 'custom',
                     handler: () => {
+                        // ✅ Обновляем URL при возврате на шаг 2
+                        this.currentStep = 2;
+                        this.updateGiftURL();
+                        
                         this.showStep2();
                         return false;
                     }
@@ -425,12 +486,20 @@ window.GiftFlow = {
             ],
             onShow: () => {
                 this.isVisible = true;
+                
+                // ✅ URL уже обновлен выше, но убеждаемся что он актуален
+                this.updateGiftURL();
             },
             onCancel: () => {
+                // ✅ При отмене очищаем URL
+                if (window.Router) {
+                    window.Router.clearActionURL();
+                }
                 this.hide();
             },
             onHide: () => {
                 this.isVisible = false;
+                // ✅ НЕ очищаем URL при onHide - это может быть переход между шагами
             }
         });
     },
@@ -516,6 +585,10 @@ window.GiftFlow = {
         this.isVisible = false;
         this.currentStep = 1;
         this.resetGiftData();
+        
+        // ✅ НЕ очищаем URL при закрытии GiftFlow, чтобы пользователь мог вернуться
+        // URL останется с параметрами gift и service_id
+        // Очистка произойдет только при переходе на другой экран или при явном закрытии через кнопку "Отмена"
     },
 
     /**

@@ -508,6 +508,15 @@ window.SubscriptionScreen = {
         
         
         if (window.Modal) {
+            // ✅ Обновляем URL ПЕРЕД показом модального окна
+            if (window.Router) {
+                const params = {};
+                if (code) {
+                    params.code = code;
+                }
+                window.Router.updateURLForAction('activate-code', params);
+            }
+            
             // ✅ Всегда показываем модальное окно, но если код передан - предзаполняем поле
             await this.showCodeActivationModal(code);
         }

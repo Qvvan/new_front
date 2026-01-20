@@ -369,8 +369,15 @@ window.Modal = {
             }
             
             // ✅ Очищаем URL от параметров действия при закрытии последнего модального окна
+            // Но НЕ для GiftFlow - там URL должен сохраняться при переходах между шагами
             if (isLastModal && window.Router) {
-                window.Router.clearActionURL();
+                // Проверяем, не является ли это модальным окном GiftFlow
+                const isGiftFlowModal = modalData?.config?.title === 'Подарить подписку';
+                // Также проверяем, не открыт ли GiftFlow
+                const isGiftFlowActive = window.GiftFlow && window.GiftFlow.isVisible;
+                if (!isGiftFlowModal && !isGiftFlowActive) {
+                    window.Router.clearActionURL();
+                }
             }
         });
     },

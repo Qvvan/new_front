@@ -65,7 +65,8 @@ window.ServiceSelector = {
         this.isVisible = false;
         
         // ✅ Очищаем URL от параметров действия при закрытии
-        if (window.Router) {
+        // Но НЕ для режима gift - там URL должен сохраняться при переходе на Step2
+        if (window.Router && this.mode !== 'gift') {
             window.Router.clearActionURL();
         }
     },
@@ -542,8 +543,22 @@ window.ServiceSelector = {
             window.GiftFlow.selectedService = this.selectedService;
             window.GiftFlow.giftData.service_id = this.selectedService.service_id || this.selectedService.id;
             
-            // Скрываем ServiceSelector
-            this.hide();
+            // ✅ Обновляем URL с выбранной услугой ПЕРЕД переходом на Step2
+            if (window.Router) {
+                const serviceId = this.selectedService.service_id || this.selectedService.id;
+                window.Router.updateURLForAction('gift', { service_id: serviceId, step: 2 });
+            }
+            
+            // Скрываем ServiceSelector (но НЕ очищаем URL)
+            this.isVisible = false;
+            const modal = this.getModalElement();
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.remove();
+                    this.cleanup();
+                }, 300);
+            }
             
             // Переходим к шагу 2 (получатель и сообщение)
             window.GiftFlow.showStep2();
