@@ -63,6 +63,11 @@ window.ServiceSelector = {
         }
 
         this.isVisible = false;
+        
+        // ✅ Очищаем URL от параметров действия при закрытии
+        if (window.Router) {
+            window.Router.clearActionURL();
+        }
     },
 
     /**
@@ -415,6 +420,18 @@ window.ServiceSelector = {
      * Выбор услуги
      */
     selectService(serviceId) {
+        // ✅ Обновляем URL при выборе услуги
+        if (window.Router && serviceId) {
+            if (this.mode === 'gift') {
+                window.Router.updateURLForAction('gift', { service_id: serviceId });
+            } else {
+                window.Router.updateURLForAction('services', { 
+                    mode: this.mode, 
+                    service_id: serviceId,
+                    subscription_id: this.subscriptionId 
+                });
+            }
+        }
         // ✅ Нормализуем serviceId (может быть строка или число)
         const normalizedId = typeof serviceId === 'string' ? parseInt(serviceId, 10) : serviceId;
         
@@ -479,7 +496,19 @@ window.ServiceSelector = {
         if (!this.selectedService) return;
 
         try {
-            
+            // ✅ Обновляем URL с выбранной услугой
+            if (window.Router) {
+                const serviceId = this.selectedService.service_id || this.selectedService.id;
+                if (this.mode === 'gift') {
+                    window.Router.updateURLForAction('gift', { service_id: serviceId });
+                } else {
+                    window.Router.updateURLForAction('services', { 
+                        mode: this.mode, 
+                        service_id: serviceId,
+                        subscription_id: this.subscriptionId 
+                    });
+                }
+            }
 
             // ✅ Для режима подарка переходим к следующему шагу
             if (this.mode === 'gift') {

@@ -213,6 +213,11 @@ window.SubscriptionScreen = {
 
         if (window.ServiceSelector) {
             await window.ServiceSelector.show('renew', subscriptionId);
+            
+            // ✅ Обновляем URL
+            if (window.Router) {
+                window.Router.updateURLForAction('renew', { subscription_id: subscriptionId });
+            }
         }
     },
 
@@ -224,6 +229,11 @@ window.SubscriptionScreen = {
 
         if (window.ServiceSelector) {
             await window.ServiceSelector.show('buy');
+            
+            // ✅ Обновляем URL
+            if (window.Router) {
+                window.Router.updateURLForAction('services', { mode: 'buy' });
+            }
         }
     },
 
@@ -478,6 +488,11 @@ window.SubscriptionScreen = {
 
         try {
             await window.GiftFlow.show();
+            
+            // ✅ Обновляем URL
+            if (window.Router) {
+                window.Router.updateURLForAction('gift');
+            }
         } catch (error) {
             
             if (window.Toast) {
@@ -605,6 +620,12 @@ window.SubscriptionScreen = {
                     ],
                     onCancel: () => {
                         resolve(null);
+                    },
+                    onHide: () => {
+                        // ✅ Очищаем URL от параметров действия при закрытии
+                        if (window.Router) {
+                            window.Router.clearActionURL();
+                        }
                     },
                     onShow: () => {
                         setTimeout(() => {
@@ -928,6 +949,11 @@ window.SubscriptionScreen = {
      * Открытие канала с новостями
      */
     handleNewsChannel() {
+        // ✅ Обновляем URL
+        if (window.Router) {
+            window.Router.updateURLForAction('news');
+        }
+        
         const newsChannelUrl = 'https://t.me/skydragonvpn'; // Замените на ваш канал
         
         if (window.TelegramApp) {
@@ -1770,6 +1796,10 @@ window.SubscriptionScreen = {
      * Показ модального окна ежедневных бонусов
      */
     async showDailyBonusModal() {
+        // ✅ Обновляем URL перед открытием
+        if (window.Router) {
+            window.Router.updateURLForAction('daily-bonus');
+        }
         if (window.TelegramApp) {
             window.TelegramApp.haptic.light();
         }
@@ -1924,6 +1954,11 @@ window.SubscriptionScreen = {
                     if (container && container._bonusScrollCleanup) {
                         container._bonusScrollCleanup();
                         delete container._bonusScrollCleanup;
+                    }
+                    
+                    // ✅ Очищаем URL от параметров действия при закрытии
+                    if (window.Router) {
+                        window.Router.clearActionURL();
                     }
                 }
             });

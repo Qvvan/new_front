@@ -154,8 +154,25 @@ window.Router = {
                 this.addToHistory(this.currentScreen);
             }
 
-            // Сохраняем предыдущий экрран
-            this.previousScreen = this.currentScreen;
+            // ✅ Сохраняем предыдущий экран ПЕРЕД изменением currentScreen
+            // Это важно для модальных окон, чтобы знать, на какой экран возвращаться
+            const isModalScreen = this.modalScreens.includes(screenName);
+            const screenBeforeNavigation = this.currentScreen;
+            
+            // Для модальных окон сохраняем экран, с которого открывается модальное окно
+            // Для обычных экранов просто сохраняем текущий как предыдущий
+            if (isModalScreen) {
+                // Для модальных окон сохраняем экран, с которого открывается
+                // Но только если это не тот же экран (чтобы не потерять настоящий previousScreen)
+                if (screenBeforeNavigation && screenBeforeNavigation !== screenName) {
+                    // Сохраняем в специальной переменной для модальных окон
+                    this._modalOpenedFrom = screenBeforeNavigation;
+                }
+            } else {
+                // Для обычных экранов просто обновляем previousScreen
+                this.previousScreen = screenBeforeNavigation;
+            }
+            
             this.currentScreen = screenName;
 
             // Выполняем переход
@@ -165,6 +182,11 @@ window.Router = {
             this.updateNavigation();
             this.updateTelegramBackButton();
             this.saveState();
+            
+            // ✅ Обновляем URL для возможности копирования ссылки
+            // ✅ Если это переход на другой экран - используем pushState, иначе replaceState
+            const isScreenChange = this.previousScreen && this.previousScreen !== screenName;
+            this.updateURL(screenName, params, isScreenChange);
 
             // ✅ Вибрация только один раз при успешном переходе
             if (window.TelegramApp && this.previousScreen !== screenName) {
@@ -226,7 +248,28 @@ window.Router = {
     async showModal(screenName, params) {
         const handler = this.screenHandlers[screenName]?.();
         if (handler && typeof handler.show === 'function') {
+            // ✅ Сохраняем экран, с которого открывается модальное окно
+            // Используем сохраненное значение из navigate() или previousScreen
+            const screenBeforeModal = this._modalOpenedFrom || this.previousScreen;
+            
+            // ✅ Сохраняем в handler для использования при закрытии
+            handler._openedFromScreen = screenBeforeModal;
+            
+            // ✅ Также обновляем previousScreen для модального окна
+            if (screenBeforeModal) {
+                this.previousScreen = screenBeforeModal;
+            }
+            
+            // ✅ Очищаем временную переменную после использования
+            this._modalOpenedFrom = null;
+            
             await handler.show(params);
+            
+            // ✅ Обновляем URL для модальных окон с параметрами
+            // Но только если это не deep link (чтобы не перезаписать исходный deep link)
+            if (!this.isDeepLinkActive && params && Object.keys(params).length > 0) {
+                this.updateURL(screenName, params);
+            }
         }
     },
 
@@ -295,18 +338,16 @@ window.Router = {
      * Обработка действий для экрана подписки
      */
     async handleSubscriptionAction(action, params) {
-        console.log('[Deep Link] handleSubscriptionAction:', action, params);
         const handler = this.screenHandlers.subscription?.();
-        if (!handler) {
-            console.error('[Deep Link] Subscription handler not found');
-            return;
-        }
+        if (!handler) return;
+        
+        // ✅ Обновляем URL для действия
+        this.updateURLForAction(action, params);
 
         switch (action) {
             case 'services':
             case 'buy':
                 // Открываем селектор услуг для покупки
-                console.log('[Deep Link] Opening ServiceSelector with mode:', params.mode || 'buy');
                 if (window.ServiceSelector) {
                     const mode = params.mode || 'buy';
                     const subscriptionId = params.subscription_id || params.subscriptionId;
@@ -314,22 +355,18 @@ window.Router = {
                     
                     try {
                         await window.ServiceSelector.show(mode, subscriptionId);
-                        console.log('[Deep Link] ServiceSelector opened');
                         
                         // Если указана конкретная услуга, выбираем её после загрузки
                         if (serviceId) {
                             setTimeout(() => {
                                 if (window.ServiceSelector && window.ServiceSelector.selectService) {
-                                    console.log('[Deep Link] Selecting service:', serviceId);
                                     window.ServiceSelector.selectService(serviceId);
                                 }
                             }, 1000); // Увеличиваем задержку для загрузки услуг
                         }
                     } catch (error) {
-                        console.error('[Deep Link] Error opening ServiceSelector:', error);
+                        // Тихая обработка ошибок
                     }
-                } else {
-                    console.error('[Deep Link] ServiceSelector not available');
                 }
                 break;
 
@@ -363,16 +400,12 @@ window.Router = {
 
             case 'daily-bonus':
                 // Открываем модальное окно ежедневных бонусов
-                console.log('[Deep Link] Opening daily bonus modal');
                 if (handler.showDailyBonusModal) {
                     try {
                         await handler.showDailyBonusModal();
-                        console.log('[Deep Link] Daily bonus modal opened');
                     } catch (error) {
-                        console.error('[Deep Link] Error opening daily bonus modal:', error);
+                        // Тихая обработка ошибок
                     }
-                } else {
-                    console.error('[Deep Link] showDailyBonusModal method not found');
                 }
                 break;
 
@@ -720,11 +753,7 @@ window.Router = {
                 }
             });
 
-            const result = screen ? { screen, params } : null;
-            if (result) {
-                console.log('[Deep Link] Result:', result);
-            }
-            return result;
+            return screen ? { screen, params } : null;
         } catch (error) {
             return null;
         }
@@ -737,9 +766,7 @@ window.Router = {
         try {
             // ✅ Сначала проверяем deep link из URL (приоритет выше сохраненного состояния)
             const deepLink = this.parseDeepLink();
-            console.log('[Deep Link] restoreState - deepLink:', deepLink);
             if (deepLink) {
-                console.log('[Deep Link] Setting screen to:', deepLink.screen, 'with params:', deepLink.params);
                 this.currentScreen = deepLink.screen;
                 this.previousScreen = null;
                 this.history = [];
@@ -799,6 +826,121 @@ window.Router = {
      */
     isScreenActive(screenName) {
         return this.currentScreen === screenName;
+    },
+
+    /**
+     * Обновление URL при навигации
+     * @param {string} screenName - Название экрана
+     * @param {Object} params - Параметры для URL
+     * @param {boolean} usePushState - Использовать pushState (для переходов между экранами) или replaceState (для обновления параметров)
+     */
+    updateURL(screenName, params = {}, usePushState = false) {
+        try {
+            // Не обновляем URL если активен deep link (чтобы не перезаписать исходный deep link)
+            if (this.isDeepLinkActive) {
+                return;
+            }
+
+            const urlParams = new URLSearchParams();
+            
+            // ✅ Всегда начинаем с чистого URL - только screen параметр
+            // Это гарантирует, что старые параметры не сохраняются
+            urlParams.set('screen', screenName);
+            
+            // ✅ Добавляем параметры из params, но исключаем action (он используется только в updateURLForAction)
+            Object.keys(params).forEach(key => {
+                // Пропускаем action - он не должен быть в обычном updateURL
+                if (key === 'action') {
+                    return;
+                }
+                if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+                    urlParams.set(key, params[key]);
+                }
+            });
+            
+            // Формируем новый URL (полностью заменяем старый)
+            const newURL = `${window.location.pathname}?${urlParams.toString()}`;
+            
+            // ✅ Используем pushState для переходов между экранами, replaceState для обновления параметров
+            if (usePushState) {
+                window.history.pushState({ screen: screenName, params: params }, '', newURL);
+            } else {
+                window.history.replaceState({ screen: screenName, params: params }, '', newURL);
+            }
+        } catch (error) {
+            // Тихая обработка ошибок
+        }
+    },
+
+    /**
+     * Обновление URL для модальных окон и действий
+     * @param {string} action - Действие (services, gift, daily-bonus и т.д.)
+     * @param {Object} params - Параметры для URL
+     */
+    updateURLForAction(action, params = {}) {
+        try {
+            // Не обновляем URL если активен deep link
+            if (this.isDeepLinkActive) {
+                return;
+            }
+
+            const urlParams = new URLSearchParams();
+            
+            // ✅ Всегда используем текущий экран (не hardcode subscription)
+            urlParams.set('screen', this.currentScreen);
+            urlParams.set('action', action);
+            
+            // Добавляем параметры
+            Object.keys(params).forEach(key => {
+                if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+                    urlParams.set(key, params[key]);
+                }
+            });
+            
+            // Формируем новый URL
+            const newURL = `${window.location.pathname}?${urlParams.toString()}`;
+            
+            // Обновляем URL без перезагрузки страницы
+            window.history.pushState({ screen: this.currentScreen, action: action, params: params }, '', newURL);
+        } catch (error) {
+            // Тихая обработка ошибок
+        }
+    },
+
+    /**
+     * Очистка URL от параметров действия (при закрытии модальных окон)
+     * @param {string} returnToScreen - Экран, на который нужно вернуться (опционально)
+     */
+    clearActionURL(returnToScreen = null) {
+        try {
+            // Не обновляем URL если активен deep link
+            if (this.isDeepLinkActive) {
+                return;
+            }
+
+            // ✅ Если указан экран для возврата, возвращаемся на него
+            const targetScreen = returnToScreen || this.currentScreen;
+            
+            // ✅ Если это модальный экран и есть предыдущий экран, возвращаемся на него
+            const isModalScreen = this.modalScreens.includes(this.currentScreen);
+            if (isModalScreen && this.previousScreen && !returnToScreen) {
+                // Возвращаемся на предыдущий экран
+                this.navigate(this.previousScreen, false);
+                return;
+            }
+
+            // ✅ Полностью очищаем URL, оставляя только screen параметр
+            const urlParams = new URLSearchParams();
+            urlParams.set('screen', targetScreen);
+            
+            // Формируем новый URL только с screen параметром
+            const newURL = `${window.location.pathname}?${urlParams.toString()}`;
+            
+            // ✅ Используем replaceState чтобы не создавать лишние записи в истории
+            window.history.replaceState({ screen: targetScreen }, '', newURL);
+        } catch (error) {
+            // Тихая обработка ошибок
+        }
     },
 
 };

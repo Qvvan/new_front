@@ -7,6 +7,11 @@ window.InstructionsScreen = {
     modal: null,
 
     async show(params = {}) {
+        // ✅ Сохраняем экран, с которого открывается модальное окно
+        if (window.Router) {
+            this._openedFromScreen = window.Router.getCurrentScreen();
+        }
+        
         // ✅ Флаг для защиты от автоматического закрытия при deep link
         this.isDeepLinkOpen = !!(params.step !== undefined || params.device || params.activate || params.code || params.config_link);
         
@@ -62,6 +67,20 @@ window.InstructionsScreen = {
         }, delay);
 
         this.render();
+
+        // ✅ Обновляем URL при открытии инструкций
+        if (window.Router && !window.Router.isDeepLinkActive) {
+            const urlParams = {
+                step: this.currentStep
+            };
+            if (this.deviceType) {
+                urlParams.device = this.deviceType;
+            }
+            if (this.pendingActivationCode) {
+                urlParams.activate = this.pendingActivationCode;
+            }
+            window.Router.updateURL('instructions', urlParams);
+        }
 
         // ✅ Если есть код активации, автоматически активируем профиль
         if (this.pendingActivationCode) {
@@ -537,6 +556,14 @@ window.InstructionsScreen = {
             nextBtn.disabled = false;
         }
 
+        // ✅ Обновляем URL с выбранным устройством
+        if (window.Router) {
+            window.Router.updateURL('instructions', {
+                device: deviceType,
+                step: this.currentStep
+            });
+        }
+
         // Вибрация выбора
         if (window.TelegramApp) {
             window.TelegramApp.haptic.selection();
@@ -566,6 +593,15 @@ window.InstructionsScreen = {
         // Переход к следующему шагу
         this.render();
 
+        // ✅ Обновляем URL с новым шагом
+        if (window.Router) {
+            const params = { step: this.currentStep };
+            if (this.deviceType) {
+                params.device = this.deviceType;
+            }
+            window.Router.updateURL('instructions', params);
+        }
+
         // Вибрация
         if (window.TelegramApp) {
             window.TelegramApp.haptic.light();
@@ -576,6 +612,15 @@ window.InstructionsScreen = {
         if (this.currentStep > 0) {
             this.currentStep--;
             this.render();
+            
+            // ✅ Обновляем URL с новым шагом
+            if (window.Router) {
+                const params = { step: this.currentStep };
+                if (this.deviceType) {
+                    params.device = this.deviceType;
+                }
+                window.Router.updateURL('instructions', params);
+            }
         }
 
         // Вибрация
@@ -652,6 +697,23 @@ window.InstructionsScreen = {
 
         this.isVisible = false;
         this._userRequestedClose = false;
+        
+        // ✅ Возвращаемся на предыдущий экран при закрытии модального окна
+        if (window.Router) {
+            // Получаем экран, с которого было открыто модальное окно
+            const openedFromScreen = this._openedFromScreen || window.Router.getPreviousScreen();
+            
+            // Очищаем сохраненное значение
+            this._openedFromScreen = null;
+            
+            if (openedFromScreen && openedFromScreen !== 'instructions') {
+                // Возвращаемся на предыдущий экран
+                window.Router.navigate(openedFromScreen, false);
+            } else {
+                // Если нет предыдущего экрана, возвращаемся на subscription по умолчанию
+                window.Router.navigate('subscription', false);
+            }
+        }
     },
 
     cleanup() {

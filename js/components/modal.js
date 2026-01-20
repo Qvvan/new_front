@@ -367,6 +367,11 @@ window.Modal = {
             if (typeof config.onHide === 'function') {
                 config.onHide(modalId);
             }
+            
+            // ✅ Очищаем URL от параметров действия при закрытии последнего модального окна
+            if (isLastModal && window.Router) {
+                window.Router.clearActionURL();
+            }
         });
     },
 

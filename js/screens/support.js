@@ -8,6 +8,11 @@ window.SupportScreen = {
     async show(params = {}) {
         this.isVisible = true;
         
+        // ✅ Сохраняем экран, с которого открывается модальное окно
+        if (window.Router) {
+            this._openedFromScreen = window.Router.getCurrentScreen();
+        }
+        
         // ✅ Обработка параметров из deep link
         const faqParam = params.faq;
         if (faqParam) {
@@ -242,6 +247,11 @@ window.SupportScreen = {
         this.currentView = 'faq';
         this.render();
 
+        // ✅ Обновляем URL с выбранным FAQ
+        if (window.Router) {
+            window.Router.updateURL('support', { faq: type });
+        }
+
         if (window.TelegramApp) {
             window.TelegramApp.haptic.light();
         }
@@ -251,6 +261,11 @@ window.SupportScreen = {
         this.currentView = 'main';
         this.currentFAQ = null;
         this.render();
+
+        // ✅ Обновляем URL без FAQ параметра (возврат на главный экран поддержки)
+        if (window.Router) {
+            window.Router.updateURL('support', {});
+        }
 
         if (window.TelegramApp) {
             window.TelegramApp.haptic.light();
@@ -292,6 +307,23 @@ window.SupportScreen = {
         }, 150); // Уменьшено с 300ms до 150ms для быстрого закрытия
 
         this.isVisible = false;
+        
+        // ✅ Возвращаемся на предыдущий экран при закрытии модального окна
+        if (window.Router) {
+            // Получаем экран, с которого было открыто модальное окно
+            const openedFromScreen = this._openedFromScreen || window.Router.getPreviousScreen();
+            
+            // Очищаем сохраненное значение
+            this._openedFromScreen = null;
+            
+            if (openedFromScreen && openedFromScreen !== 'support') {
+                // Возвращаемся на предыдущий экран
+                window.Router.navigate(openedFromScreen, false);
+            } else {
+                // Если нет предыдущего экрана, возвращаемся на subscription по умолчанию
+                window.Router.navigate('subscription', false);
+            }
+        }
     },
 
     cleanup() {
