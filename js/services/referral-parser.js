@@ -38,7 +38,7 @@ window.ReferralAPI = {
         }
 
         // Получаем username бота (нужно будет настроить в конфиге)
-        const botUsername = window.Config?.BOT_USERNAME || 'SuperSummaryBot';
+        const botUsername = window.Config?.BOT_USERNAME;
         const userId = telegramUser.id.toString();
 
         return {
