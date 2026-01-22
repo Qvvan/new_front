@@ -2652,7 +2652,28 @@ body.page-hidden .loadShine {
 
 /* Responsive adjustments */
 @media (max-width: 360px) {
-    .referral-stats-grid,
+    .referral-stats-grid {
+        /* Сохраняем 3 колонки, но уменьшаем gap */
+        gap: var(--spacing-xs);
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .stat-card {
+        /* Уменьшаем padding для компактности */
+        padding: var(--spacing-sm);
+    }
+
+    .stat-number {
+        /* Уменьшаем размер числа */
+        font-size: var(--font-size-xl);
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        /* Уменьшаем размер текста */
+        font-size: 11px;
+    }
+
     .share-actions-grid {
         grid-template-columns: 1fr;
         gap: var(--spacing-sm);
@@ -2676,6 +2697,48 @@ body.page-hidden .loadShine {
         flex-direction: column;
         gap: var(--spacing-lg);
         text-align: center;
+    }
+}
+
+/* Дополнительные медиа-запросы для плавного масштабирования */
+@media (max-width: 480px) {
+    .referral-stats-grid {
+        gap: var(--spacing-sm);
+    }
+
+    .stat-card {
+        padding: var(--spacing-md);
+    }
+
+    .stat-number {
+        font-size: var(--font-size-lg);
+    }
+
+    .stat-label {
+        font-size: var(--font-size-xs);
+    }
+}
+
+@media (max-width: 320px) {
+    .referral-stats-grid {
+        /* На очень маленьких экранах еще больше уменьшаем gap */
+        gap: 4px;
+    }
+
+    .stat-card {
+        /* Минимальный padding */
+        padding: var(--spacing-xs);
+    }
+
+    .stat-number {
+        /* Еще меньше размер числа */
+        font-size: var(--font-size-lg);
+        margin-bottom: 2px;
+    }
+
+    .stat-label {
+        /* Минимальный размер текста */
+        font-size: 10px;
     }
 }
 

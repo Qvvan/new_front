@@ -37,16 +37,14 @@ window.ReferralAPI = {
             throw new Error('Telegram user not available');
         }
 
-        // Генерируем реферальный код
-        const referralCode = `ref_${telegramUser.id}_${Date.now().toString(36)}`;
-
         // Получаем username бота (нужно будет настроить в конфиге)
-        const botUsername = window.Config?.BOT_USERNAME || 'SkyDragonVPNBot';
+        const botUsername = window.Config?.BOT_USERNAME || 'SuperSummaryBot';
+        const userId = telegramUser.id.toString();
 
         return {
-            code: referralCode,
-            link: `https://t.me/${botUsername}?startapp=${referralCode}`,
-            shortCode: referralCode.split('_')[1] // Для отображения
+            code: userId,
+            link: `https://t.me/${botUsername}/sky?startapp=${userId}`,
+            shortCode: userId
         };
     }
 };

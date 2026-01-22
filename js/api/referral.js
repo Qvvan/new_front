@@ -47,13 +47,13 @@ window.ReferralAPI = {
         }
 
         // Генерируем ссылку с Telegram bot URL
-        const botUsername = 'skydragonvpnbot';
-        const startParam = `${telegramUser.id}`;
-        const link = `https://t.me/${botUsername}?start=${startParam}`;
+        const botUsername = 'SuperSummaryBot';
+        const userId = telegramUser.id.toString();
+        const link = `https://t.me/${botUsername}/sky?startapp=${userId}`;
 
         return {
             link: link,
-            shortCode: telegramUser.id.toString()
+            shortCode: userId
         };
     }
 };
