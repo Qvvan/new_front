@@ -400,7 +400,7 @@ window.InstructionsScreen = {
 
             <div class="download-note">
                 <i class="fas fa-info-circle"></i>
-                <span>После установки приложения нажмите "Далее"</span>
+                <span>После установки требуется настройка профиля</span>
             </div>
         `;
     },
