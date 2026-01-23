@@ -266,10 +266,13 @@ window.SubscriptionScreen = {
             // Обновляем данные подписок
             await this.refresh();
 
-            // ✅ Сразу показываем инструкции
+            // ✅ Сразу показываем инструкции с subscription_id
             setTimeout(() => {
                 if (window.InstructionsScreen) {
-                    window.InstructionsScreen.show();
+                    const subscriptionId = response?.subscription_id || response?.id || 
+                                        (this.currentSubscriptions.length > 0 ? 
+                                         (this.currentSubscriptions[0].subscription_id || this.currentSubscriptions[0].id) : null);
+                    window.InstructionsScreen.show({ subscription_id: subscriptionId });
                 }
             }, 1000);
 
@@ -940,7 +943,11 @@ window.SubscriptionScreen = {
                         type: 'primary',
                         handler: () => {
                             if (window.InstructionsScreen) {
-                                window.InstructionsScreen.show();
+                                // Получаем subscription_id из подарка или из текущих подписок
+                                const subscriptionId = giftData?.subscription_id || giftData?.subscription?.id ||
+                                    (this.currentSubscriptions.length > 0 ? 
+                                     (this.currentSubscriptions[0].subscription_id || this.currentSubscriptions[0].id) : null);
+                                window.InstructionsScreen.show({ subscription_id: subscriptionId });
                             }
                         }
                     },

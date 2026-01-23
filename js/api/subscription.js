@@ -73,5 +73,14 @@ window.SubscriptionAPI = {
      */
     async getUserHistory(userId, params = {}) {
         return await window.APIClient.get(`/subscription/subscriptions/user/${userId}/history`, params);
+    },
+
+    /**
+     * Получение ссылок для импорта приложений
+     * @param {number} subscriptionId - ID подписки
+     * @returns {Promise<Object>} Объект с ссылками для разных платформ
+     */
+    async getImportLinks(subscriptionId) {
+        return await window.APIClient.get(`/subscription/subscriptions/${subscriptionId}/import-links`);
     }
 };

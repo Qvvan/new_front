@@ -5,6 +5,8 @@ window.InstructionsScreen = {
     currentStep: 0,
     deviceType: null,
     modal: null,
+    importLinks: null,
+    subscriptionId: null,
 
     async show(params = {}) {
         // ✅ Сохраняем экран, с которого открывается модальное окно
@@ -65,6 +67,19 @@ window.InstructionsScreen = {
                 this.modal.classList.add('active');
             }
         }, delay);
+
+        // Получаем subscription_id из параметров или из текущего состояния
+        this.subscriptionId = params.subscription_id || params.subscriptionId || this.getSubscriptionIdFromState();
+        
+        console.log('[Instructions] subscription_id:', this.subscriptionId);
+
+        // Загружаем import-links
+        if (this.subscriptionId) {
+            await this.loadImportLinks(this.subscriptionId);
+            console.log('[Instructions] importLinks loaded:', this.importLinks);
+        } else {
+            console.warn('[Instructions] No subscription_id found');
+        }
 
         this.render();
 
@@ -130,9 +145,9 @@ window.InstructionsScreen = {
                 </div>
                 <div class="modal-actions">
                     ${this.currentStep > 0 ? '<button class="btn btn-secondary" id="instructionsPrev">Назад</button>' : '<button class="btn btn-outline" id="instructionsSkip">Пропустить</button>'}
-                    <button class="btn btn-primary" id="instructionsNext" ${this.currentStep === 0 && !this.deviceType ? 'disabled' : ''}>
+                    ${this.currentStep === 1 && this.getAppsForDevice(this.deviceType) && this.getAppsForDevice(this.deviceType).length > 0 ? '' : `<button class="btn btn-primary" id="instructionsNext" ${this.currentStep === 0 && !this.deviceType ? 'disabled' : ''}>
                         ${this.currentStep === 2 ? 'Завершить' : 'Далее'}
-                    </button>
+                    </button>`}
                 </div>
             </div>
         `;
@@ -158,10 +173,86 @@ window.InstructionsScreen = {
     renderCurrentStep() {
         switch(this.currentStep) {
             case 0: return this.renderDeviceSelection();
-            case 1: return this.renderAppDownload();
+            case 1: {
+                // Для шага 2 нужно асинхронно загрузить данные если нужно
+                const content = this.renderAppDownloadSync();
+                // Если данных нет, пытаемся загрузить асинхронно
+                if (!this.importLinks && this.subscriptionId) {
+                    this.loadImportLinks(this.subscriptionId).then(() => {
+                        this.render();
+                    });
+                }
+                return content;
+            }
             case 2: return this.renderProfileSetup();
             default: return '<p>Шаг не найден</p>';
         }
+    },
+
+    renderAppDownloadSync() {
+        if (!this.deviceType) {
+            return '<p>Сначала выберите устройство</p>';
+        }
+
+        const apps = this.getAppsForDevice(this.deviceType);
+        console.log('[Instructions] renderAppDownloadSync - deviceType:', this.deviceType, 'apps:', apps, 'importLinks:', this.importLinks);
+        
+        if (!apps || apps.length === 0) {
+            // Fallback на старые данные
+            const appInfo = this.getAppInfo(this.deviceType);
+            return `
+                <div class="step-header">
+                    <h3>Скачайте приложение</h3>
+                </div>
+
+                <div class="app-download">
+                    <div class="app-icon">
+                        <i class="${appInfo.icon}"></i>
+                    </div>
+                    <div class="app-info">
+                        <h4>${appInfo.name}</h4>
+                        <p>${appInfo.description}</p>
+                    </div>
+                    <button class="btn btn-primary" id="downloadApp" data-url="${appInfo.downloadUrl}">
+                        <i class="fas fa-download"></i>
+                        Скачать
+                    </button>
+                </div>
+
+                <div class="download-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>После установки приложения нажмите "Далее"</span>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="step-header">
+                <h3>Скачайте приложение</h3>
+            </div>
+
+            <div class="apps-list">
+                ${apps.map((app, index) => `
+                    <div class="app-card" data-app-index="${index}">
+                        <div class="app-icon">
+                            <i class="${this.getAppIcon(app.app_name)}"></i>
+                        </div>
+                        <div class="app-info">
+                            <h4>${Utils.escapeHtml(app.app_name)}</h4>
+                        </div>
+                        <button class="btn btn-primary btn-download-app" data-url="${Utils.escapeHtml(app.store_url)}" data-import-url="${Utils.escapeHtml(app.import_url)}">
+                            <i class="fas fa-download"></i>
+                            Скачать
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="download-note">
+                <i class="fas fa-info-circle"></i>
+                <span>После установки приложения нажмите "Далее"</span>
+            </div>
+        `;
     },
 
     renderDeviceSelection() {
@@ -191,38 +282,6 @@ window.InstructionsScreen = {
         `;
     },
 
-    renderAppDownload() {
-        if (!this.deviceType) {
-            return '<p>Сначала выберите устройство</p>';
-        }
-
-        const appInfo = this.getAppInfo(this.deviceType);
-
-        return `
-            <div class="step-header">
-                <h3>Скачайте приложение</h3>
-            </div>
-
-            <div class="app-download">
-                <div class="app-icon">
-                    <i class="${appInfo.icon}"></i>
-                </div>
-                <div class="app-info">
-                    <h4>${appInfo.name}</h4>
-                    <p>${appInfo.description}</p>
-                </div>
-                <button class="btn btn-primary" id="downloadApp" data-url="${appInfo.downloadUrl}">
-                    <i class="fas fa-download"></i>
-                    Скачать
-                </button>
-            </div>
-
-            <div class="download-note">
-                <i class="fas fa-info-circle"></i>
-                <span>После установки приложения нажмите "Далее"</span>
-            </div>
-        `;
-    },
 
     renderProfileSetup() {
         if (!this.deviceType) {
@@ -311,41 +370,163 @@ window.InstructionsScreen = {
 
     async activateProfile() {
         try {
-            // Получаем активную подписку с config_link
-            const configLink = await this.getActiveSubscriptionConfig();
+            // Используем сохраненный import_url если был выбран конкретный
+            let importUrl = this.selectedImportUrl;
+            console.log('[Instructions] activateProfile - selectedImportUrl:', importUrl);
 
-            if (!configLink) {
-                if (window.Toast) {
-                    window.Toast.error('Не найдена активная подписка с конфигурацией');
+            // Если не выбран конкретный, берем первый доступный
+            if (!importUrl) {
+                importUrl = this.getImportUrlForDevice(this.deviceType);
+                console.log('[Instructions] activateProfile - using first available:', importUrl);
+            }
+
+            if (!importUrl) {
+                // Fallback на старый метод
+                const configLink = await this.getActiveSubscriptionConfig();
+                if (!configLink) {
+                    if (window.Toast) {
+                        window.Toast.error('Не найдена активная подписка с конфигурацией');
+                    }
+                    return;
                 }
+                const activationUrl = this.generateActivationUrl(configLink);
+                this.openActivationUrl(activationUrl);
                 return;
             }
 
-            // Генерируем ссылку для активации
-            const activationUrl = this.generateActivationUrl(configLink);
-
-            // Открываем ссылку
-            if (window.TelegramApp) {
-                window.TelegramApp.openLink(activationUrl);
-            } else {
-                window.open(activationUrl, '_blank');
-            }
-
-            // Показываем уведомление
-            if (window.Toast) {
-                window.Toast.success('Профиль отправлен в приложение!');
-            }
-
-            // Вибрация успеха
-            if (window.TelegramApp) {
-                window.TelegramApp.haptic.success();
-            }
+            // Открываем ссылку для активации
+            this.openActivationUrl(importUrl);
 
         } catch (error) {
             if (window.Toast) {
                 window.Toast.error('Ошибка активации профиля. Попробуйте получить ключи вручную.');
             }
         }
+    },
+
+    openActivationUrl(url) {
+        // Открываем ссылку
+        if (window.TelegramApp) {
+            window.TelegramApp.openLink(url);
+        } else {
+            window.open(url, '_blank');
+        }
+
+        // Показываем уведомление
+        if (window.Toast) {
+            window.Toast.success('Профиль отправлен в приложение!');
+        }
+
+        // Вибрация успеха
+        if (window.TelegramApp) {
+            window.TelegramApp.haptic.success();
+        }
+    },
+
+    getSubscriptionIdFromState() {
+        // Пытаемся получить subscription_id из SubscriptionScreen
+        if (window.SubscriptionScreen && window.SubscriptionScreen.currentSubscriptions) {
+            const activeSubscription = window.SubscriptionScreen.currentSubscriptions.find(sub => {
+                const daysLeft = Utils.daysBetween(sub.end_date);
+                return daysLeft > 0 && (sub.status === 'active' || sub.status === 'trial');
+            });
+            
+            if (activeSubscription) {
+                return activeSubscription.subscription_id || activeSubscription.id;
+            }
+        }
+        return null;
+    },
+
+    async loadImportLinks(subscriptionId) {
+        try {
+            if (!window.SubscriptionAPI || !subscriptionId) {
+                console.warn('[Instructions] Cannot load import links - API or subscriptionId missing');
+                return;
+            }
+
+            console.log('[Instructions] Loading import links for subscription_id:', subscriptionId);
+            
+            // Загружаем import-links напрямую
+            const importLinksResponse = await window.SubscriptionAPI.getImportLinks(subscriptionId);
+            
+            console.log('[Instructions] Import links response:', importLinksResponse);
+            
+            // Проверяем структуру ответа
+            if (importLinksResponse && typeof importLinksResponse === 'object') {
+                this.importLinks = importLinksResponse;
+                console.log('[Instructions] Import links loaded successfully:', {
+                    iphone: this.importLinks.iphone?.length || 0,
+                    android: this.importLinks.android?.length || 0,
+                    windows: this.importLinks.windows?.length || 0,
+                    macos: this.importLinks.macos?.length || 0
+                });
+            } else {
+                console.warn('[Instructions] Invalid import links response format');
+                this.importLinks = null;
+            }
+        } catch (error) {
+            console.error('[Instructions] Failed to load import links:', error);
+            this.importLinks = null;
+        }
+    },
+
+    getAppsForDevice(deviceType) {
+        if (!this.importLinks) {
+            return null;
+        }
+
+        const platformMap = {
+            'android': 'android',
+            'ios': 'iphone',
+            'windows': 'windows',
+            'macos': 'macos'
+        };
+
+        const platform = platformMap[deviceType];
+        if (!platform || !this.importLinks[platform]) {
+            return null;
+        }
+
+        return this.importLinks[platform];
+    },
+
+    getImportUrlForDevice(deviceType) {
+        const apps = this.getAppsForDevice(deviceType);
+        if (!apps || apps.length === 0) {
+            return null;
+        }
+
+        // Используем первый доступный import_url
+        return apps[0].import_url;
+    },
+
+    getAppIcon(appName) {
+        const iconMap = {
+            'v2RayTun': 'fas fa-shield-alt',
+            'Happ - Proxy Utility Plus': 'fas fa-network-wired',
+            'Streisand': 'fas fa-lock'
+        };
+
+        // Ищем по частичному совпадению
+        for (const [key, icon] of Object.entries(iconMap)) {
+            if (appName.toLowerCase().includes(key.toLowerCase())) {
+                return icon;
+            }
+        }
+
+        // Иконка по умолчанию в зависимости от устройства
+        if (this.deviceType === 'android') {
+            return 'fab fa-android';
+        } else if (this.deviceType === 'ios') {
+            return 'fab fa-apple';
+        } else if (this.deviceType === 'windows') {
+            return 'fab fa-windows';
+        } else if (this.deviceType === 'macos') {
+            return 'fab fa-apple';
+        }
+
+        return 'fas fa-mobile-alt';
     },
 
     async getActiveSubscriptionConfig() {
@@ -490,16 +671,70 @@ window.InstructionsScreen = {
             });
         });
 
-        // Скачивание приложения
+        // Скачивание приложения (fallback)
         const downloadBtn = this.modal.querySelector('#downloadApp');
         if (downloadBtn) {
             downloadBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 const url = downloadBtn.dataset.url;
+                
+                // Открываем ссылку на скачивание
                 this.downloadApp(url);
+                
+                // Сразу переходим на шаг 3 (настройка профиля)
+                this.currentStep = 2;
+                this.render();
+                
+                // Обновляем URL
+                if (window.Router) {
+                    const params = { step: this.currentStep };
+                    if (this.deviceType) {
+                        params.device = this.deviceType;
+                    }
+                    window.Router.updateURL('instructions', params);
+                }
             });
         }
+
+        // Скачивание приложений из списка
+        const downloadBtns = this.modal.querySelectorAll('.btn-download-app');
+        downloadBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const url = btn.dataset.url;
+                const importUrl = btn.dataset.importUrl;
+                
+                // Сохраняем import_url для активации
+                if (importUrl) {
+                    this.selectedImportUrl = importUrl;
+                    console.log('[Instructions] Selected import_url:', importUrl);
+                }
+                
+                // Открываем ссылку на скачивание
+                this.downloadApp(url);
+                
+                // Сразу переходим на шаг 3 (настройка профиля)
+                this.currentStep = 2;
+                console.log('[Instructions] Moving to step 3 after download');
+                this.render();
+                
+                // Обновляем URL
+                if (window.Router) {
+                    const params = { step: this.currentStep };
+                    if (this.deviceType) {
+                        params.device = this.deviceType;
+                    }
+                    window.Router.updateURL('instructions', params);
+                }
+                
+                // Вибрация
+                if (window.TelegramApp) {
+                    window.TelegramApp.haptic.light();
+                }
+            });
+        });
 
         // Получение ключей
         const getKeysBtn = this.modal.querySelector('#getKeys');
@@ -543,6 +778,8 @@ window.InstructionsScreen = {
 
     selectDevice(deviceType) {
         this.deviceType = deviceType;
+        // Сбрасываем выбранный import_url при смене устройства
+        this.selectedImportUrl = null;
 
         // Обновляем UI БЕЗ полного перерендера
         const cards = this.modal.querySelectorAll('.device-card');
@@ -570,14 +807,20 @@ window.InstructionsScreen = {
         }
     },
 
-    nextStep() {
-
+    async nextStep() {
         // Проверяем можно ли перейти дальше с текущего шага
         if (this.currentStep === 0 && !this.deviceType) {
             if (window.Toast) {
                 window.Toast.warning('Выберите устройство');
             }
             return;
+        }
+
+        // Если переходим на шаг 2 (скачивание приложения), загружаем данные если нужно
+        if (this.currentStep === 0 && this.deviceType) {
+            if (!this.importLinks && this.subscriptionId) {
+                await this.loadImportLinks(this.subscriptionId);
+            }
         }
 
         // Сначала увеличиваем шаг
@@ -611,6 +854,10 @@ window.InstructionsScreen = {
     prevStep() {
         if (this.currentStep > 0) {
             this.currentStep--;
+            // Сбрасываем выбранный import_url при возврате на шаг 2
+            if (this.currentStep === 1) {
+                this.selectedImportUrl = null;
+            }
             this.render();
             
             // ✅ Обновляем URL с новым шагом
@@ -729,5 +976,8 @@ window.InstructionsScreen = {
         this.pendingActivationCode = null;
         this.isDeepLinkOpen = false;
         this._userRequestedClose = false;
+        this.importLinks = null;
+        this.subscriptionId = null;
+        this.selectedImportUrl = null;
     }
 };

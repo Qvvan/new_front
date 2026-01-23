@@ -1898,6 +1898,91 @@ body.page-hidden .loadShine {
     font-size: var(--font-size-sm);
 }
 
+.apps-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    margin: var(--spacing-xl) 0;
+}
+
+.app-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-dark);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    transition: all var(--transition-normal);
+}
+
+.app-card:hover {
+    border-color: var(--border-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.app-card .app-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--gradient-card);
+    border-radius: var(--border-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xl);
+    flex-shrink: 0;
+}
+
+.app-card .app-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.app-card .app-info h4 {
+    font-size: var(--font-size-base);
+    margin: 0;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.app-card .btn {
+    flex-shrink: 0;
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-sm);
+    min-height: 40px;
+}
+
+@media (max-width: 480px) {
+    .apps-list {
+        gap: var(--spacing-md);
+    }
+
+    .app-card {
+        padding: var(--spacing-lg);
+        gap: var(--spacing-md);
+        flex-wrap: wrap;
+    }
+
+    .app-card .app-icon {
+        width: 40px;
+        height: 40px;
+        font-size: var(--font-size-lg);
+    }
+
+    .app-card .app-info {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    .app-card .btn {
+        width: 100%;
+        margin-top: var(--spacing-sm);
+    }
+}
+
 .download-note {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-dark);
