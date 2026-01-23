@@ -7,8 +7,15 @@ window.InstructionsScreen = {
     modal: null,
     importLinks: null,
     subscriptionId: null,
+    showSubscriptionSelection: false, // Флаг для показа выбора подписки внутри модального окна
+    availableSubscriptions: [], // Доступные подписки для выбора
 
     async show(params = {}) {
+        // Закрываем предыдущее модальное окно если есть (как в support.js)
+        if (this.modal) {
+            this.hide();
+        }
+        
         // ✅ Сохраняем экран, с которого открывается модальное окно
         if (window.Router) {
             this._openedFromScreen = window.Router.getCurrentScreen();
@@ -17,6 +24,7 @@ window.InstructionsScreen = {
         // ✅ Флаг для защиты от автоматического закрытия при deep link
         this.isDeepLinkOpen = !!(params.step !== undefined || params.device || params.activate || params.code || params.config_link);
         
+        // Устанавливаем isVisible в true ПОСЛЕ закрытия предыдущего модального окна
         this.isVisible = true;
         
         // ✅ Обработка параметров из deep link
@@ -56,19 +64,27 @@ window.InstructionsScreen = {
         // Получаем subscription_id из параметров
         this.subscriptionId = params.subscription_id || params.subscriptionId;
         
+        // Создаем модальное окно СРАЗУ, чтобы показать выбор подписки внутри него
+        this.modal = this.createModal();
+        document.body.appendChild(this.modal);
+        
+        // Показываем модальное окно
+        const delay = this.isDeepLinkOpen ? 100 : 10;
+        setTimeout(() => {
+            if (this.modal) {
+                this.modal.classList.add('active');
+            }
+        }, delay);
+        
         // Если subscription_id не передан, проверяем количество подписок
         if (!this.subscriptionId) {
             const subscriptions = await this.getAllSubscriptions();
             
             if (subscriptions.length === 0) {
-                // Нет подписок - показываем модалку покупки
-                const selectedSubscriptionId = await this.showSubscriptionSelectionModal();
-                if (!selectedSubscriptionId) {
-                    this.isVisible = false;
-                    return;
-                }
-                // Если пользователь выбрал купить - закрываем инструкции
-                this.isVisible = false;
+                // Нет подписок - показываем сообщение о покупке внутри модального окна
+                this.showSubscriptionSelection = true;
+                this.availableSubscriptions = [];
+                this.render();
                 return;
             }
             
@@ -82,72 +98,36 @@ window.InstructionsScreen = {
                 const isActive = daysLeft > 0 && (subscription.status === 'active' || subscription.status === 'trial');
                 
                 if (!isActive) {
-                    // Подписка неактивна - предлагаем продлить
-                    const selectedSubscriptionId = await this.showSubscriptionSelectionModal();
-                    if (!selectedSubscriptionId) {
-                        this.isVisible = false;
-                        return;
-                    }
-                    this.subscriptionId = selectedSubscriptionId;
-                    await this.renewSubscription(selectedSubscriptionId);
-                    this.subscriptionId = this.getSubscriptionIdFromState() || this.subscriptionId;
-                }
-            } else {
-                // Несколько подписок - показываем выбор
-                const selectedSubscriptionId = await this.showSubscriptionSelectionModalForInstructions(subscriptions);
-                
-                if (!selectedSubscriptionId) {
-                    // Пользователь отменил выбор - закрываем инструкции
-                    this.isVisible = false;
+                    // Подписка неактивна - показываем выбор продления внутри модального окна
+                    this.showSubscriptionSelection = true;
+                    this.availableSubscriptions = subscriptions;
+                    this.render();
                     return;
                 }
-                
-                this.subscriptionId = selectedSubscriptionId;
-                
-                // Проверяем активна ли выбранная подписка
-                const selectedSubscription = subscriptions.find(sub => 
-                    (sub.subscription_id || sub.id) == selectedSubscriptionId
-                );
-                
-                if (selectedSubscription) {
-                    const daysLeft = Utils.daysBetween(selectedSubscription.end_date);
-                    const isActive = daysLeft > 0 && (selectedSubscription.status === 'active' || selectedSubscription.status === 'trial');
-                    
-                    if (!isActive) {
-                        // Подписка неактивна - предлагаем продлить
-                        await this.renewSubscription(selectedSubscriptionId);
-                        this.subscriptionId = this.getSubscriptionIdFromState() || this.subscriptionId;
-                    }
-                }
+                // Если подписка активна - продолжаем с инструкциями (showSubscriptionSelection = false)
+            } else {
+                // Несколько подписок - показываем выбор внутри модального окна
+                this.showSubscriptionSelection = true;
+                this.availableSubscriptions = subscriptions;
+                this.render();
+                return;
             }
         }
         
         console.log('[Instructions] subscription_id:', this.subscriptionId);
+        
+        // Если subscription_id есть, скрываем выбор подписки и показываем инструкции
+        this.showSubscriptionSelection = false;
 
-        // Закрываем предыдущий модаль если есть
-        if (this.modal) {
-            this.hide();
-        }
-
-        this.modal = this.createModal();
-        document.body.appendChild(this.modal);
-
-        // ✅ Увеличиваем задержку для deep link, чтобы избежать конфликтов
-        const delay = this.isDeepLinkOpen ? 100 : 10;
-        setTimeout(() => {
-            if (this.modal) { // Проверяем что модальное окно еще существует
-                this.modal.classList.add('active');
-            }
-        }, delay);
-
-        // Загружаем import-links
-        if (this.subscriptionId) {
+        // Загружаем import-links если subscription_id есть
+        if (this.subscriptionId && !this.showSubscriptionSelection) {
             await this.loadImportLinks(this.subscriptionId);
             console.log('[Instructions] importLinks loaded:', this.importLinks);
-        } else {
+        } else if (!this.subscriptionId) {
             console.warn('[Instructions] No subscription_id found');
         }
 
+        // Рендерим содержимое (выбор подписки или инструкции)
         this.render();
 
         // ✅ Обновляем URL при открытии инструкций
@@ -189,38 +169,141 @@ window.InstructionsScreen = {
     render() {
         if (!this.modal) return;
 
+        // Если нужно показать выбор подписки, показываем его
+        if (this.showSubscriptionSelection) {
+            this.modal.innerHTML = `
+                <div class="modal modal-instructions">
+                    <div class="modal-header">
+                        <div class="modal-title">
+                            <i class="fas fa-book"></i>
+                            Выберите подписку
+                        </div>
+                        <button class="modal-close" id="instructionsClose">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        ${this.renderSubscriptionSelection()}
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" id="instructionsCancel">Отмена</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Показываем обычные инструкции
+            this.modal.innerHTML = `
+                <div class="modal modal-instructions">
+                    <div class="modal-header">
+                        <div class="modal-title">
+                            <i class="fas fa-book"></i>
+                            Инструкции по настройке (Шаг ${this.currentStep + 1}/3)
+                        </div>
+                        <button class="modal-close" id="instructionsClose">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="steps-indicator">
+                            ${this.renderStepsIndicator()}
+                        </div>
 
-        this.modal.innerHTML = `
-            <div class="modal modal-instructions">
-                <div class="modal-header">
-                    <div class="modal-title">
-                        <i class="fas fa-book"></i>
-                        Инструкции по настройке (Шаг ${this.currentStep + 1}/3)
+                        <div class="step-content">
+                            ${this.renderCurrentStep()}
+                        </div>
                     </div>
-                    <button class="modal-close" id="instructionsClose">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="steps-indicator">
-                        ${this.renderStepsIndicator()}
-                    </div>
-
-                    <div class="step-content">
-                        ${this.renderCurrentStep()}
+                    <div class="modal-actions">
+                        ${this.currentStep > 0 ? '<button class="btn btn-secondary" id="instructionsPrev">Назад</button>' : '<button class="btn btn-outline" id="instructionsSkip">Пропустить</button>'}
+                        ${this.currentStep === 1 && this.getAppsForDevice(this.deviceType) && this.getAppsForDevice(this.deviceType).length > 0 ? '' : `<button class="btn btn-primary" id="instructionsNext" ${this.currentStep === 0 && !this.deviceType ? 'disabled' : ''}>
+                            ${this.currentStep === 2 ? 'Завершить' : 'Далее'}
+                        </button>`}
                     </div>
                 </div>
-                <div class="modal-actions">
-                    ${this.currentStep > 0 ? '<button class="btn btn-secondary" id="instructionsPrev">Назад</button>' : '<button class="btn btn-outline" id="instructionsSkip">Пропустить</button>'}
-                    ${this.currentStep === 1 && this.getAppsForDevice(this.deviceType) && this.getAppsForDevice(this.deviceType).length > 0 ? '' : `<button class="btn btn-primary" id="instructionsNext" ${this.currentStep === 0 && !this.deviceType ? 'disabled' : ''}>
-                        ${this.currentStep === 2 ? 'Завершить' : 'Далее'}
-                    </button>`}
-                </div>
-            </div>
-        `;
+            `;
+        }
 
         // Настраиваем обработчики событий ПОСЛЕ создания HTML
         this.setupEventListeners();
+    },
+
+    renderSubscriptionSelection() {
+        if (this.availableSubscriptions.length === 0) {
+            // Нет подписок
+            return `
+                <div class="subscription-selection-content">
+                    <div class="subscription-selection-message">
+                        <i class="fas fa-info-circle"></i>
+                        <p>У вас нет активной подписки. Для просмотра инструкций необходимо приобрести подписку.</p>
+                    </div>
+                    <button class="btn btn-primary" id="buySubscription">
+                        <i class="fas fa-shopping-cart"></i>
+                        Купить подписку
+                    </button>
+                </div>
+            `;
+        }
+
+        if (this.availableSubscriptions.length === 1) {
+            // Одна подписка - показываем информацию о ней
+            const subscription = this.availableSubscriptions[0];
+            const daysLeft = Utils.daysBetween(subscription.end_date);
+            const isActive = daysLeft > 0 && (subscription.status === 'active' || subscription.status === 'trial');
+            
+            if (!isActive) {
+                // Подписка неактивна - предлагаем продлить
+                return `
+                    <div class="subscription-selection-content">
+                        <div class="subscription-selection-message">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>${daysLeft <= 0 ? 'Ваша подписка просрочена.' : 'Ваша подписка истекает.'}</p>
+                            <p>Для просмотра инструкций необходимо продлить подписку.</p>
+                        </div>
+                        <button class="btn btn-primary" id="renewSubscription" data-subscription-id="${subscription.subscription_id || subscription.id}">
+                            <i class="fas fa-sync-alt"></i>
+                            Продлить подписку
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Несколько подписок - показываем список
+        const subscriptionOptions = this.availableSubscriptions.map((sub) => {
+            const subId = sub.subscription_id || sub.id;
+            const daysLeft = Utils.daysBetween(sub.end_date);
+            const serviceName = sub.service_name || `Подписка ${subId}`;
+            const isActive = daysLeft > 0 && (sub.status === 'active' || sub.status === 'trial');
+            const statusText = isActive 
+                ? 'Активна' 
+                : daysLeft <= 0 
+                    ? 'Просрочена' 
+                    : `Истекает через ${daysLeft} ${Utils.pluralize(daysLeft, ['день', 'дня', 'дней'])}`;
+            
+            return `
+                <div class="subscription-option ${isActive ? 'subscription-active' : 'subscription-expired'}" data-subscription-id="${subId}">
+                    <div class="subscription-option-info">
+                        <h4>${Utils.escapeHtml(serviceName)}</h4>
+                        <p class="subscription-status ${isActive ? 'status-active' : 'status-expired'}">${statusText}</p>
+                    </div>
+                    <button class="btn ${isActive ? 'btn-primary' : 'btn-secondary'} btn-select-subscription" 
+                            data-subscription-id="${subId}" 
+                            data-is-active="${isActive}">
+                        ${isActive ? 'Выбрать' : 'Продлить'}
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="subscription-selection-content">
+                <div class="subscription-selection-message">
+                    <p>У вас несколько подписок. Выберите подписку, для которой хотите посмотреть инструкции:</p>
+                </div>
+                <div class="subscriptions-list">
+                    ${subscriptionOptions}
+                </div>
+            </div>
+        `;
     },
 
     renderStepsIndicator() {
@@ -1012,7 +1095,6 @@ window.InstructionsScreen = {
             closeBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                this._userRequestedClose = true; // ✅ Помечаем что пользователь явно закрыл
                 this.hide();
             });
         }
@@ -1151,14 +1233,74 @@ window.InstructionsScreen = {
             });
         }
 
+        // Обработка выбора подписки
+        const cancelBtn = this.modal.querySelector('#instructionsCancel');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.hide();
+            });
+        }
+
+        // Кнопка покупки подписки
+        const buyBtn = this.modal.querySelector('#buySubscription');
+        if (buyBtn) {
+            buyBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.hide();
+                if (window.ServiceSelector) {
+                    window.ServiceSelector.show('buy');
+                }
+            });
+        }
+
+        // Кнопка продления подписки (для одной подписки)
+        const renewBtn = this.modal.querySelector('#renewSubscription');
+        if (renewBtn) {
+            renewBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const subscriptionId = renewBtn.dataset.subscriptionId;
+                this.hide();
+                await this.renewSubscription(subscriptionId);
+            });
+        }
+
+        // Кнопки выбора подписки (для нескольких подписок)
+        const selectBtns = this.modal.querySelectorAll('.btn-select-subscription');
+        selectBtns.forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const subscriptionId = btn.dataset.subscriptionId;
+                const isActive = btn.dataset.isActive === 'true';
+                
+                if (!isActive) {
+                    // Подписка неактивна - продлеваем
+                    this.hide();
+                    await this.renewSubscription(subscriptionId);
+                    // После продления открываем инструкции снова
+                    const newSubscriptionId = this.getSubscriptionIdFromState() || subscriptionId;
+                    if (newSubscriptionId) {
+                        await this.show({ subscription_id: newSubscriptionId });
+                    }
+                } else {
+                    // Подписка активна - продолжаем с инструкциями
+                    this.subscriptionId = subscriptionId;
+                    this.showSubscriptionSelection = false;
+                    await this.loadImportLinks(this.subscriptionId);
+                    this.render();
+                }
+            });
+        });
+
         // Закрытие по клику вне модала
         this.modal.addEventListener('click', (e) => {
             if (e.target === this.modal) {
-                // ✅ Для deep link не закрываем по клику вне модала
-                if (!this.isDeepLinkOpen) {
-                    this._userRequestedClose = true;
-                    this.hide();
-                }
+                this.hide();
             }
         });
 
@@ -1312,52 +1454,51 @@ window.InstructionsScreen = {
         this.hide();
     },
 
+    /**
+     * Закрытие модального окна инструкций
+     * Точная копия логики из support.js
+     */
     hide() {
         if (!this.modal) return;
 
-        // ✅ Если это deep link открытие, не закрываем автоматически
-        // Пользователь должен явно закрыть модальное окно
-        if (this.isDeepLinkOpen && this.isVisible) {
-            // Разрешаем закрытие только если пользователь явно нажал закрыть
-            // или если это не первое открытие
-            if (!this._userRequestedClose) {
-                // Сбрасываем флаг deep link после первого рендеринга
-                setTimeout(() => {
-                    this.isDeepLinkOpen = false;
-                }, 2000); // Через 2 секунды разрешаем обычное закрытие
-                return;
-            }
-        }
-
-        this.modal.classList.remove('active');
-        setTimeout(() => {
-            if (this.modal && this.modal.parentNode) {
-                this.modal.parentNode.removeChild(this.modal);
-            }
-            this.cleanup();
-        }, 300);
-
-        this.isVisible = false;
-        this._userRequestedClose = false;
+        // Сохраняем ссылку на модальное окно для удаления (критично!)
+        const modalToRemove = this.modal;
         
-        // ✅ Возвращаемся на предыдущий экран при закрытии модального окна
+        // Удаляем класс active для анимации закрытия
+        modalToRemove.classList.remove('active');
+        
+        // Удаляем элемент из DOM после анимации
+        setTimeout(() => {
+            // Проверяем что это именно то модальное окно, которое мы хотели удалить
+            if (modalToRemove && modalToRemove.parentNode) {
+                modalToRemove.parentNode.removeChild(modalToRemove);
+            }
+            // Вызываем cleanup только если это последнее модальное окно
+            if (this.modal === modalToRemove) {
+                this.cleanup();
+            }
+        }, 150);
+
+        // Устанавливаем isVisible в false ПОСЛЕ setTimeout, как в support.js
+        this.isVisible = false;
+        
+        // Возвращаемся на предыдущий экран при закрытии модального окна
         if (window.Router) {
-            // Получаем экран, с которого было открыто модальное окно
             const openedFromScreen = this._openedFromScreen || window.Router.getPreviousScreen();
-            
-            // Очищаем сохраненное значение
             this._openedFromScreen = null;
             
             if (openedFromScreen && openedFromScreen !== 'instructions') {
-                // Возвращаемся на предыдущий экран
                 window.Router.navigate(openedFromScreen, false);
             } else {
-                // Если нет предыдущего экрана, возвращаемся на subscription по умолчанию
                 window.Router.navigate('subscription', false);
             }
         }
     },
 
+    /**
+     * Полная очистка состояния после закрытия модального окна
+     * Точная копия логики из support.js
+     */
     cleanup() {
         // Убираем обработчик Escape
         if (this.escapeHandler) {
@@ -1365,14 +1506,21 @@ window.InstructionsScreen = {
             this.escapeHandler = null;
         }
 
-        this.modal = null;
+        // Очистка состояния (БЕЗ установки isVisible = false, это делается в hide())
+        // Важно: не очищаем this.modal если он указывает на новое модальное окно
+        // (это может произойти если show() был вызван сразу после hide())
+        if (!this.isVisible) {
+            this.modal = null;
+        }
         this.currentStep = 0;
         this.deviceType = null;
         this.pendingActivationCode = null;
         this.isDeepLinkOpen = false;
-        this._userRequestedClose = false;
         this.importLinks = null;
         this.subscriptionId = null;
         this.selectedImportUrl = null;
+        this._openedFromScreen = null;
+        this.showSubscriptionSelection = false;
+        this.availableSubscriptions = [];
     }
 };
