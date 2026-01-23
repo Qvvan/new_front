@@ -581,6 +581,12 @@
     pointer-events: auto; /* Разрешаем клики когда активен */
 }
 
+/* Скрытие модалки инструкций при показе другой модалки */
+#instructionsModal[style*="display: none"] {
+    z-index: 999 !important;
+    pointer-events: none !important;
+}
+
 .modal {
     width: 90%;
     max-width: 400px;
@@ -6243,6 +6249,98 @@ body.page-hidden [style*="animation"] {
     font-weight: var(--font-weight-medium);
     color: var(--text-secondary);
     margin: 0;
+}
+
+/* Subscription Selection Modal */
+.subscription-expired-message {
+    text-align: center;
+    padding: var(--spacing-lg) 0;
+}
+
+.subscription-expired-message p {
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-md);
+    line-height: 1.5;
+}
+
+.subscription-selection-message {
+    padding: var(--spacing-md) 0;
+}
+
+.subscription-selection-message > p {
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.5;
+}
+
+.subscriptions-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.subscription-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-dark);
+    border-radius: var(--border-radius-lg);
+    transition: all var(--transition-normal);
+}
+
+.subscription-option:hover {
+    border-color: var(--border-light);
+    background: var(--bg-tertiary);
+}
+
+.subscription-option-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.subscription-option-info h4 {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-xs) 0;
+}
+
+.subscription-status {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.subscription-option .btn-select-subscription {
+    flex-shrink: 0;
+    margin-left: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-sm);
+    min-height: 40px;
+}
+
+.subscription-option.subscription-active {
+    border-color: var(--accent-green);
+    background: rgba(73, 170, 77, 0.1);
+}
+
+.subscription-option.subscription-expired {
+    /* Убрано затемнение - просроченные подписки выглядят так же ярко */
+}
+
+.subscription-status.status-active {
+    color: var(--accent-green);
+    font-weight: var(--font-weight-semibold);
+}
+
+.subscription-status.status-expired {
+    color: var(--accent-red);
+    font-weight: var(--font-weight-medium);
 }
 
 .gift-message-container {

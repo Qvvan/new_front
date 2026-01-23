@@ -30,6 +30,7 @@ window.InstructionsScreen = {
                 this.currentStep = 0;
             }
         } else {
+            // Всегда начинаем с шага 0 при открытии инструкций
             this.currentStep = 0;
         }
 
@@ -52,6 +53,77 @@ window.InstructionsScreen = {
             this.pendingActivationCode = null;
         }
 
+        // Получаем subscription_id из параметров
+        this.subscriptionId = params.subscription_id || params.subscriptionId;
+        
+        // Если subscription_id не передан, проверяем количество подписок
+        if (!this.subscriptionId) {
+            const subscriptions = await this.getAllSubscriptions();
+            
+            if (subscriptions.length === 0) {
+                // Нет подписок - показываем модалку покупки
+                const selectedSubscriptionId = await this.showSubscriptionSelectionModal();
+                if (!selectedSubscriptionId) {
+                    this.isVisible = false;
+                    return;
+                }
+                // Если пользователь выбрал купить - закрываем инструкции
+                this.isVisible = false;
+                return;
+            }
+            
+            if (subscriptions.length === 1) {
+                // Одна подписка - используем её
+                const subscription = subscriptions[0];
+                this.subscriptionId = subscription.subscription_id || subscription.id;
+                
+                // Проверяем активна ли она
+                const daysLeft = Utils.daysBetween(subscription.end_date);
+                const isActive = daysLeft > 0 && (subscription.status === 'active' || subscription.status === 'trial');
+                
+                if (!isActive) {
+                    // Подписка неактивна - предлагаем продлить
+                    const selectedSubscriptionId = await this.showSubscriptionSelectionModal();
+                    if (!selectedSubscriptionId) {
+                        this.isVisible = false;
+                        return;
+                    }
+                    this.subscriptionId = selectedSubscriptionId;
+                    await this.renewSubscription(selectedSubscriptionId);
+                    this.subscriptionId = this.getSubscriptionIdFromState() || this.subscriptionId;
+                }
+            } else {
+                // Несколько подписок - показываем выбор
+                const selectedSubscriptionId = await this.showSubscriptionSelectionModalForInstructions(subscriptions);
+                
+                if (!selectedSubscriptionId) {
+                    // Пользователь отменил выбор - закрываем инструкции
+                    this.isVisible = false;
+                    return;
+                }
+                
+                this.subscriptionId = selectedSubscriptionId;
+                
+                // Проверяем активна ли выбранная подписка
+                const selectedSubscription = subscriptions.find(sub => 
+                    (sub.subscription_id || sub.id) == selectedSubscriptionId
+                );
+                
+                if (selectedSubscription) {
+                    const daysLeft = Utils.daysBetween(selectedSubscription.end_date);
+                    const isActive = daysLeft > 0 && (selectedSubscription.status === 'active' || selectedSubscription.status === 'trial');
+                    
+                    if (!isActive) {
+                        // Подписка неактивна - предлагаем продлить
+                        await this.renewSubscription(selectedSubscriptionId);
+                        this.subscriptionId = this.getSubscriptionIdFromState() || this.subscriptionId;
+                    }
+                }
+            }
+        }
+        
+        console.log('[Instructions] subscription_id:', this.subscriptionId);
+
         // Закрываем предыдущий модаль если есть
         if (this.modal) {
             this.hide();
@@ -67,11 +139,6 @@ window.InstructionsScreen = {
                 this.modal.classList.add('active');
             }
         }, delay);
-
-        // Получаем subscription_id из параметров или из текущего состояния
-        this.subscriptionId = params.subscription_id || params.subscriptionId || this.getSubscriptionIdFromState();
-        
-        console.log('[Instructions] subscription_id:', this.subscriptionId);
 
         // Загружаем import-links
         if (this.subscriptionId) {
@@ -420,6 +487,334 @@ window.InstructionsScreen = {
         // Вибрация успеха
         if (window.TelegramApp) {
             window.TelegramApp.haptic.success();
+        }
+    },
+
+    async checkActiveSubscription() {
+        // Проверяем наличие активной подписки
+        if (window.SubscriptionScreen && window.SubscriptionScreen.currentSubscriptions) {
+            const activeSubscription = window.SubscriptionScreen.currentSubscriptions.find(sub => {
+                const daysLeft = Utils.daysBetween(sub.end_date);
+                return daysLeft > 0 && (sub.status === 'active' || sub.status === 'trial');
+            });
+            
+            return !!activeSubscription;
+        }
+        
+        // Если нет данных в SubscriptionScreen, проверяем через API
+        try {
+            if (!window.SubscriptionAPI) {
+                return false;
+            }
+            
+            const response = await window.SubscriptionAPI.listSubscriptions();
+            const subscriptions = response.subscriptions || [];
+            
+            const activeSubscription = subscriptions.find(sub => {
+                const daysLeft = Utils.daysBetween(sub.end_date);
+                return daysLeft > 0 && (sub.status === 'active' || sub.status === 'trial');
+            });
+            
+            return !!activeSubscription;
+        } catch (error) {
+            console.warn('[Instructions] Failed to check active subscription:', error);
+            return false;
+        }
+    },
+
+    async getAllSubscriptions() {
+        // Получаем все подписки (активные и неактивные)
+        try {
+            if (window.SubscriptionScreen && window.SubscriptionScreen.currentSubscriptions) {
+                return window.SubscriptionScreen.currentSubscriptions;
+            }
+            
+            if (!window.SubscriptionAPI) {
+                return [];
+            }
+            
+            const response = await window.SubscriptionAPI.listSubscriptions();
+            return response.subscriptions || [];
+        } catch (error) {
+            console.warn('[Instructions] Failed to get subscriptions:', error);
+            return [];
+        }
+    },
+
+    async showSubscriptionSelectionModalForInstructions(subscriptions) {
+        return new Promise(async (resolve) => {
+            if (subscriptions.length === 0) {
+                resolve(null);
+                return;
+            }
+            
+            if (subscriptions.length === 1) {
+                // Одна подписка - возвращаем её ID
+                const subscription = subscriptions[0];
+                resolve(subscription.subscription_id || subscription.id);
+                return;
+            }
+            
+            // Несколько подписок - показываем выбор
+            const subscriptionOptions = subscriptions.map((sub, index) => {
+                const subId = sub.subscription_id || sub.id;
+                const daysLeft = Utils.daysBetween(sub.end_date);
+                const serviceName = sub.service_name || `Подписка ${subId}`;
+                const isActive = daysLeft > 0 && (sub.status === 'active' || sub.status === 'trial');
+                const statusText = isActive 
+                    ? 'Активна' 
+                    : daysLeft <= 0 
+                        ? 'Просрочена' 
+                        : `Истекает через ${daysLeft} ${Utils.pluralize(daysLeft, ['день', 'дня', 'дней'])}`;
+                
+                return `
+                    <div class="subscription-option ${isActive ? 'subscription-active' : 'subscription-expired'}" data-subscription-id="${subId}">
+                        <div class="subscription-option-info">
+                            <h4>${Utils.escapeHtml(serviceName)}</h4>
+                            <p class="subscription-status ${isActive ? 'status-active' : 'status-expired'}">${statusText}</p>
+                        </div>
+                        <button class="btn ${isActive ? 'btn-primary' : 'btn-primary'} btn-select-subscription" 
+                                data-subscription-id="${subId}" 
+                                data-is-active="${isActive}">
+                            ${isActive ? 'Выбрать' : 'Продлить'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            
+            if (window.Modal) {
+                // Временно скрываем модалку инструкций если она уже создана
+                let instructionsModalHidden = false;
+                if (this.modal) {
+                    this.modal.style.display = 'none';
+                    instructionsModalHidden = true;
+                }
+                
+                window.Modal.show({
+                    title: 'Выберите подписку',
+                    content: `
+                        <div class="subscription-selection-message">
+                            <p>У вас несколько подписок. Выберите подписку, для которой хотите посмотреть инструкции:</p>
+                            <div class="subscriptions-list">
+                                ${subscriptionOptions}
+                            </div>
+                        </div>
+                    `,
+                    buttons: [
+                        {
+                            id: 'cancel',
+                            text: 'Отмена',
+                            action: 'close',
+                            handler: () => {
+                                // Восстанавливаем модалку инструкций если была скрыта
+                                if (instructionsModalHidden && this.modal) {
+                                    this.modal.style.display = '';
+                                }
+                                resolve(null);
+                            }
+                        }
+                    ],
+                    onShow: () => {
+                        // Настраиваем обработчики для кнопок выбора
+                        setTimeout(() => {
+                            const selectButtons = document.querySelectorAll('.btn-select-subscription');
+                            selectButtons.forEach(btn => {
+                                btn.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    
+                                    const subscriptionId = btn.dataset.subscriptionId;
+                                    const isActive = btn.dataset.isActive === 'true';
+                                    
+                                    // Если подписка неактивна - открываем модалку продления
+                                    if (!isActive) {
+                                        window.Modal.hide();
+                                        
+                                        // Восстанавливаем модалку инструкций если была скрыта
+                                        if (instructionsModalHidden && this.modal) {
+                                            this.modal.style.display = '';
+                                        }
+                                        
+                                        // Показываем модалку продления
+                                        this.renewSubscription(subscriptionId);
+                                        
+                                        resolve(null);
+                                        return;
+                                    }
+                                    
+                                    // Если подписка активна - продолжаем
+                                    window.Modal.hide();
+                                    
+                                    // Восстанавливаем модалку инструкций если была скрыта
+                                    if (instructionsModalHidden && this.modal) {
+                                        this.modal.style.display = '';
+                                    }
+                                    
+                                    resolve(subscriptionId);
+                                });
+                            });
+                        }, 100);
+                    },
+                    onHide: () => {
+                        // Восстанавливаем модалку инструкций если была скрыта
+                        if (instructionsModalHidden && this.modal) {
+                            this.modal.style.display = '';
+                        }
+                    }
+                });
+            } else {
+                resolve(null);
+            }
+        });
+    },
+
+    async showSubscriptionSelectionModal() {
+        return new Promise(async (resolve) => {
+            const subscriptions = await this.getAllSubscriptions();
+            
+            if (subscriptions.length === 0) {
+                // Нет подписок вообще - предлагаем купить новую
+                if (window.Modal) {
+                    window.Modal.show({
+                        title: 'Нет активной подписки',
+                        content: `
+                            <div class="subscription-expired-message">
+                                <p>У вас нет активной подписки. Для просмотра инструкций необходимо приобрести подписку.</p>
+                            </div>
+                        `,
+                        buttons: [
+                            {
+                                id: 'buy',
+                                text: 'Купить подписку',
+                                type: 'primary',
+                                handler: () => {
+                                    if (window.ServiceSelector) {
+                                        window.ServiceSelector.show('buy');
+                                    }
+                                    resolve(null);
+                                }
+                            },
+                            {
+                                id: 'cancel',
+                                text: 'Отмена',
+                                action: 'close',
+                                handler: () => resolve(null)
+                            }
+                        ]
+                    });
+                } else {
+                    resolve(null);
+                }
+                return;
+            }
+            
+            if (subscriptions.length === 1) {
+                // Одна подписка - сразу предлагаем продлить
+                const subscription = subscriptions[0];
+                const subscriptionId = subscription.subscription_id || subscription.id;
+                const daysLeft = Utils.daysBetween(subscription.end_date);
+                
+                if (window.Modal) {
+                    window.Modal.show({
+                        title: 'Подписка просрочена',
+                        content: `
+                            <div class="subscription-expired-message">
+                                <p>${daysLeft <= 0 ? 'Ваша подписка просрочена.' : 'Ваша подписка истекает.'}</p>
+                                <p>Для просмотра инструкций необходимо продлить подписку.</p>
+                            </div>
+                        `,
+                        buttons: [
+                            {
+                                id: 'renew',
+                                text: 'Продлить',
+                                type: 'primary',
+                                handler: () => {
+                                    resolve(subscriptionId);
+                                }
+                            },
+                            {
+                                id: 'cancel',
+                                text: 'Отмена',
+                                action: 'close',
+                                handler: () => resolve(null)
+                            }
+                        ]
+                    });
+                } else {
+                    resolve(subscriptionId);
+                }
+                return;
+            }
+            
+            // Несколько подписок - показываем выбор
+            const subscriptionOptions = subscriptions.map((sub, index) => {
+                const subId = sub.subscription_id || sub.id;
+                const daysLeft = Utils.daysBetween(sub.end_date);
+                const serviceName = sub.service_name || `Подписка ${subId}`;
+                const statusText = daysLeft <= 0 ? 'Просрочена' : `Истекает через ${daysLeft} ${Utils.pluralize(daysLeft, ['день', 'дня', 'дней'])}`;
+                
+                return `
+                    <div class="subscription-option" data-subscription-id="${subId}">
+                        <div class="subscription-option-info">
+                            <h4>${Utils.escapeHtml(serviceName)}</h4>
+                            <p class="subscription-status">${statusText}</p>
+                        </div>
+                        <button class="btn btn-primary btn-select-subscription" data-subscription-id="${subId}">
+                            Выбрать
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            
+            if (window.Modal) {
+                const modal = window.Modal.show({
+                    title: 'Выберите подписку',
+                    content: `
+                        <div class="subscription-selection-message">
+                            <p>У вас нет активной подписки. Выберите подписку, которую хотите продлить для просмотра инструкций:</p>
+                            <div class="subscriptions-list">
+                                ${subscriptionOptions}
+                            </div>
+                        </div>
+                    `,
+                    buttons: [
+                        {
+                            id: 'cancel',
+                            text: 'Отмена',
+                            action: 'close',
+                            handler: () => resolve(null)
+                        }
+                    ],
+                    onShow: () => {
+                        // Настраиваем обработчики для кнопок выбора
+                        setTimeout(() => {
+                            const selectButtons = document.querySelectorAll('.btn-select-subscription');
+                            selectButtons.forEach(btn => {
+                                btn.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const subscriptionId = btn.dataset.subscriptionId;
+                                    window.Modal.hide();
+                                    resolve(subscriptionId);
+                                });
+                            });
+                        }, 100);
+                    }
+                });
+            } else {
+                resolve(null);
+            }
+        });
+    },
+
+    async renewSubscription(subscriptionId) {
+        // Продлеваем подписку через ServiceSelector
+        if (window.ServiceSelector) {
+            await window.ServiceSelector.show('renew', subscriptionId);
+            // После продления обновляем данные подписок
+            if (window.SubscriptionScreen) {
+                await window.SubscriptionScreen.refresh();
+            }
         }
     },
 
