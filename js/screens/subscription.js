@@ -138,7 +138,23 @@ window.SubscriptionScreen = {
             requestAnimationFrame(() => target.removeAttribute('data-processing'));
 
             const action = target.dataset.action;
-            const subscriptionId = target.dataset.subscriptionId;
+            let subscriptionId = target.dataset.subscriptionId;
+
+            // Проверяем и нормализуем subscriptionId
+            if (subscriptionId === 'undefined' || subscriptionId === undefined || subscriptionId === null) {
+                // Пытаемся получить из родительского элемента
+                const parentCard = target.closest('[data-subscription-id]');
+                if (parentCard) {
+                    subscriptionId = parentCard.dataset.subscriptionId;
+                }
+            }
+
+            // Преобразуем в строку, если это не undefined/null
+            if (subscriptionId && subscriptionId !== 'undefined') {
+                subscriptionId = String(subscriptionId);
+            } else {
+                subscriptionId = null;
+            }
 
             if (action === 'show-daily-bonus-modal') {
                 this.showDailyBonusModal();
@@ -209,14 +225,24 @@ window.SubscriptionScreen = {
      * Продление подписки
      */
     async handleRenewSubscription(subscriptionId) {
-        
+        // Проверяем subscriptionId
+        if (!subscriptionId || subscriptionId === 'undefined' || subscriptionId === 'null') {
+            console.error('[Subscription] Invalid subscriptionId:', subscriptionId);
+            if (window.Toast) {
+                window.Toast.error('Ошибка: не удалось определить подписку для продления');
+            }
+            return;
+        }
+
+        // Преобразуем в число если нужно
+        const id = typeof subscriptionId === 'string' && !isNaN(subscriptionId) ? parseInt(subscriptionId, 10) : subscriptionId;
 
         if (window.ServiceSelector) {
-            await window.ServiceSelector.show('renew', subscriptionId);
+            await window.ServiceSelector.show('renew', id);
             
             // ✅ Обновляем URL
             if (window.Router) {
-                window.Router.updateURLForAction('renew', { subscription_id: subscriptionId });
+                window.Router.updateURLForAction('renew', { subscription_id: id });
             }
         }
     },
@@ -1213,14 +1239,14 @@ window.SubscriptionScreen = {
                     <div class="subscription-compact-actions">
                         ${!isTrial && !isExpired ? `
                             <div class="subscription-compact-auto-renewal"
-                                 data-subscription-id="${subscription.id}"
+                                 data-subscription-id="${subscription.subscription_id || subscription.id}"
                                  title="Автопродление">
                                 <div class="toggle-switch-compact ${subscription.auto_renewal ? 'active' : ''}">
                                     <div class="toggle-slider-compact"></div>
                                 </div>
                             </div>
                         ` : ''}
-                        <button class="btn-trial-activation btn-renew-compact" data-action="renew" data-subscription-id="${subscription.id}">
+                        <button class="btn-trial-activation btn-renew-compact" data-action="renew" data-subscription-id="${subscription.subscription_id || subscription.id}">
                             <div class="btn-trial-bg">
                                 <div class="btn-trial-shine"></div>
                                 <div class="btn-trial-glow"></div>
