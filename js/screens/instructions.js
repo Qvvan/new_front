@@ -9,6 +9,7 @@ window.InstructionsScreen = {
     subscriptionId: null,
     showSubscriptionSelection: false, // Флаг для показа выбора подписки внутри модального окна
     availableSubscriptions: [], // Доступные подписки для выбора
+    selectedAppIndex: null, // Индекс выбранного приложения на шаге 2 (для кнопки «Далее»)
 
     async show(params = {}) {
         // Закрываем предыдущее модальное окно если есть (как в support.js)
@@ -214,9 +215,9 @@ window.InstructionsScreen = {
                     </div>
                     <div class="modal-actions">
                         ${this.currentStep > 0 ? '<button class="btn btn-secondary" id="instructionsPrev">Назад</button>' : '<button class="btn btn-outline" id="instructionsSkip">Пропустить</button>'}
-                        ${this.currentStep === 1 && this.getAppsForDevice(this.deviceType) && this.getAppsForDevice(this.deviceType).length > 0 ? '' : `<button class="btn btn-primary" id="instructionsNext" ${this.currentStep === 0 && !this.deviceType ? 'disabled' : ''}>
+                        <button class="btn btn-primary" id="instructionsNext" ${this.currentStep === 0 && !this.deviceType ? 'disabled' : ''}>
                             ${this.currentStep === 2 ? 'Завершить' : 'Далее'}
-                        </button>`}
+                        </button>
                     </div>
                 </div>
             `;
@@ -383,7 +384,7 @@ window.InstructionsScreen = {
 
             <div class="apps-list">
                 ${apps.map((app, index) => `
-                    <div class="app-card" data-app-index="${index}">
+                    <div class="app-card ${this.selectedAppIndex === index ? 'selected' : ''}" data-app-index="${index}" data-import-url="${Utils.escapeHtml(app.import_url || '')}">
                         <div class="app-icon">
                             <i class="${this.getAppIcon(app.app_name)}"></i>
                         </div>
@@ -1174,6 +1175,28 @@ window.InstructionsScreen = {
             });
         }
 
+        // Клик по карточке приложения — выбор приложения (для кнопки «Далее»)
+        const appCards = this.modal.querySelectorAll('.apps-list .app-card');
+        appCards.forEach((card) => {
+            card.addEventListener('click', (e) => {
+                // Не перехватываем клик по кнопке «Скачать»
+                if (e.target.closest('.btn-download-app')) return;
+                e.preventDefault();
+                e.stopPropagation();
+                const index = parseInt(card.dataset.appIndex, 10);
+                const importUrl = card.dataset.importUrl;
+                this.selectedAppIndex = index;
+                if (importUrl) {
+                    this.selectedImportUrl = importUrl;
+                    console.log('[Instructions] Selected app by click, import_url:', importUrl);
+                }
+                this.render();
+                if (window.TelegramApp) {
+                    window.TelegramApp.haptic.selection();
+                }
+            });
+        });
+
         // Скачивание приложений из списка
         const downloadBtns = this.modal.querySelectorAll('.btn-download-app');
         downloadBtns.forEach(btn => {
@@ -1187,6 +1210,11 @@ window.InstructionsScreen = {
                 if (importUrl) {
                     this.selectedImportUrl = importUrl;
                     console.log('[Instructions] Selected import_url:', importUrl);
+                }
+                // Помечаем выбранное приложение по индексу карточки
+                const card = btn.closest('.app-card');
+                if (card && card.dataset.appIndex !== undefined) {
+                    this.selectedAppIndex = parseInt(card.dataset.appIndex, 10);
                 }
                 
                 // Открываем ссылку на скачивание
@@ -1353,6 +1381,17 @@ window.InstructionsScreen = {
             return;
         }
 
+        // На шаге выбора приложения: если есть список приложений, нужно выбрать приложение (кликом по карточке или кнопкой «Скачать»)
+        if (this.currentStep === 1) {
+            const apps = this.getAppsForDevice(this.deviceType);
+            if (apps && apps.length > 0 && this.selectedAppIndex == null && !this.selectedImportUrl) {
+                if (window.Toast) {
+                    window.Toast.warning('Нажмите на приложение и нажмите далее');
+                }
+                return;
+            }
+        }
+
         // Если переходим на шаг 2 (скачивание приложения), загружаем данные если нужно
         if (this.currentStep === 0 && this.deviceType) {
             if (!this.importLinks && this.subscriptionId) {
@@ -1391,9 +1430,10 @@ window.InstructionsScreen = {
     prevStep() {
         if (this.currentStep > 0) {
             this.currentStep--;
-            // Сбрасываем выбранный import_url при возврате на шаг 2
+            // Сбрасываем выбранный import_url и приложение при возврате на шаг 2
             if (this.currentStep === 1) {
                 this.selectedImportUrl = null;
+                this.selectedAppIndex = null;
             }
             this.render();
             
@@ -1519,6 +1559,7 @@ window.InstructionsScreen = {
         this.importLinks = null;
         this.subscriptionId = null;
         this.selectedImportUrl = null;
+        this.selectedAppIndex = null;
         this._openedFromScreen = null;
         this.showSubscriptionSelection = false;
         this.availableSubscriptions = [];

@@ -1920,12 +1920,19 @@ body.page-hidden .loadShine {
     align-items: center;
     gap: var(--spacing-lg);
     transition: all var(--transition-normal);
+    cursor: pointer;
 }
 
 .app-card:hover {
     border-color: var(--border-light);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
+}
+
+.app-card.selected {
+    border-color: var(--accent-white);
+    background: var(--glass-bg-strong);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
 
 .app-card .app-icon {
