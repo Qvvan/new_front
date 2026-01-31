@@ -19,20 +19,40 @@ window.KeysScreen = {
             const subscriptionsResponse = await window.SubscriptionAPI.listSubscriptions();
             this.subscriptions = Array.isArray(subscriptionsResponse) ? subscriptionsResponse : (subscriptionsResponse.subscriptions || []);
 
-            // Загружаем ключи
+            // Получаем user_id текущего пользователя
+            let userId = null;
+            try {
+                const user = await window.UserAPI?.getCurrentUser?.();
+                userId = user?.telegram_id ?? user?.user_id ?? user?.id;
+            } catch (e) {
+                // Игнорируем
+            }
+
+            // Загружаем ключи через /user-keys (приоритет) или legacy /keys
             this.allKeys = [];
             for (const subscription of this.subscriptions) {
                 try {
-                    const keysResponse = await window.KeysAPI.getKeys(subscription.subscription_id || subscription.id);
-                    const keys = keysResponse.keys || [];
+                    const subId = subscription.subscription_id ?? subscription.id;
+                    let keys = [];
+
+                    if (userId && subId && window.KeysAPI.getUserKeys) {
+                        const keysResponse = await window.KeysAPI.getUserKeys(userId, subId);
+                        const rawKeys = keysResponse.keys || [];
+                        // API возвращает массив строк "vless://..."
+                        keys = rawKeys.map(k => (typeof k === 'string' ? { key: k } : k));
+                    } else {
+                        const keysResponse = await window.KeysAPI.getKeys(subId);
+                        keys = keysResponse.keys || [];
+                    }
 
                     keys.forEach(key => {
-                        key.subscription = subscription;
+                        const keyObj = typeof key === 'string' ? { key } : key;
+                        keyObj.subscription = subscription;
+                        keyObj.subscription_id = subId;
+                        this.allKeys.push(keyObj);
                     });
-
-                    this.allKeys.push(...keys);
                 } catch (error) {
-                    
+                    // Игнорируем ошибки загрузки ключей по подписке
                 }
             }
 
@@ -547,6 +567,7 @@ window.KeysScreen = {
 
         return `
             <div class="keys-content">
+                ${content}
                 ${Object.entries(keysBySubscription).map(([subscriptionId, keys]) =>
                     this.renderKeysSubscription(subscriptionId, keys)
                 ).join('')}
@@ -558,7 +579,7 @@ window.KeysScreen = {
         const grouped = {};
 
         this.allKeys.forEach(key => {
-            const subscriptionId = key.subscription_id;
+            const subscriptionId = key.subscription_id ?? key.subscription?.id ?? key.subscription?.subscription_id ?? 'default';
             if (!grouped[subscriptionId]) {
                 grouped[subscriptionId] = [];
             }
@@ -569,8 +590,10 @@ window.KeysScreen = {
     },
 
     renderKeysSubscription(subscriptionId, keys) {
-        const subscription = this.subscriptions.find(s => s.id === subscriptionId);
-        const serviceName = subscription ? this.getServiceName(subscription) : 'Подписка';
+        const subscription = this.subscriptions.find(s =>
+            s.id === subscriptionId || s.subscription_id === subscriptionId
+        );
+        const serviceName = subscription ? this.getServiceName(subscription) : (subscriptionId === 'default' ? 'VPN Ключи' : 'Подписка');
 
         return `
             <div class="subscription-box">
@@ -589,21 +612,37 @@ window.KeysScreen = {
     },
 
     renderKey(key) {
-        const serverInfo = this.parseServerInfo(key.key);
+        const keyValue = typeof key === 'string' ? key : (key?.key ?? '');
+        const serverInfo = this.parseServerInfo(keyValue);
 
         return `
-            <div class="key-row" data-action="copy-key" data-key="${Utils.escapeHtml(key.key)}">
+            <div class="key-row" data-action="copy-key" data-key="${this.escapeKeyForAttribute(keyValue)}">
                 <div class="key-info">
                     <div class="key-name">
                         <span class="server-flag">${serverInfo.flag}</span>
-                        <span>${serverInfo.name}</span>
+                        <span class="key-label">${Utils.escapeHtml(serverInfo.name)}</span>
                     </div>
+                    <div class="key-preview">${Utils.escapeHtml(this.getKeyPreview(keyValue))}</div>
                 </div>
-                <button class="copy-btn">
+                <button class="copy-btn key-copy-btn" data-action="copy-key" data-key="${this.escapeKeyForAttribute(keyValue)}" type="button" title="Скопировать">
                     <i class="fas fa-copy"></i>
                 </button>
             </div>
         `;
+    },
+
+    escapeKeyForAttribute(keyValue) {
+        if (!keyValue) return '';
+        return String(keyValue)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    },
+
+    getKeyPreview(keyValue) {
+        if (!keyValue || keyValue.length < 60) return keyValue || '';
+        return keyValue.substring(0, 50) + '…';
     },
 
     /**

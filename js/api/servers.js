@@ -6,7 +6,7 @@ window.ServersAPI = {
      * @returns {Promise<Array>} Список серверов с информацией о нагрузке
      */
     async getServers() {
-        return await window.APIClient.get('/servers');
+        return await window.APIClient.get('/keys/servers');
     },
 
     /**
@@ -15,7 +15,7 @@ window.ServersAPI = {
      * @returns {Promise<Object>} Данные сервера
      */
     async getServer(serverId) {
-        return await window.APIClient.get(`/servers/${serverId}`);
+        return await window.APIClient.get(`/keys/servers/${serverId}`);
     },
 
     /**
@@ -24,6 +24,6 @@ window.ServersAPI = {
      * @returns {Promise<Object>} Статистика сервера
      */
     async getServerStats(serverId) {
-        return await window.APIClient.get(`/servers/${serverId}/stats`);
+        return await window.APIClient.get(`/keys/servers/${serverId}/stats`);
     }
 };

@@ -1,7 +1,20 @@
 // js/api/keys.js - ИСПРАВЛЯЕМ API
 window.KeysAPI = {
     /**
-     * Получение ключей по подписке
+     * Получение ключей пользователя по user_id и subscription_id
+     * @param {string|number} userId - ID пользователя (telegram_id)
+     * @param {string|number} subscriptionId - ID подписки
+     * @returns {Promise<Object>} { keys: string[] } - массив ключей vless://...
+     */
+    async getUserKeys(userId, subscriptionId) {
+        return await window.APIClient.get('/keys/user-keys', {
+            user_id: userId,
+            subscription_id: subscriptionId
+        });
+    },
+
+    /**
+     * Получение ключей по подписке (legacy, для совместимости)
      * @param {string} subscriptionId - UUID подписки
      * @returns {Promise<Object>} Список ключей
      */
