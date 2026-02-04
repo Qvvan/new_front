@@ -1,0 +1,83 @@
+import { api } from './client';
+
+export type ImportLinkApp = { app_name?: string; store_url?: string; import_url?: string };
+export type ImportLinksMap = Record<string, ImportLinkApp[]>;
+
+export const userApi = {
+  register: (referrerId?: string | null) =>
+    api.post<{ user?: unknown }>('/user', referrerId ? { referrer_id: referrerId } : {}),
+  getCurrentUser: (forceRefresh = false) =>
+    api.post<{ user?: unknown; telegram_id?: number; user_id?: number; id?: number }>('/user/user', {}, { cacheable: !forceRefresh }),
+  updateLastSeen: () => api.post('/user/user/me/last-seen'),
+};
+
+export const subscriptionApi = {
+  list: () => api.get<{ subscriptions?: unknown[] } | unknown[]>('/subscription/subscriptions/user'),
+  get: (id: string | number) => api.get(`/subscriptions/${id}`),
+  activateTrial: () => api.post<{ subscription_id?: string; id?: string }>('/user/user/trial'),
+  updateAutoRenewal: (subscriptionId: number, autoRenewal: boolean) =>
+    api.post(`/subscription/subscriptions/${subscriptionId}/auto-renewal?auto_renewal=${autoRenewal}`),
+  getImportLinks: (subscriptionId: number) =>
+    api.get<ImportLinksMap>(`/subscription/subscriptions/${subscriptionId}/import-links`),
+};
+
+export const paymentApi = {
+  create: (data: object, userId?: number) => {
+    const q = userId ? `?user_id=${userId}` : '';
+    return api.post<{ payment?: { id: string; status: string }; confirmation_url?: string; url?: string }>(`/payments${q}`, data);
+  },
+  createSubscription: (data: { service_id: number }, userId: number) =>
+    api.post<{ confirmation_url?: string; url?: string }>(`/subscription/subscriptions/payment?user_id=${userId}`, data),
+  createRenewal: (data: { subscription_id: number; service_id: number }, userId: number) =>
+    api.post<{ confirmation_url?: string; url?: string }>(`/subscription/subscriptions/renewal/payment?user_id=${userId}`, data),
+  get: (id: string) => api.get(`/payments/${id}`),
+  list: (userId: number, params?: { limit?: number; offset?: number }) =>
+    api.get<{ payments?: unknown[] }>(`/payments/user/${userId}/history`, { limit: 50, offset: 0, ...params }),
+  getPending: (userId: number) =>
+    api.get<{ payments?: unknown[] }>(`/payments/user/${userId}/pending`).then(r => (r.payments ?? []) as Array<{ id: string; status?: string; created_at?: string; confirmation_url?: string; payment_url?: string; url?: string; receipt_link?: string; service_name?: string; service_duration?: string; price?: number }>),
+};
+
+export const keysApi = {
+  getUserKeys: (userId: number | string, subscriptionId: string | number) =>
+    api.get<{ keys?: string[] }>('/keys/user-keys', { user_id: userId, subscription_id: subscriptionId }),
+  getKeys: (subscriptionId: string) =>
+    api.get<{ keys?: unknown[] }>('/keys', { subscription_id: subscriptionId }),
+};
+
+export const referralApi = {
+  list: () => api.get<{ referrals?: unknown[] } | unknown[]>('/user/referral/me'),
+};
+
+export const servicesApi = {
+  list: () => api.get<{ services?: unknown[] } | unknown[]>('/subscription/services'),
+  get: (id: number) => api.get(`/services/${id}`),
+};
+
+export const giftApi = {
+  create: (data: { service_id: number; recipient_user_id?: number; message?: string; sender_display_name?: string }) =>
+    api.post('/subscription/gifts', data),
+  get: (id: number) => api.get(`/subscription/gifts/${id}`),
+  getByCode: (code: string) => api.get(`/subscription/gifts/code/${code}`),
+  getPending: (userId: number) =>
+    api.get<unknown[] | { gifts?: unknown[] }>(`/subscription/gifts/user/${userId}/pending`).then(r =>
+      Array.isArray(r) ? r : (r as { gifts?: unknown[] }).gifts ?? []),
+  getSent: (userId: number) =>
+    api.get<unknown[] | { gifts?: unknown[] }>(`/subscription/gifts/user/${userId}/sent`).then(r =>
+      Array.isArray(r) ? r : (r as { gifts?: unknown[] })?.gifts ?? []),
+  activate: (id: number) => api.post(`/subscription/gifts/${id}/activate`),
+  activateByCode: (code: string) => api.post('/subscription/gifts/activate/code', { gift_code: code }),
+  refund: (id: number) => api.post(`/subscription/gifts/${id}/refund`),
+};
+
+export const serversApi = {
+  list: () => api.get<{ servers?: unknown[] } | unknown[]>('/keys/servers'),
+};
+
+export const currencyApi = {
+  getBalance: () => api.get<{ balance?: number }>('/user/currency/balance'),
+  getTransactions: (params?: { limit?: number; offset?: number }) =>
+    api.get<{ transactions?: unknown[] }>('/user/currency/transactions', { limit: 50, offset: 0, ...params }),
+  getDailyBonusStatus: () => api.get('/user/currency/daily-bonus/status'),
+  claimDailyBonus: () => api.post<{ balance?: number; bonus_amount?: number }>('/user/currency/daily-bonus/claim'),
+  getDailyBonusList: () => api.get('/user/currency/daily-bonus/list'),
+};

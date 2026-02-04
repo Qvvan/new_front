@@ -1,0 +1,539 @@
+/* CSS Custom Properties (Variables) */
+:root {
+    /* Colors */
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a;
+    --bg-tertiary: #151515;    /* было #2a2a2a */
+    --bg-accent: #1a1a1a;
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0a0;
+    --text-muted: #666666;
+    --accent-white: #ffffff;
+    --accent-red: #ff4757;
+    --accent-green: #49aa4d;
+    --accent-blue: #3742fa;
+    --accent-orange: #ff9f43;
+
+    /* Borders */
+    --border-dark: rgba(255, 255, 255, 0.1);
+    --border-light: rgba(255, 255, 255, 0.2);
+    --border-accent: rgba(255, 255, 255, 0.3);
+
+    /* Glass Effects */
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-bg-strong: rgba(255, 255, 255, 0.08);
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.6);
+
+    /* Gradients */
+    --gradient-card: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    --gradient-card-alt: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.08));
+    --gradient-success: linear-gradient(135deg, #4CAF50, #45a049);
+    --gradient-danger: linear-gradient(135deg, #ff4757, #ff3742);
+    --gradient-warning: linear-gradient(135deg, #ff9f43, #ff8c29);
+    --gradient-info: linear-gradient(135deg, #3742fa, #2f3542);
+
+    /* Sizes */
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 16px;
+    --border-radius-xl: 20px;
+    --border-radius-full: 50%;
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 20px;
+    --spacing-2xl: 24px;
+    --spacing-3xl: 32px;
+
+    /* Typography */
+    --font-size-xs: 11px;
+    --font-size-sm: 13px;
+    --font-size-base: 15px;
+    --font-size-lg: 17px;
+    --font-size-xl: 19px;
+    --font-size-2xl: 22px;
+    --font-size-3xl: 28px;
+    --font-size-4xl: 36px;
+
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* Layout - Полуполноэкранный режим */
+    --max-width-mobile: 500px;    /* Увеличиваем для лучшего использования экрана */
+    --max-width-desktop: 100%;
+    --nav-height: 80px;
+    --payment-banner-height: 70px;
+
+    /* 🔥 Новые переменные для полуполноэкранного режима */
+    --telegram-header-height: 0px;  /* Минимизируем отступ от заголовка Telegram */
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+    --vh: 1vh; /* Fallback для динамической высоты viewport */
+    --tg-viewport-height: 100vh; /* Telegram viewport высота */
+
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+
+    /* Aliases for components.css */
+    --color-surface: #0a0a0a;
+    --color-surface-hover: #151515;
+    --color-border: rgba(255, 255, 255, 0.1);
+    --color-text: #ffffff;
+    --color-success: #49aa4d;
+    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    /* Z-index */
+    --z-background: -1;
+    --z-base: 1;
+    --z-elevated: 10;
+    --z-nav: 100;
+    --z-payment-banner: 150;
+    --z-modal: 1000;
+    --z-toast: 10000;
+}
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+
+    /* 🔥 Полное скрытие скроллбаров для чистого вида */
+    -ms-overflow-style: none;  /* IE и Edge */
+    scrollbar-width: none;     /* Firefox */
+}
+
+*::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
+}
+
+html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* 🔥 Фиксируем html для полноэкранного режима */
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.5;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+
+    /* 🔥 Полуполноэкранный режим */
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
+    overflow-x: hidden;
+    overflow-y: hidden; /* Контролируем скролл через app-container */
+
+    /* Блокируем случайные скроллы за пределы */
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+
+    --tg-theme-bg-color: #0d0d0d !important;
+    --tg-theme-secondary-bg-color: #0d0d0d !important;
+    --tg-theme-header-bg-color: #0d0d0d !important;
+}
+
+.tgme_widget_message_header,
+.tgme_widget_message_author,
+.tg-webapp-header,
+.webapp-header {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    opacity: 0 !important;
+}
+
+.app-container {
+    margin-top: 0 !important;
+    padding-top: var(--safe-area-top) !important;
+    top: 0 !important;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.2;
+    margin: 0;
+}
+
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-2xl); }
+h3 { font-size: var(--font-size-xl); }
+h4 { font-size: var(--font-size-lg); }
+h5 { font-size: var(--font-size-base); }
+h6 { font-size: var(--font-size-sm); }
+
+p {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+/* 🔥 Layout Base Classes - Полуполноэкранный режим */
+.app-container {
+    /* Занимаем весь экран */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
+
+    background: var(--bg-primary);
+    overflow: hidden;
+
+    /* 🔥 Учитываем safe area но НЕ заходим в системную панель */
+    padding-top: var(--safe-area-top);
+    padding-bottom: 0;
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
+
+    /* Блокируем случайный скролл за пределы */
+    overscroll-behavior: contain;
+
+    /* Z-index для корректного отображения */
+    z-index: var(--z-base);
+}
+
+.main-content {
+    /* 🔥 Занимаем всю доступную высоту за вычетом навигации */
+    position: relative;
+    width: 100%;
+    height: calc(100vh - var(--nav-height) - var(--safe-area-top) - var(--safe-area-bottom));
+    height: calc(var(--tg-viewport-height, 100vh) - var(--nav-height) - var(--safe-area-top) - var(--safe-area-bottom));
+
+    /* Контролируемый скролл */
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    /* Плавный скролл */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+
+    /* Убираем отступы - контент идет от края до края */
+    padding: 0;
+    margin: 0;
+}
+
+/* 🔥 Offset для payment banner (теперь баннер внизу над навигацией) */
+.main-content.with-payment-banner {
+    padding-bottom: calc(var(--payment-banner-height) + var(--nav-height));
+}
+
+.screen {
+    display: none;
+    position: relative;
+    width: 100%;
+    min-height: 100%;
+
+    /* 🔥 Убираем все отступы - контент управляется через content-wrapper */
+    padding: 0;
+    margin: 0;
+
+    /* Переходы */
+    opacity: 0;
+    transition: opacity 0.15s ease-out;
+
+    /* Контент может скроллиться */
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    /* Улучшаем скролл на мобильных */
+    -webkit-overflow-scrolling: touch;
+}
+
+.screen.active {
+    display: block;
+    opacity: 1;
+}
+
+/* 🔥 Специальный режим без скролла для full-screen контента */
+.screen.screen-no-scroll {
+    overflow: hidden;
+    height: 100%;
+}
+
+/* 🔥 Content wrapper - ЗДЕСЬ контролируем отступы контента */
+.content-wrapper {
+    /* Центрируем контент */
+    max-width: var(--max-width-mobile);
+    margin: 0 auto;
+    width: 100%;
+
+    /* 🔥 Контролируемые отступы для контента */
+    padding: var(--spacing-lg) var(--spacing-md);
+
+    /* Минимальная высота для корректного отображения */
+    min-height: 100%;
+
+    /* Позиционирование */
+    position: relative;
+    z-index: var(--z-base);
+
+    /* Дополнительные отступы для safe area (если нужно) */
+    padding-left: max(var(--spacing-md), var(--safe-area-left));
+    padding-right: max(var(--spacing-md), var(--safe-area-right));
+}
+
+/* Background Effects */
+.background-glow {
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+    z-index: var(--z-background);
+    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация для снижения нагрузки на GPU/CPU */
+    pointer-events: none;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+
+/* Text Utilities */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-white { color: var(--accent-white); }
+.text-red { color: var(--accent-red); }
+.text-green { color: var(--accent-green); }
+
+.font-bold { font-weight: var(--font-weight-bold); }
+.font-semibold { font-weight: var(--font-weight-semibold); }
+.font-medium { font-weight: var(--font-weight-medium); }
+
+/* Flexbox Utilities */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-row { flex-direction: row; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-around { justify-content: space-around; }
+.justify-start { justify-content: flex-start; }
+.justify-end { justify-content: flex-end; }
+.flex-1 { flex: 1; }
+.flex-grow { flex-grow: 1; }
+.flex-shrink-0 { flex-shrink: 0; }
+
+/* Spacing Utilities */
+.gap-xs { gap: var(--spacing-xs); }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+.gap-xl { gap: var(--spacing-xl); }
+.gap-2xl { gap: var(--spacing-2xl); }
+
+.m-0 { margin: 0; }
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+.mt-xl { margin-top: var(--spacing-xl); }
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+.mb-xl { margin-bottom: var(--spacing-xl); }
+
+.p-0 { padding: 0; }
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
+.p-xl { padding: var(--spacing-xl); }
+
+/* Border Radius Utilities */
+.rounded-sm { border-radius: var(--border-radius-sm); }
+.rounded-md { border-radius: var(--border-radius-md); }
+.rounded-lg { border-radius: var(--border-radius-lg); }
+.rounded-xl { border-radius: var(--border-radius-xl); }
+.rounded-full { border-radius: var(--border-radius-full); }
+
+/* Scrolling */
+.scroll-smooth {
+    scroll-behavior: smooth;
+}
+
+/* Selection */
+::selection {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+}
+
+/* Focus */
+:focus {
+    outline: none;
+}
+
+:focus-visible {
+    outline: 2px solid var(--accent-white);
+    outline-offset: 2px;
+}
+
+/* 🔥 Responsive Design для полуполноэкранного режима */
+
+/* Экстра-маленькие экраны */
+@media (max-width: 360px) {
+    .content-wrapper {
+        padding: var(--spacing-md) var(--spacing-xs);
+        padding-left: max(var(--spacing-xs), var(--safe-area-left));
+        padding-right: max(var(--spacing-xs), var(--safe-area-right));
+    }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 320px) {
+    .content-wrapper {
+        padding: var(--spacing-sm) 2px;
+        padding-left: max(2px, var(--safe-area-left));
+        padding-right: max(2px, var(--safe-area-right));
+    }
+}
+
+/* Средние экраны */
+@media (max-width: 480px) {
+    .content-wrapper {
+        padding: var(--spacing-lg) var(--spacing-sm);
+        padding-left: max(var(--spacing-sm), var(--safe-area-left));
+        padding-right: max(var(--spacing-sm), var(--safe-area-right));
+    }
+}
+
+/* Планшеты и больше */
+@media (min-width: 768px) {
+    .content-wrapper {
+        max-width: 600px; /* Немного шире на планшетах */
+        padding: var(--spacing-xl) var(--spacing-lg);
+    }
+}
+
+/* Десктопы */
+@media (min-width: 992px) {
+    .app-container {
+        /* Полноэкранный режим на десктопах тоже */
+        border: none;
+        max-width: none;
+        margin: 0;
+    }
+
+    .content-wrapper {
+        max-width: 700px; /* Оптимальная ширина для чтения */
+    }
+}
+
+/* Большие десктопы */
+@media (min-width: 1200px) {
+    .content-wrapper {
+        max-width: 800px;
+    }
+}
+
+/* 🔥 Ландшафтная ориентация */
+@media (orientation: landscape) and (max-height: 500px) {
+    .content-wrapper {
+        padding-top: var(--spacing-md);
+        padding-bottom: var(--spacing-md);
+    }
+
+    /* Корректировка для низких экранов в ландшафте */
+    .main-content {
+        height: calc(100vh - var(--nav-height));
+    }
+
+    .main-content.with-payment-banner {
+        padding-bottom: calc(var(--payment-banner-height) + var(--nav-height));
+    }
+}
+
+/* 🔥 Устройства с вырезами (notch) */
+@supports (padding: max(0px)) {
+    .app-container {
+        /* Используем max() для корректного отображения на устройствах с вырезами */
+        padding-top: max(var(--safe-area-top), 0px);
+        padding-bottom: max(var(--safe-area-bottom), 0px);
+        padding-left: max(var(--safe-area-left), 0px);
+        padding-right: max(var(--safe-area-right), 0px);
+    }
+
+    .content-wrapper {
+        /* Дополнительная защита от заезда под вырез */
+        padding-left: max(var(--spacing-md), var(--safe-area-left));
+        padding-right: max(var(--spacing-md), var(--safe-area-right));
+    }
+}
+
+/* 🔥 Модальные окна тоже без скроллбаров */
+.modal {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.modal::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* 🔥 Производительность и анимации */
+.screen {
+    /* Аппаратное ускорение для плавных переходов */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000;
+}
+
+.screen.active {
+    animation: screenEnter 0.2s ease-out forwards;
+}
+
+@keyframes screenEnter {
+    from {
+        opacity: 0;
+        transform: translateY(10px) translateZ(0);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) translateZ(0);
+    }
+}
