@@ -53,6 +53,11 @@ export function pluralize(count: number, forms: [string, string, string]): strin
   return forms[index];
 }
 
+/** Длительность подписки в днях: «30 дней», «90 дней» и т.д. */
+export function formatDurationDays(days: number): string {
+  return `${days} ${pluralize(days, ['день', 'дня', 'дней'])}`;
+}
+
 export function escapeHtml(text: string): string {
   const div = document.createElement('div');
   div.textContent = text;

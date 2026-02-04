@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { servicesApi, giftApi } from '../../core/api/endpoints';
 import { useToast } from '../../shared/ui/Toast';
 import { useTelegram } from '../../core/telegram/hooks';
-import { formatPrice } from '../../core/utils';
+import { formatPrice, formatDurationDays } from '../../core/utils';
 import { modalBackdrop, modalPanel } from '../../shared/motion/variants';
 import { usePaymentBannerStore } from '../../shared/ui/PaymentBanner';
 import { storage } from '../../core/storage';
@@ -13,12 +13,6 @@ interface GiftFlowModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
-}
-
-function formatDuration(days: number): string {
-  if (days >= 360) return `${Math.round(days / 365)} год`;
-  if (days >= 30) return `${Math.round(days / 30)} мес`;
-  return `${days} дн`;
 }
 
 const NAME_PATTERN = /^[a-zA-Zа-яА-ЯёЁ\s]*$/;
@@ -99,7 +93,7 @@ export function GiftFlowModal({ open, onClose, onSuccess }: GiftFlowModalProps) 
             payment_url: paymentUrl,
             url: paymentUrl,
             service_name: payment.service_name ?? selectedService?.name,
-            service_duration: selectedService ? formatDuration(selectedService.duration_days ?? 0) : undefined,
+            service_duration: selectedService ? formatDurationDays(selectedService.duration_days ?? 0) : undefined,
             created_at: payment.created_at ?? new Date().toISOString(),
           };
           await storage.addPendingPayment(toStore);
@@ -153,7 +147,7 @@ export function GiftFlowModal({ open, onClose, onSuccess }: GiftFlowModalProps) 
                             <div className="service-compact-pricing">
                               <div className="service-compact-price">{formatPrice(s.price ?? 0)}</div>
                             </div>
-                            <div className="service-compact-period">{formatDuration(s.duration_days ?? 0)}</div>
+                            <div className="service-compact-period">{formatDurationDays(s.duration_days ?? 0)}</div>
                           </div>
                         </div>
                       );
@@ -212,7 +206,7 @@ export function GiftFlowModal({ open, onClose, onSuccess }: GiftFlowModalProps) 
                     </div>
                     <div className="gift-summary-item">
                       <span className="gift-summary-label">Срок:</span>
-                      <span className="gift-summary-value">{formatDuration(selectedService.duration_days ?? 0)}</span>
+                      <span className="gift-summary-value">{formatDurationDays(selectedService.duration_days ?? 0)}</span>
                     </div>
                     <div className="gift-summary-item">
                       <span className="gift-summary-label">Цена:</span>

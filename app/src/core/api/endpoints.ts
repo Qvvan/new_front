@@ -34,7 +34,23 @@ export const paymentApi = {
   list: (userId: number, params?: { limit?: number; offset?: number }) =>
     api.get<{ payments?: unknown[] }>(`/payments/user/${userId}/history`, { limit: 50, offset: 0, ...params }),
   getPending: (userId: number) =>
-    api.get<{ payments?: unknown[] }>(`/payments/user/${userId}/pending`).then(r => (r.payments ?? []) as Array<{ id: string; status?: string; created_at?: string; confirmation_url?: string; payment_url?: string; url?: string; receipt_link?: string; service_name?: string; service_duration?: string; price?: number }>),
+    api.get<{ payments?: unknown[] }>(`/payments/user/${userId}/pending`).then(r => (r.payments ?? []) as PendingPaymentApiItem[]),
+};
+
+export type PendingPaymentApiItem = {
+  id: string;
+  status?: string;
+  created_at?: string;
+  confirmation_url?: string;
+  payment_url?: string;
+  url?: string;
+  receipt_link?: string;
+  service_id?: number;
+  service_name?: string;
+  service_duration?: string;
+  price?: number;
+  amount?: number;
+  description?: string;
 };
 
 export const keysApi = {

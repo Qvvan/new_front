@@ -12,9 +12,12 @@ interface PendingPayment {
   payment_url?: string;
   url?: string;
   receipt_link?: string;
+  service_id?: number;
   service_name?: string;
   service_duration?: string;
   price?: number;
+  amount?: number;
+  description?: string;
 }
 
 interface PaymentBannerState {
@@ -131,7 +134,7 @@ export function PaymentBanner() {
             <div className="payment-text">
               <div className="payment-title">{payment.service_name ?? 'VPN подписка'}</div>
               <div className="payment-subtitle">
-                {formatPrice(payment.price ?? 0)}
+                {formatPrice(payment.price ?? payment.amount ?? 0)}
                 {payment.service_duration ? ` • ${payment.service_duration}` : ''}
                 {!isPending ? ' • Оплачено' : ' • Ожидание оплаты'}
               </div>

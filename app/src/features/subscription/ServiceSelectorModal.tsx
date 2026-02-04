@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { servicesApi, userApi, paymentApi, subscriptionApi } from '../../core/api/endpoints';
 import { useToast } from '../../shared/ui/Toast';
 import { useTelegram } from '../../core/telegram/hooks';
-import { formatPrice } from '../../core/utils';
+import { formatPrice, formatDurationDays } from '../../core/utils';
 import { modalBackdrop, modalPanel } from '../../shared/motion/variants';
 import { TgsPlayer, ASSETS_GIFS } from '../../shared/ui/TgsPlayer';
 import { daysBetween } from '../../core/utils';
@@ -31,12 +31,6 @@ type ServiceItem = {
   badge?: string;
   sort_order?: number;
 };
-
-function formatDuration(days: number): string {
-  if (days >= 360) return `${Math.round(days / 365)} год`;
-  if (days >= 30) return `${Math.round(days / 30)} мес`;
-  return `${days} дн`;
-}
 
 export function ServiceSelectorModal({ open, mode, subscriptionId, onClose, onSuccess }: ServiceSelectorModalProps) {
   const toast = useToast();
@@ -162,7 +156,7 @@ export function ServiceSelectorModal({ open, mode, subscriptionId, onClose, onSu
                             {formatPrice(s.price ?? 0)}
                           </div>
                         </div>
-                        <div className="service-compact-period">{formatDuration(s.duration_days ?? 0)}</div>
+                        <div className="service-compact-period">{formatDurationDays(s.duration_days ?? 0)}</div>
                       </div>
                     </div>
                   );
@@ -189,7 +183,7 @@ export function ServiceSelectorModal({ open, mode, subscriptionId, onClose, onSu
                     </div>
                     <div className="trial-info">
                       <h4 className="trial-title">{trialService.name}</h4>
-                      <div className="trial-duration">{formatDuration(trialService.duration_days ?? 0)}</div>
+                      <div className="trial-duration">{formatDurationDays(trialService.duration_days ?? 0)}</div>
                     </div>
                     <div className="trial-status">{trialActivated ? 'Использован' : 'Доступен'}</div>
                   </div>

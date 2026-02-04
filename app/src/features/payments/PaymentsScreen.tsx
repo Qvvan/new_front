@@ -3,7 +3,7 @@ import { userApi, paymentApi, currencyApi, giftApi, servicesApi } from '../../co
 import { useModal } from '../../shared/ui/Modal';
 import { useToast } from '../../shared/ui/Toast';
 import { useTelegram } from '../../core/telegram/hooks';
-import { formatDate, formatPrice, copyToClipboard } from '../../core/utils';
+import { formatDate, formatPrice, formatDurationDays, copyToClipboard } from '../../core/utils';
 import { TgsPlayer, ASSETS_GIFS } from '../../shared/ui/TgsPlayer';
 
 type Action = { type: 'payment' | 'currency' | 'gift'; data: unknown; date: Date };
@@ -83,11 +83,7 @@ export function PaymentsScreen() {
     if (p.service_duration) return p.service_duration;
     const s = p.service_id ? serviceMap.get(p.service_id) : null;
     const days = (s as { duration_days?: number })?.duration_days;
-    if (days != null) {
-      if (days >= 360) return `${Math.round(days / 365)} год`;
-      if (days >= 30) return `${Math.round(days / 30)} мес`;
-      return `${days} дн`;
-    }
+    if (days != null) return formatDurationDays(days);
     return 'Неизвестно';
   };
 
