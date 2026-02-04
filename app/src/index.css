@@ -276,6 +276,7 @@ button:active:not(:disabled),
   background: rgba(0, 0, 0, 0.2);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2) inset;
 }
+/* Круг таймера: все свойства заданы в PaymentBanner.tsx (style на circle), здесь не переопределяем */
 .payment-banner .timer-text {
   font-size: 10px;
 }
@@ -294,4 +295,26 @@ button:active:not(:disabled),
 }
 .payment-details .gift-code-container .btn-copy-code {
   flex-shrink: 0;
+}
+
+/* Активация кода — в общем стиле приложения, без голубых оттенков */
+.code-activation-icon-wrapper .code-activation-icon-glow {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+  opacity: 0.8;
+}
+.code-activation-icon {
+  color: var(--text-primary, #fff) !important;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+.code-input-wrapper.focused .code-input-border {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+.code-input.has-value {
+  color: var(--text-primary, #fff);
+  text-shadow: none;
+}
+.code-input-focus-line {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
 }

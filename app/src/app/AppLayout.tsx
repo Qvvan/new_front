@@ -44,7 +44,7 @@ export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 800);
+    const t = setTimeout(() => setLoading(false), 150);
     return () => clearTimeout(t);
   }, []);
 

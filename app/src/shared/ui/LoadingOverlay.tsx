@@ -14,7 +14,7 @@ export function LoadingOverlay() {
         className="loading-text"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.15 }}
+        transition={{ delay: 0.05, duration: 0.15 }}
       >
         Загрузка...
       </motion.p>

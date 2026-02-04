@@ -88,7 +88,19 @@ export function PaymentBanner() {
   }, [payment, hide]);
 
   const isPending = payment?.status === 'pending';
-  const progress = isPending ? (timeLeft / 3600) * 100 : 100;
+  // Прогресс: 100% = весь час впереди, 0% = время вышло (как в старом коде getProgressPercent)
+  const progressPercent = isPending ? (timeLeft / 3600) * 100 : 100;
+  const circumference = 125.6; // 2 * PI * 20, как в старом коде
+  const strokeDashoffset = circumference - (circumference * progressPercent) / 100;
+  // Синий круг как в старом коде (#4A90E2), все свойства круга задаём явно в JSX
+  const circleStyle: React.CSSProperties = {
+    fill: 'none',
+    stroke: '#4A90E2',
+    strokeWidth: 3,
+    strokeLinecap: 'round',
+    strokeDasharray: circumference,
+    strokeDashoffset,
+  };
 
   return (
     <AnimatePresence>
@@ -107,8 +119,8 @@ export function PaymentBanner() {
         <div className="payment-info">
           <div className="payment-timer">
             <div className="timer-circle">
-              <svg className={`timer-progress ${isPending ? 'active' : ''}`} width="32" height="32" viewBox="0 0 32 32">
-                <circle cx="16" cy="16" r="14" fill="none" stroke="#4A90E2" strokeWidth="2" strokeLinecap="round" strokeDasharray={88} strokeDashoffset={88 - (88 * progress) / 100} />
+              <svg className={`timer-progress ${isPending ? 'active' : ''}`} width="44" height="44" viewBox="0 0 44 44">
+                <circle cx="22" cy="22" r="20" style={circleStyle} />
               </svg>
               <span className="timer-text">{isPending ? formatTime(timeLeft) : '✓'}</span>
             </div>

@@ -115,6 +115,7 @@ export function SupportModal() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
                   className="faq-list"
                 >
                   {FAQ_ITEMS.map(item => (
@@ -137,6 +138,7 @@ export function SupportModal() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
                   className="faq-content"
                 >
                   <div className="faq-steps">

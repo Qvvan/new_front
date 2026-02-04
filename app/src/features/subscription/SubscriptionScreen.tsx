@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { userApi, subscriptionApi, currencyApi } from '../../core/api/endpoints';
+import { userApi, subscriptionApi, currencyApi, servicesApi } from '../../core/api/endpoints';
 import { useModalsStore } from '../../app/modalsStore';
 import { useToast } from '../../shared/ui/Toast';
 import { useModal } from '../../shared/ui/Modal';
@@ -22,11 +22,10 @@ type Sub = {
   status?: string;
   auto_renewal?: boolean;
   service_name?: string;
+  service_id?: number;
 };
 
-function getServiceName(sub: Sub) {
-  return sub.service_name ?? `Подписка ${String(sub.subscription_id ?? sub.id).slice(0, 8)}`;
-}
+type ServiceItem = { id?: number; service_id?: number; name?: string };
 
 function isTrialSubscription(sub: Sub) {
   return sub.status === 'trial';
@@ -60,6 +59,20 @@ export function SubscriptionScreen() {
     queryFn: () => subscriptionApi.list(),
   });
   const subscriptions = (Array.isArray(subsRes) ? subsRes : (subsRes as { subscriptions?: Sub[] })?.subscriptions ?? []) as Sub[];
+
+  const { data: servicesRes } = useQuery({ queryKey: ['services'], queryFn: () => servicesApi.list() });
+  const servicesList = Array.isArray(servicesRes) ? servicesRes : (servicesRes as { services?: ServiceItem[] })?.services ?? [];
+  const serviceMap = new Map((servicesList as ServiceItem[]).map(s => [(s.service_id ?? s.id)!, s]));
+
+  function getServiceName(sub: Sub): string {
+    if (sub.service_name) return sub.service_name;
+    const serviceId = sub.service_id;
+    if (serviceId != null) {
+      const service = serviceMap.get(serviceId);
+      if (service?.name) return service.name;
+    }
+    return `Подписка ${String(sub.subscription_id ?? sub.id ?? '').slice(0, 8)}`;
+  }
 
   const { data: dailyBonus } = useQuery({
     queryKey: ['dailyBonus'],
