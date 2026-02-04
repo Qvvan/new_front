@@ -280,6 +280,34 @@ button:active:not(:disabled),
 .payment-banner .timer-text {
   font-size: 10px;
 }
+.payment-banner .payment-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+}
+.payment-banner .payment-banner-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--border-radius-md, 8px);
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.payment-banner .payment-banner-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+.payment-banner .payment-banner-close span {
+  font-size: 20px;
+  line-height: 1;
+}
 
 /* Детали подарка: как в старом коде */
 .payment-details .gift-code-container {

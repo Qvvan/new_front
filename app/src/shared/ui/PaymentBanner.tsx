@@ -141,9 +141,19 @@ export function PaymentBanner() {
             </div>
           </div>
         </div>
-        <button type="button" className="btn btn-sm btn-primary" onClick={openPaymentUrl}>
-          {isPending ? 'Продолжить оплату' : 'Чек'}
-        </button>
+        <div className="payment-banner-actions">
+          <button type="button" className="btn btn-sm btn-primary" onClick={openPaymentUrl}>
+            {isPending ? 'Продолжить оплату' : 'Чек'}
+          </button>
+          <button
+            type="button"
+            className="payment-banner-close"
+            onClick={hide}
+            aria-label="Закрыть баннер"
+          >
+            <span aria-hidden>×</span>
+          </button>
+        </div>
       </div>
         </motion.div>
       )}
