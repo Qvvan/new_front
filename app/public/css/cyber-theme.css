@@ -1,0 +1,472 @@
+/**
+ * Cyber Theme - Cybersecurity / Hack Terminal Style
+ * Variables and overrides for the reference design
+ */
+
+:root {
+  /* Cyber color palette */
+  --primary: #00ff88;
+  --secondary: #00d4ff;
+  --accent: #ff6b6b;
+  --success: #51cf66;
+  --warning: #ffd43b;
+  --danger: #ff4757;
+  --bg-dark: #0a0e1a;
+  --bg-darker: #050810;
+  --bg-card: #0f1419;
+  --bg-hover: #1a1f2e;
+  --border: #1e293b;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --gradient-1: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%);
+  --gradient-2: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.2);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.3);
+  --shadow-glow: 0 0 30px rgba(0,255,136,0.3);
+  --shadow-glow-strong: 0 0 50px rgba(0,255,136,0.5);
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-primary: 'Tajawal', sans-serif;
+  --font-code: 'Fira Code', monospace;
+  --font-tech: 'Orbitron', monospace;
+
+  /* Map to existing vars */
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #050810;
+  --bg-tertiary: #0f1419;
+  --bg-accent: #1a1f2e;
+  --accent-white: #00ff88;
+  --accent-red: #ff4757;
+  --accent-green: #51cf66;
+  --accent-blue: #00d4ff;
+  --accent-orange: #ffd43b;
+  --border-dark: rgba(0, 255, 136, 0.15);
+  --border-light: rgba(0, 255, 136, 0.3);
+  --border-accent: rgba(0, 212, 255, 0.4);
+  --glass-bg: rgba(0, 255, 136, 0.05);
+  --glass-border: rgba(0, 255, 136, 0.2);
+  --glass-bg-strong: rgba(0, 255, 136, 0.1);
+  --gradient-card: linear-gradient(135deg, rgba(0,255,136,0.05) 0%, rgba(0,212,255,0.05) 100%);
+  --gradient-success: linear-gradient(135deg, #00ff88 0%, #51cf66 100%);
+  --gradient-danger: linear-gradient(135deg, #ff4757 0%, #ff6b6b 100%);
+  --gradient-warning: linear-gradient(135deg, #ffd43b 0%, #ff9f43 100%);
+  --gradient-info: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+  --color-success: #51cf66;
+  --color-text: #e2e8f0;
+  --color-text-secondary: #94a3b8;
+  --font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+  font-family: var(--font-primary);
+  font-weight: 500;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Cyber background effects */
+.cyber-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.cyber-grid-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(var(--primary) 1px, transparent 1px),
+    linear-gradient(90deg, var(--primary) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.05;
+  animation: cyberGridMove 20s linear infinite;
+}
+
+@keyframes cyberGridMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+}
+
+.cyber-scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--gradient-1);
+  box-shadow: 0 0 20px var(--primary);
+  opacity: 0.4;
+  animation: cyberScanDown 3s linear infinite;
+}
+
+@keyframes cyberScanDown {
+  0% { top: -2px; opacity: 0.4; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.cyber-radial-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(0,255,136,0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, rgba(0,212,255,0.08) 0%, transparent 50%);
+  animation: cyberGlowPulse 4s ease-in-out infinite;
+}
+
+@keyframes cyberGlowPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Loader - Hack Terminal */
+.loader-screen.cyber-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, rgba(0,255,136,0.05) 0%, var(--bg-darker) 70%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  overflow: hidden;
+}
+
+.cyber-loader-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(0,255,136,0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, rgba(0,212,255,0.1) 0%, transparent 50%);
+  animation: cyberGlowPulse 4s ease-in-out infinite;
+}
+
+.cyber-loader-container {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  padding: 1.5rem;
+}
+
+.hack-terminal {
+  background: linear-gradient(135deg, rgba(0,255,136,0.05) 0%, rgba(0,212,255,0.05) 100%);
+  border: 2px solid var(--primary);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0,255,136,0.3), 0 0 60px rgba(0,212,255,0.2), inset 0 0 30px rgba(0,255,136,0.1);
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(20px);
+}
+
+.terminal-header {
+  background: linear-gradient(135deg, rgba(0,255,136,0.1) 0%, rgba(0,212,255,0.1) 100%);
+  padding: 1rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 2px solid var(--primary);
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.terminal-dots .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.terminal-dots .dot.red { background: var(--danger); }
+.terminal-dots .dot.yellow { background: var(--warning); }
+.terminal-dots .dot.green { background: var(--success); }
+
+.terminal-title {
+  color: var(--text-primary);
+  font-family: var(--font-code);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.terminal-body {
+  padding: 1.2rem 1.2rem;
+  font-family: var(--font-code);
+  font-size: 0.85rem;
+  line-height: 1.8;
+  min-height: 180px;
+  background: rgba(0,0,0,0.2);
+}
+
+.terminal-line {
+  margin-bottom: 0.4rem;
+  opacity: 0;
+  animation: terminalFadeIn 0.4s ease forwards;
+}
+
+@keyframes terminalFadeIn {
+  to { opacity: 1; }
+}
+
+.terminal-line .prompt {
+  color: var(--primary);
+  margin-right: 0.5rem;
+}
+
+.terminal-line .command {
+  color: var(--text-primary);
+}
+
+.terminal-line .output {
+  color: var(--text-secondary);
+  display: block;
+  margin-left: 1.5rem;
+}
+
+.terminal-line .output.success {
+  color: var(--success);
+}
+
+.terminal-line .output .success {
+  color: var(--success);
+}
+
+.terminal-line .cursor {
+  color: var(--primary);
+  animation: cursorBlink 1s infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.loader-progress-container {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: rgba(0,255,136,0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(0,255,136,0.3);
+}
+
+.loader-progress-bar {
+  height: 100%;
+  background: var(--gradient-1);
+  width: 0%;
+  box-shadow: 0 0 20px var(--primary);
+  transition: width 0.3s ease;
+  border-radius: 10px;
+}
+
+.loader-percentage {
+  text-align: center;
+  color: var(--primary);
+  font-family: var(--font-code);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.hack-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.hack-line {
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  background: var(--primary);
+  opacity: 0.1;
+  animation: scanLine 2s linear infinite;
+}
+
+.hack-line:nth-child(1) { left: 20%; animation-delay: 0s; }
+.hack-line:nth-child(2) { left: 50%; animation-delay: 0.7s; }
+.hack-line:nth-child(3) { left: 80%; animation-delay: 1.4s; }
+
+@keyframes scanLine {
+  0% { top: -100%; opacity: 0; }
+  50% { opacity: 0.3; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* Button overrides - Cyber style */
+.btn-primary {
+  background: var(--gradient-1) !important;
+  color: var(--bg-dark) !important;
+  border: 2px solid transparent !important;
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.5) !important;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: transparent !important;
+  color: var(--primary) !important;
+  border: 2px solid var(--primary) !important;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(0, 255, 136, 0.1) !important;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3) !important;
+  transform: translateY(-2px);
+}
+
+/* Card overrides */
+.card {
+  background: linear-gradient(135deg, rgba(0,255,136,0.05) 0%, rgba(0,212,255,0.05) 100%) !important;
+  border: 2px solid var(--border) !important;
+}
+
+.card::before {
+  background: linear-gradient(90deg, transparent, var(--primary), transparent) !important;
+  opacity: 0.3;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  background: rgba(5, 8, 16, 0.92) !important;
+}
+
+.modal {
+  background: var(--bg-card) !important;
+  border: 2px solid var(--primary) !important;
+  box-shadow: 0 10px 40px rgba(0, 255, 136, 0.2), 0 0 60px rgba(0, 0, 0, 0.5) !important;
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+  font-family: var(--font-tech);
+  letter-spacing: 0.5px;
+}
+
+.modal-close {
+  color: var(--text-secondary);
+}
+
+.modal-close:hover {
+  color: var(--primary);
+}
+
+/* Subscription status badges */
+.subscription-status.active {
+  background: var(--gradient-success) !important;
+}
+
+.subscription-status.expired {
+  background: var(--gradient-danger) !important;
+}
+
+/* Toggle switch cyber */
+.toggle-switch.active {
+  background: var(--gradient-1) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.4) !important;
+}
+
+/* btn-trial-activation / primary CTA */
+.btn-trial-activation .btn-trial-bg {
+  background: linear-gradient(135deg, rgba(0,255,136,0.2) 0%, rgba(0,212,255,0.15) 100%) !important;
+}
+
+.btn-trial-activation:hover .btn-trial-bg {
+  background: linear-gradient(135deg, rgba(0,255,136,0.3) 0%, rgba(0,212,255,0.25) 100%) !important;
+}
+
+.btn-trial-activation .btn-trial-glow {
+  background: radial-gradient(circle, var(--primary) 0%, transparent 70%) !important;
+}
+
+/* notcoin-action-card */
+.notcoin-action-card {
+  background: linear-gradient(135deg, rgba(0,255,136,0.05) 0%, rgba(0,212,255,0.05) 100%) !important;
+  border: 2px solid var(--border) !important;
+}
+
+.notcoin-action-card:hover {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 25px rgba(0, 255, 136, 0.2) !important;
+}
+
+.notcoin-action-card[data-action="instructions"] .notcoin-decorative-icon i {
+  color: var(--primary) !important;
+}
+
+.notcoin-action-card[data-action="support"] .notcoin-decorative-icon i {
+  color: var(--secondary) !important;
+}
+
+/* Form inputs cyber */
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.15) !important;
+}
+
+/* Section title */
+.section-title {
+  font-family: var(--font-tech);
+  letter-spacing: 0.5px;
+}
+
+/* Days left gradient (hero stat style) */
+.days-left:not(.text-red) {
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Daily bonus & currency top bar */
+.daily-bonus-button,
+.currency-balance-button {
+  border-color: rgba(0, 255, 136, 0.3) !important;
+}
+
+.daily-bonus-button:hover,
+.currency-balance-button:hover {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.2) !important;
+}
+
+.bonus-claim-indicator {
+  background: var(--primary) !important;
+  box-shadow: 0 0 12px var(--primary) !important;
+}
+
+/* Empty state card */
+.empty-state-card {
+  border: 2px solid var(--border) !important;
+}
+
+.empty-state-title {
+  font-family: var(--font-tech);
+  letter-spacing: 0.5px;
+}

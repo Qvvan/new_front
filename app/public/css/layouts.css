@@ -1,4 +1,4 @@
-/* Bottom Navigation */
+/* Bottom Navigation - Cyber theme */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -8,15 +8,15 @@
     height: var(--nav-height);
     min-height: var(--nav-height);
     max-height: var(--nav-height);
-    background: #111111;
+    background: rgba(5, 8, 16, 0.95);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-top: 1px solid rgba(0, 255, 136, 0.2);
     z-index: var(--z-nav);
     padding: 0;
     margin: 0;
-    border: none;
-    border-top: none;
     outline: none;
-    box-shadow: none;
-    /* Убираем любые возможные зазоры */
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 255, 136, 0.08);
     box-sizing: border-box;
 }
 
@@ -53,14 +53,17 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.12), rgba(0, 212, 255, 0.06));
     border-radius: var(--border-radius-lg);
     opacity: 0;
     transition: opacity var(--transition-normal);
+    border: 1px solid transparent;
 }
 
 .nav-item.active::before {
     opacity: 1;
+    border-color: rgba(0, 255, 136, 0.3);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
 }
 
 .nav-item:active {
@@ -73,13 +76,12 @@
     transition: all var(--transition-normal);
     position: relative;
     z-index: 1;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
 .nav-item.active .nav-icon {
-    color: var(--accent-white);
-    transform: scale(1.15);
-    filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.2));
+    color: var(--primary);
+    transform: scale(1.12);
+    filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.5));
 }
 
 .nav-label {
@@ -93,7 +95,7 @@
 }
 
 .nav-item.active .nav-label {
-    color: var(--accent-white);
+    color: var(--primary);
     font-weight: var(--font-weight-bold);
 }
 
@@ -103,7 +105,7 @@
     right: 10px;
     width: 16px;
     height: 16px;
-    background: var(--accent-red);
+    background: var(--danger);
     border-radius: 50%;
     font-size: 9px;
     font-weight: var(--font-weight-semibold);
@@ -111,7 +113,7 @@
     align-items: center;
     justify-content: center;
     border: 2px solid var(--bg-secondary);
-    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация для снижения нагрузки */
+    box-shadow: 0 0 12px rgba(255, 71, 87, 0.5);
 }
 
 /* ✅ ОПТИМИЗАЦИЯ: Останавливаем анимации при скрытой странице */
@@ -131,7 +133,7 @@ body.page-hidden [class*="infinite"] {
     100% { transform: scale(1); }
 }
 
-/* Payment Banner */
+/* Payment Banner - Cyber theme */
 .payment-banner {
     position: fixed;
     bottom: var(--nav-height);
@@ -140,24 +142,26 @@ body.page-hidden [class*="infinite"] {
     width: calc(100% - var(--spacing-md) * 2);
     max-width: 428px;
     height: var(--payment-banner-height);
-    background: rgba(17, 17, 17, 0.4);
+    background: linear-gradient(135deg, rgba(0,255,136,0.08) 0%, rgba(0,212,255,0.05) 100%);
+    backdrop-filter: blur(20px);
     border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 2px solid rgba(0, 255, 136, 0.4);
+    border-left: 1px solid rgba(0, 255, 136, 0.2);
+    border-right: 1px solid rgba(0, 255, 136, 0.2);
     border-bottom: none;
     z-index: calc(var(--z-nav) + 1);
     transition: all var(--transition-normal);
-    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3), 0 0 30px rgba(0, 255, 136, 0.15), inset 0 1px 0 rgba(0, 255, 136, 0.1);
     cursor: pointer;
 }
 
 .payment-banner:hover {
-    background: rgba(17, 17, 17, 0.5);
-    border-top-color: rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, rgba(0,255,136,0.12) 0%, rgba(0,212,255,0.08) 100%);
+    border-top-color: rgba(0, 255, 136, 0.6);
+    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.4), 0 0 40px rgba(0, 255, 136, 0.25);
 }
 
-/* Псевдоэлемент для закрытия зазора на мобильных - перекрывает черный фон app-container */
+/* Псевдоэлемент для закрытия зазора на мобильных */
 .payment-banner::after {
     content: '';
     position: absolute;
@@ -165,7 +169,7 @@ body.page-hidden [class*="infinite"] {
     left: -1px;
     right: -1px;
     height: 3px;
-    background: #111111;
+    background: var(--bg-darker, #050810);
     z-index: -1;
     border-radius: 0;
 }

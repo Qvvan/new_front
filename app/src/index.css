@@ -1,4 +1,5 @@
 @import url('/css/globals.css');
+@import url('/css/cyber-theme.css');
 @import url('/css/components.css');
 @import url('/css/layouts.css');
 @import url('/css/animations.css');
@@ -21,7 +22,7 @@
   appearance: none;
 }
 .bottom-nav .nav-item:focus-visible {
-  outline: 2px solid var(--accent-white);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 

@@ -44,7 +44,7 @@ export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 150);
+    const t = setTimeout(() => setLoading(false), 2200);
     return () => clearTimeout(t);
   }, []);
 
@@ -68,6 +68,10 @@ export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
     <NavContext.Provider value={ctx}>
       <div className="app-container">
         <div className="background-glow" aria-hidden />
+        <div className="cyber-bg" aria-hidden>
+          <div className="cyber-grid-overlay" />
+          <div className="cyber-scan-line" />
+        </div>
         <PaymentBanner />
         <main className="main-content" id="mainContent">
           <AnimatePresence mode="wait">
