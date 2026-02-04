@@ -92,10 +92,14 @@ export function PaymentBanner() {
   const progressPercent = isPending ? (timeLeft / 3600) * 100 : 100;
   const circumference = 125.6; // 2 * PI * 20, как в старом коде
   const strokeDashoffset = circumference - (circumference * progressPercent) / 100;
-  // Синий круг как в старом коде (#4A90E2), все свойства круга задаём явно в JSX
+  // Градиент: много времени — зелёный, мало — красный (p от 1 до 0)
+  const p = Math.max(0, Math.min(1, progressPercent / 100));
+  const strokeColor = isPending
+    ? `rgb(${Math.round(34 + (239 - 34) * (1 - p))}, ${Math.round(197 + (68 - 197) * (1 - p))}, ${Math.round(94 + (68 - 94) * (1 - p))})`
+    : '#22c55e';
   const circleStyle: React.CSSProperties = {
     fill: 'none',
-    stroke: '#4A90E2',
+    stroke: strokeColor,
     strokeWidth: 3,
     strokeLinecap: 'round',
     strokeDasharray: circumference,
