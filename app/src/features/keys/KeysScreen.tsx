@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { subscriptionApi, keysApi, serversApi } from '../../core/api/endpoints';
+import { subscriptionApi, keysApi, serversApi, type UserKeyItem, type UserKeyUnavailableItem } from '../../core/api/endpoints';
 import { userApi } from '../../core/api/endpoints';
 import { useAppNavigate } from '../../app/AppLayout';
 import { useToast } from '../../shared/ui/Toast';
@@ -19,11 +19,19 @@ function getCountryFlag(name: string): string {
   return m[lower] ?? '🌐';
 }
 
-function parseServerFromKey(key: string): { name: string; flag: string } {
+function parseKeyName(key: string): string {
   const hash = key.lastIndexOf('#');
-  const name = hash !== -1 ? decodeURIComponent(key.slice(hash + 1)) : 'VPN сервер';
+  return hash !== -1 ? decodeURIComponent(key.slice(hash + 1)) : 'VPN ключ';
+}
+
+function parseServerFromKey(key: string): { name: string; flag: string } {
+  const name = parseKeyName(key);
   return { name, flag: getCountryFlag(name) };
 }
+
+type KeyRowItem =
+  | { type: 'key'; key: string; keyName: string; serverName: string; serverId: number; port: number }
+  | { type: 'unavailable'; serverName: string; serverId: number; port: number; message: string };
 
 export function KeysScreen() {
   const { navigate } = useAppNavigate();
@@ -43,24 +51,57 @@ export function KeysScreen() {
   });
   const subscriptions = Array.isArray(subsRes) ? subsRes : (subsRes as { subscriptions?: unknown[] })?.subscriptions ?? [];
 
-  const { data: keysBySub } = useQuery({
+  const { data: keysRows } = useQuery({
     queryKey: ['keys', userId, subscriptions.map((s: unknown) => (s as { subscription_id?: string; id?: string }).subscription_id ?? (s as { id?: string }).id)],
-    queryFn: async () => {
-      const all: { key: string; subscription?: unknown; subscription_id?: string }[] = [];
+    queryFn: async (): Promise<KeyRowItem[]> => {
+      const all: KeyRowItem[] = [];
       for (const sub of subscriptions) {
         const subId = (sub as { subscription_id?: string; id?: string }).subscription_id ?? (sub as { id?: string }).id;
         if (!subId) continue;
         try {
-          let keys: string[] = [];
           if (userId && subId) {
             const r = await keysApi.getUserKeys(userId, subId);
-            keys = r.keys ?? [];
+            const keyItems = (r.keys ?? []) as UserKeyItem[];
+            keyItems.forEach((item) => {
+              all.push({
+                type: 'key',
+                key: item.key,
+                keyName: parseKeyName(item.key),
+                serverName: item.server_name,
+                serverId: item.server_id,
+                port: item.port,
+              });
+            });
+            const unavail = (r.unavailable ?? []) as UserKeyUnavailableItem[];
+            unavail.forEach((item) => {
+              all.push({
+                type: 'unavailable',
+                serverName: item.server_name,
+                serverId: item.server_id,
+                port: item.port,
+                message: item.message,
+              });
+            });
           } else {
             const r = await keysApi.getKeys(String(subId));
-            keys = (r.keys ?? []).map((k: unknown) => typeof k === 'string' ? k : (k as { key?: string }).key ?? '');
+            const keys = (r.keys ?? []) as { key?: string }[];
+            keys.forEach((k) => {
+              const keyStr = typeof k === 'string' ? k : (k?.key ?? '');
+              if (keyStr) {
+                all.push({
+                  type: 'key',
+                  key: keyStr,
+                  keyName: parseKeyName(keyStr),
+                  serverName: 'VPN',
+                  serverId: 0,
+                  port: 0,
+                });
+              }
+            });
           }
-          keys.forEach(k => all.push({ key: typeof k === 'string' ? k : (k as { key?: string }).key ?? '', subscription: sub, subscription_id: String(subId) }));
-        } catch {}
+        } catch {
+          // skip failed subscription
+        }
       }
       return all;
     },
@@ -167,7 +208,7 @@ export function KeysScreen() {
         )}
 
         {activeTab === 'keys' && (
-          <motion.div className="tab-content-container" variants={staggerItem}>
+          <motion.div className="tab-content-container" variants={staggerItem} initial={false}>
             {!hasActive ? (
               <div className="empty-state-card">
                 <div className="empty-state-content">
@@ -187,7 +228,7 @@ export function KeysScreen() {
                   </div>
                 </div>
               </div>
-            ) : keysBySub?.length === 0 ? (
+            ) : (keysRows?.length ?? 0) === 0 ? (
               <div className="empty-state-card">
                 <div className="empty-state-content">
                   <div className="empty-state-icon-gif">
@@ -214,16 +255,27 @@ export function KeysScreen() {
                     </div>
                   </div>
                 )}
-                {(keysBySub ?? []).map((item, i) => {
-                  const keyStr = typeof item.key === 'string' ? item.key : (item as { key?: string }).key ?? '';
-                  const { name, flag } = parseServerFromKey(keyStr);
-                  return (
-                    <div key={i} className="key-row" onClick={() => copyKey(keyStr)} role="button" tabIndex={0}>
-                      <div className="key-info">
-                        <div className="key-name"><span className="server-flag">{flag}</span> <span className="key-label">{name}</span></div>
-                        <div className="key-preview">{keyStr.length > 60 ? keyStr.slice(0, 50) + '…' : keyStr}</div>
+                {(keysRows ?? []).map((item, i) => {
+                  if (item.type === 'key') {
+                    const flag = getCountryFlag(item.serverName);
+                    return (
+                      <div key={`key-${i}`} className="key-row" onClick={() => copyKey(item.key)} role="button" tabIndex={0}>
+                        <div className="key-info">
+                          <div className="key-name"><span className="server-flag">{flag}</span> <span className="key-label">{item.keyName}</span></div>
+                          <div className="key-server">Сервер: {item.serverName} (порт {item.port})</div>
+                          <div className="key-preview">{item.key.length > 60 ? item.key.slice(0, 50) + '…' : item.key}</div>
+                        </div>
+                        <button type="button" className="copy-btn key-copy-btn" onClick={e => { e.stopPropagation(); copyKey(item.key); }} title="Скопировать ключ"><i className="fas fa-copy" /></button>
                       </div>
-                      <button type="button" className="copy-btn key-copy-btn" onClick={e => { e.stopPropagation(); copyKey(keyStr); }}><i className="fas fa-copy" /></button>
+                    );
+                  }
+                  const flag = getCountryFlag(item.serverName);
+                  return (
+                    <div key={`unav-${i}`} className="key-row key-row-unavailable">
+                      <div className="key-info">
+                        <div className="key-name"><span className="server-flag">{flag}</span> <span className="key-label">{item.serverName} :{item.port}</span></div>
+                        <div className="key-unavailable-msg">{item.message}</div>
+                      </div>
                     </div>
                   );
                 })}

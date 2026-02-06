@@ -1,17 +1,40 @@
-# .dockerignore
+# Dependencies
+app/node_modules
 node_modules
-npm-debug.log
+
+# Build output
+app/dist
+dist
+
+# Git
 .git
 .gitignore
-README.md
-.env
-.nyc_output
-coverage
-.nyc_output
-.vscode
+
+# IDE
 .idea
+.vscode
+*.swp
+*.swo
+
+# Logs
 *.log
-ssl/
-nginx/
-docker-compose.yml
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local env files
+.env.local
+.env.*.local
+
+# Docker files (не копируем в контейнер)
 Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# SSL certificates
+ssl/
+
+# Documentation
+*.md

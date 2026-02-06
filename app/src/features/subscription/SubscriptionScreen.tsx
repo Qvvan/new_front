@@ -180,10 +180,13 @@ export function SubscriptionScreen() {
               </div>
             </div>
           </motion.div>
-        ) : subscriptions.length === 1 ? (
-          <motion.div className="card subscription-card" variants={staggerItem} data-subscription-id={subscriptions[0].subscription_id ?? subscriptions[0].id}>
+        ) : (
+          subscriptions.length === 1 ? (() => {
+            const sub = subscriptions[0];
+            const subExpired = daysBetween(sub?.end_date ?? '') <= 0;
+            return (
+          <motion.div className={`card subscription-card subscription-card--${subExpired ? 'expired' : 'active'}`} variants={staggerItem} data-subscription-id={sub.subscription_id ?? sub.id}>
             {(() => {
-              const sub = subscriptions[0];
               const subId = sub.subscription_id ?? Number(sub.id);
               const days = daysBetween(sub.end_date ?? '');
               const isExpired = days <= 0;
@@ -195,11 +198,16 @@ export function SubscriptionScreen() {
               return (
                 <>
                   <div className="subscription-header">
-                    <h2 className="subscription-title">
-                      <i className={`fas ${isTrial ? 'fa-gift' : 'fa-shield-alt'}`} />
-                      {getServiceName(sub)}
-                    </h2>
-                    <div className={`subscription-status ${statusClass}`}>{statusText}</div>
+                    <div className="subscription-title-row">
+                      <span className={`subscription-title-icon ${isTrial ? 'trial' : 'vpn'}`} aria-hidden>
+                        <i className={`fas ${isTrial ? 'fa-gift' : 'fa-shield-alt'}`} />
+                      </span>
+                      <h2 className="subscription-title">{getServiceName(sub)}</h2>
+                    </div>
+                    <div className={`subscription-status ${statusClass}`}>
+                      {statusClass === 'active' && <span className="subscription-status-dot" aria-hidden />}
+                      <span>{statusText}</span>
+                    </div>
                   </div>
                   <div className="subscription-info">
                     <div className="time-remaining">
@@ -237,7 +245,8 @@ export function SubscriptionScreen() {
               );
             })()}
           </motion.div>
-        ) : (
+            );
+          })() : (
           <motion.div className="subscriptions-compact" variants={staggerItem}>
             {subscriptions.map((sub) => {
               const subId = sub.subscription_id ?? Number(sub.id);
@@ -279,6 +288,7 @@ export function SubscriptionScreen() {
               );
             })}
           </motion.div>
+          )
         )}
 
         <motion.div className="subscription-bottom-actions" variants={staggerItem}>

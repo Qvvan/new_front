@@ -53,9 +53,28 @@ export type PendingPaymentApiItem = {
   description?: string;
 };
 
+export type UserKeyItem = {
+  server_id: number;
+  server_name: string;
+  port: number;
+  key: string;
+};
+
+export type UserKeyUnavailableItem = {
+  server_id: number;
+  server_name: string;
+  port: number;
+  message: string;
+};
+
+export type UserKeysResponse = {
+  keys?: UserKeyItem[];
+  unavailable?: UserKeyUnavailableItem[];
+};
+
 export const keysApi = {
   getUserKeys: (userId: number | string, subscriptionId: string | number) =>
-    api.get<{ keys?: string[] }>('/keys/user-keys', { user_id: userId, subscription_id: subscriptionId }),
+    api.get<UserKeysResponse>('/keys/user-keys', { user_id: userId, subscription_id: subscriptionId }),
   getKeys: (subscriptionId: string) =>
     api.get<{ keys?: unknown[] }>('/keys', { subscription_id: subscriptionId }),
 };

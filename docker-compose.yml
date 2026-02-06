@@ -11,7 +11,8 @@ services:
       - /root/new_front/ssl/certificate.crt:/etc/nginx/ssl/certificate.crt:ro
       - /root/new_front/ssl/certificate.key:/etc/nginx/ssl/certificate.key:ro
     depends_on:
-      - frontend
+      frontend:
+        condition: service_healthy
     networks:
       - network
     restart: unless-stopped
@@ -25,13 +26,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    expose:
-      - "8080"
+    # Не expose портов наружу - nginx проксирует внутри сети
     networks:
       - network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
       interval: 30s
       timeout: 10s
       retries: 3
