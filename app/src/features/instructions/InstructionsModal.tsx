@@ -32,7 +32,7 @@ function getAppIcon(appName: string, deviceType: string): string {
   return 'fas fa-mobile-alt';
 }
 
-type Sub = { subscription_id?: number; id?: string; end_date?: string; status?: string; service_name?: string };
+type Sub = { subscription_id?: number; id?: string; end_date?: string; status?: string; service_name?: string; sub_url?: string };
 
 export function InstructionsModal() {
   const { instructions, closeInstructions, openServiceSelector } = useModalsStore();
@@ -175,6 +175,19 @@ export function InstructionsModal() {
     handleClose();
     navigate('/keys');
   }, [handleClose, navigate]);
+
+  const openSubUrl = useCallback(() => {
+    const currentSub = subscriptions.find(s => (s.subscription_id ?? Number(s.id)) === subscriptionId);
+    if (currentSub?.sub_url) {
+      const url = currentSub.sub_url.startsWith('/') 
+        ? `${window.location.origin}${currentSub.sub_url}`
+        : currentSub.sub_url;
+      tg?.openLink?.(url) ?? window.open(url, '_blank');
+      tg?.haptic.light();
+    } else {
+      toast.error('Ссылка на подписку недоступна');
+    }
+  }, [subscriptions, subscriptionId, tg, toast]);
 
   const contactSupport = useCallback(() => {
     handleClose();
@@ -373,7 +386,7 @@ export function InstructionsModal() {
                             <button type="button" className="btn btn-activation" onClick={activateProfile}>
                               <i className="fas fa-magic" /> Активировать профиль
                             </button>
-                            <button type="button" className="btn btn-outline" onClick={goToKeys}>
+                            <button type="button" className="btn btn-outline" onClick={openSubUrl}>
                               <i className="fas fa-key" /> Получить ключи вручную
                             </button>
                           </div>
