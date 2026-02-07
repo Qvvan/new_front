@@ -131,8 +131,7 @@ export function SubscriptionScreen() {
   const servicesList = Array.isArray(servicesRes) ? servicesRes : (servicesRes as { services?: ServiceItem[] })?.services ?? [];
   const serviceMap = new Map((servicesList as ServiceItem[]).map(s => [(s.service_id ?? s.id)!, s]));
 
-  function getServiceName(sub: Sub): string {
-    if (sub.custom_name) return sub.custom_name;
+  function getServiceTypeName(sub: Sub): string {
     if (sub.service_name) return sub.service_name;
     const serviceId = sub.service_id;
     if (serviceId != null) {
@@ -140,6 +139,10 @@ export function SubscriptionScreen() {
       if (service?.name) return service.name;
     }
     return `Подписка ${String(sub.subscription_id ?? sub.id ?? '').slice(0, 8)}`;
+  }
+
+  function getDisplayName(sub: Sub): string {
+    return sub.custom_name || getServiceTypeName(sub);
   }
 
   const { data: dailyBonus } = useQuery({
@@ -179,7 +182,7 @@ export function SubscriptionScreen() {
 
   const handleRename = (sub: Sub) => {
     tg?.haptic.light();
-    setRenameModal({ open: true, subId: sub.subscription_id ?? Number(sub.id), currentName: getServiceName(sub) });
+    setRenameModal({ open: true, subId: sub.subscription_id ?? Number(sub.id), currentName: getDisplayName(sub) });
   };
 
   const handleRenameSave = useCallback(async (newName: string) => {
@@ -294,10 +297,17 @@ export function SubscriptionScreen() {
                       <span className={`subscription-title-icon ${isTrial ? 'trial' : 'vpn'}`} aria-hidden>
                         <i className={`fas ${isTrial ? 'fa-gift' : 'fa-shield-alt'}`} />
                       </span>
-                      <h2 className="subscription-title">{getServiceName(sub)}</h2>
-                      <button type="button" className="subscription-rename-btn" onClick={() => handleRename(sub)} title="Переименовать" aria-label="Переименовать подписку">
-                        <i className="fas fa-pen" />
-                      </button>
+                      <div className="subscription-title-group">
+                        <div className="subscription-title-name">
+                          <h2 className="subscription-title">{getDisplayName(sub)}</h2>
+                          <button type="button" className="subscription-rename-btn" onClick={() => handleRename(sub)} title="Переименовать" aria-label="Переименовать подписку">
+                            <i className="fas fa-pen" />
+                          </button>
+                        </div>
+                        {sub.custom_name && (
+                          <span className="subscription-type-label">{getServiceTypeName(sub)}</span>
+                        )}
+                      </div>
                     </div>
                     <div className={`subscription-status ${statusClass}`}>
                       {statusClass === 'active' && <span className="subscription-status-dot" aria-hidden />}
@@ -358,11 +368,14 @@ export function SubscriptionScreen() {
                     </div>
                     <div className="subscription-compact-details">
                       <div className="subscription-compact-name-row">
-                        <h4>{getServiceName(sub)}</h4>
+                        <h4>{getDisplayName(sub)}</h4>
                         <button type="button" className="subscription-rename-btn subscription-rename-btn--compact" onClick={(e) => { e.stopPropagation(); handleRename(sub); }} title="Переименовать" aria-label="Переименовать подписку">
                           <i className="fas fa-pen" />
                         </button>
                       </div>
+                      {sub.custom_name && (
+                        <span className="subscription-type-label subscription-type-label--compact">{getServiceTypeName(sub)}</span>
+                      )}
                       <p>{statusText}</p>
                     </div>
                   </div>
