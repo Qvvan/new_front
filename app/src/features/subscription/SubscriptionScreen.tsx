@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { userApi, subscriptionApi, currencyApi, servicesApi } from '../../core/api/endpoints';
+import { clearApiCache } from '../../core/api/client';
 import { useModalsStore } from '../../app/modalsStore';
 import { useToast } from '../../shared/ui/Toast';
 import { useModal } from '../../shared/ui/Modal';
@@ -89,6 +90,7 @@ export function SubscriptionScreen() {
     mutationFn: () => subscriptionApi.activateTrial(),
     onSuccess: async () => {
       toast.success('Пробный период активирован');
+      clearApiCache('/subscription/subscriptions/user');
       await refetchSubs();
       tg?.haptic.success();
     },
@@ -124,6 +126,7 @@ export function SubscriptionScreen() {
     if (!ok) return;
     try {
       await subscriptionApi.updateAutoRenewal(subId, !current);
+      clearApiCache('/subscription/subscriptions/user');
       await refetchSubs();
       toast.success(!current ? 'Автопродление включено' : 'Автопродление выключено');
       tg?.haptic.success();
@@ -235,7 +238,7 @@ export function SubscriptionScreen() {
                       <div className="btn-trial-content">
                         <div className="trial-icon-wrapper"><i className="fas fa-sync-alt" /></div>
                         <div className="trial-text">
-                          <span className="trial-main">{isExpired ? 'Возобновить' : 'Продлить подписку'}</span>
+                          <span className="trial-main">{isExpired ? 'Продлить подписку' : 'Продлить подписку'}</span>
                         </div>
                         <div className="trial-arrow"><i className="fas fa-arrow-right" /></div>
                       </div>

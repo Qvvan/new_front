@@ -2464,6 +2464,24 @@ body.page-hidden .loadShine {
     padding: var(--spacing-md) var(--spacing-lg);
 }
 
+/* — Подсказка выбора подписки — */
+.support-select-hint {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 0 0 12px;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* — Мета-информация о подписке в списке выбора — */
+.support-sub-meta {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    margin-top: 2px;
+    line-height: 1.3;
+}
+
 .support-form {
     margin-bottom: var(--spacing-2xl);
 }

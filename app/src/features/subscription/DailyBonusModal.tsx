@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { currencyApi } from '../../core/api/endpoints';
+import { clearApiCache } from '../../core/api/client';
 import { useToast } from '../../shared/ui/Toast';
 import { useTelegram } from '../../core/telegram/hooks';
 import { formatTimeUntil } from '../../core/utils';
@@ -39,6 +40,7 @@ export function DailyBonusModal({ open, onClose }: DailyBonusModalProps) {
     mutationFn: () => currencyApi.claimDailyBonus(),
     onSuccess: () => {
       toast.success('Бонус получен!');
+      clearApiCache('/user/currency');
       queryClient.invalidateQueries({ queryKey: ['currencyBalance'] });
       queryClient.invalidateQueries({ queryKey: ['dailyBonus'] });
       queryClient.invalidateQueries({ queryKey: ['dailyBonusList'] });
