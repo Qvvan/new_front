@@ -10,7 +10,7 @@ export default defineConfig({
     strictPort: true,
     // HMR через nginx
     hmr: {
-      clientPort: 8080,
+      clientPort: 80,
     },
     // Проксирование API (для локальной разработки без Docker)
     proxy: {
