@@ -17,6 +17,7 @@ type Sub = {
   auto_renewal?: boolean;
   service_name?: string;
   service_id?: number;
+  custom_name?: string;
 };
 
 /* ───── FAQ ───── */
@@ -99,7 +100,7 @@ function buildSupportText(sub?: Sub): string {
   let text = '🐉 SkyDragon VPN — Обращение в поддержку\n\n';
 
   if (sub) {
-    const name = sub.service_name || `Подписка #${sub.subscription_id ?? sub.id ?? ''}`;
+    const subId = sub.subscription_id ?? sub.id ?? '';
     const status = getStatusLabel(sub.status);
     const endDate = sub.end_date ? formatDate(sub.end_date, 'long') : 'Не указана';
     const days = sub.end_date ? daysBetween(sub.end_date) : 0;
@@ -117,7 +118,7 @@ function buildSupportText(sub?: Sub): string {
     const autoRenewal = sub.auto_renewal ? '✅ Включено' : '❌ Выключено';
 
     text += '📋 Информация о подписке:\n';
-    text += `▸ Тариф: ${name}\n`;
+    text += `▸ ID подписки: ${subId}\n`;
     text += `▸ Статус: ${status}\n`;
     text += `▸ Действует до: ${endDate} ${daysHint}\n`;
     text += `▸ Автопродление: ${autoRenewal}\n\n`;
@@ -302,7 +303,7 @@ export function SupportModal() {
 
                   {subscriptions.map(sub => {
                     const subId = sub.subscription_id ?? Number(sub.id);
-                    const name = sub.service_name || `Подписка #${subId}`;
+                    const name = sub.custom_name || sub.service_name || `Подписка #${subId}`;
                     const days = daysBetween(sub.end_date ?? '');
                     const isExpired = days <= 0;
                     return (
