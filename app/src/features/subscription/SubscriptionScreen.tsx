@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { userApi, subscriptionApi, currencyApi, servicesApi } from '../../core/api/endpoints';
@@ -24,12 +24,76 @@ type Sub = {
   auto_renewal?: boolean;
   service_name?: string;
   service_id?: number;
+  custom_name?: string;
+  source?: string;
 };
 
 type ServiceItem = { id?: number; service_id?: number; name?: string };
 
 function isTrialSubscription(sub: Sub) {
   return sub.status === 'trial';
+}
+
+function RenameModal({ open, currentName, onSave, onClose, saving }: {
+  open: boolean;
+  currentName: string;
+  onSave: (name: string) => void;
+  onClose: () => void;
+  saving: boolean;
+}) {
+  const [value, setValue] = useState(currentName);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      setValue(currentName);
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [open, currentName]);
+
+  if (!open) return null;
+
+  const examples = ['Для мамы', 'Моя', 'Рабочая', 'Для папы', 'Основная'];
+
+  return (
+    <div className="modal-overlay active" onClick={onClose}>
+      <div className="modal rename-modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div className="modal-title">Переименовать подписку</div>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Закрыть">×</button>
+        </div>
+        <div className="modal-body">
+          <p className="rename-description">Придумайте удобное название для вашей подписки, чтобы легко её различать</p>
+          <input
+            ref={inputRef}
+            className="rename-input"
+            type="text"
+            value={value}
+            onChange={e => setValue(e.target.value)}
+            placeholder="Введите название"
+            maxLength={50}
+            onKeyDown={e => { if (e.key === 'Enter' && value.trim()) onSave(value.trim()); }}
+          />
+          <div className="rename-examples">
+            <span className="rename-examples-label">Примеры:</span>
+            <div className="rename-examples-list">
+              {examples.map(ex => (
+                <button key={ex} type="button" className="rename-example-chip" onClick={() => setValue(ex)}>
+                  {ex}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="modal-actions">
+          <button type="button" className="btn btn-secondary" onClick={onClose}>Отмена</button>
+          <button type="button" className="btn btn-primary" onClick={() => onSave(value.trim())} disabled={!value.trim() || saving}>
+            {saving ? 'Сохранение...' : 'Сохранить'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function SubscriptionScreen() {
@@ -42,6 +106,8 @@ export function SubscriptionScreen() {
   const [activateCodeOpen, setActivateCodeOpen] = useState(false);
   const [dailyBonusModalOpen, setDailyBonusModalOpen] = useState(false);
   const [currencyModalOpen, setCurrencyModalOpen] = useState(false);
+  const [renameModal, setRenameModal] = useState<{ open: boolean; subId: number; currentName: string }>({ open: false, subId: 0, currentName: '' });
+  const [renameSaving, setRenameSaving] = useState(false);
   const { openInstructions, openSupport, serviceSelector: storeServiceSelector, closeServiceSelector } = useModalsStore();
   const serviceSelectorOpen = serviceSelector.open || storeServiceSelector?.open === true;
   const serviceSelectorMode = storeServiceSelector?.open ? storeServiceSelector.mode : serviceSelector.mode;
@@ -66,6 +132,7 @@ export function SubscriptionScreen() {
   const serviceMap = new Map((servicesList as ServiceItem[]).map(s => [(s.service_id ?? s.id)!, s]));
 
   function getServiceName(sub: Sub): string {
+    if (sub.custom_name) return sub.custom_name;
     if (sub.service_name) return sub.service_name;
     const serviceId = sub.service_id;
     if (serviceId != null) {
@@ -109,6 +176,28 @@ export function SubscriptionScreen() {
     tg?.haptic.light();
     tg?.openLink?.('https://t.me/skydragonvpn') ?? window.open('https://t.me/skydragonvpn', '_blank');
   };
+
+  const handleRename = (sub: Sub) => {
+    tg?.haptic.light();
+    setRenameModal({ open: true, subId: sub.subscription_id ?? Number(sub.id), currentName: getServiceName(sub) });
+  };
+
+  const handleRenameSave = useCallback(async (newName: string) => {
+    setRenameSaving(true);
+    try {
+      await subscriptionApi.rename(renameModal.subId, newName);
+      clearApiCache('/subscription/subscriptions/user');
+      await refetchSubs();
+      toast.success('Подписка переименована');
+      tg?.haptic.success();
+      setRenameModal(m => ({ ...m, open: false }));
+    } catch (err: unknown) {
+      const e = err as Error & { data?: { comment?: string } };
+      toast.error(e.data?.comment ?? e.message ?? 'Ошибка переименования');
+    } finally {
+      setRenameSaving(false);
+    }
+  }, [renameModal.subId, refetchSubs, toast, tg]);
 
   const handleTrial = useCallback(async () => {
     const ok = await modal.showConfirm(
@@ -206,6 +295,9 @@ export function SubscriptionScreen() {
                         <i className={`fas ${isTrial ? 'fa-gift' : 'fa-shield-alt'}`} />
                       </span>
                       <h2 className="subscription-title">{getServiceName(sub)}</h2>
+                      <button type="button" className="subscription-rename-btn" onClick={() => handleRename(sub)} title="Переименовать" aria-label="Переименовать подписку">
+                        <i className="fas fa-pen" />
+                      </button>
                     </div>
                     <div className={`subscription-status ${statusClass}`}>
                       {statusClass === 'active' && <span className="subscription-status-dot" aria-hidden />}
@@ -265,7 +357,12 @@ export function SubscriptionScreen() {
                       <i className={`fas ${isTrial ? 'fa-gift' : 'fa-shield-alt'}`} />
                     </div>
                     <div className="subscription-compact-details">
-                      <h4>{getServiceName(sub)}</h4>
+                      <div className="subscription-compact-name-row">
+                        <h4>{getServiceName(sub)}</h4>
+                        <button type="button" className="subscription-rename-btn subscription-rename-btn--compact" onClick={(e) => { e.stopPropagation(); handleRename(sub); }} title="Переименовать" aria-label="Переименовать подписку">
+                          <i className="fas fa-pen" />
+                        </button>
+                      </div>
                       <p>{statusText}</p>
                     </div>
                   </div>
@@ -361,6 +458,13 @@ export function SubscriptionScreen() {
       />
       <GiftFlowModal open={giftFlowOpen} onClose={() => setGiftFlowOpen(false)} onSuccess={() => { refetchSubs(); setGiftFlowOpen(false); }} />
       <ActivateCodeModal open={activateCodeOpen} onClose={() => setActivateCodeOpen(false)} onSuccess={() => { refetchSubs(); setActivateCodeOpen(false); }} />
+      <RenameModal
+        open={renameModal.open}
+        currentName={renameModal.currentName}
+        onSave={handleRenameSave}
+        onClose={() => setRenameModal(m => ({ ...m, open: false }))}
+        saving={renameSaving}
+      />
     </div>
   );
 }

@@ -19,6 +19,8 @@ export const subscriptionApi = {
     api.post(`/subscription/subscriptions/${subscriptionId}/auto-renewal?auto_renewal=${autoRenewal}`),
   getImportLinks: (subscriptionId: number) =>
     api.get<ImportLinksMap>(`/subscription/subscriptions/${subscriptionId}/import-links`),
+  rename: (subscriptionId: number, customName: string) =>
+    api.patch(`/subscription/subscriptions/${subscriptionId}/rename`, { custom_name: customName }),
 };
 
 export const paymentApi = {
