@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { subscriptionApi, keysApi, serversApi, type UserKeyItem, type UserKeyUnavailableItem } from '../../core/api/endpoints';
+import { subscriptionApi, keysApi, serversApi, type UserKeyItem, type UserKeyUnavailableItem, type ServerOnlineItem } from '../../core/api/endpoints';
 import { userApi } from '../../core/api/endpoints';
 import { useAppNavigate } from '../../app/AppLayout';
 import { useToast } from '../../shared/ui/Toast';
@@ -12,11 +12,52 @@ import { TgsPlayer, ASSETS_GIFS } from '../../shared/ui/TgsPlayer';
 
 function getCountryFlag(name: string): string {
   const m: Record<string, string> = {
-    nl: '🇳🇱', de: '🇩🇪', fr: '🇫🇷', us: '🇺🇸', gb: '🇬🇧', uk: '🇬🇧',
-    ru: '🇷🇺', jp: '🇯🇵', ca: '🇨🇦', se: '🇸🇪', ch: '🇨🇭', fi: '🇫🇮',
+    nl: '🇳🇱', 'нидерланды': '🇳🇱', de: '🇩🇪', 'германия': '🇩🇪',
+    fr: '🇫🇷', 'франция': '🇫🇷', us: '🇺🇸', 'сша': '🇺🇸',
+    gb: '🇬🇧', uk: '🇬🇧', 'великобритания': '🇬🇧',
+    ru: '🇷🇺', 'россия': '🇷🇺', jp: '🇯🇵', 'япония': '🇯🇵',
+    ca: '🇨🇦', 'канада': '🇨🇦', se: '🇸🇪', 'швеция': '🇸🇪',
+    ch: '🇨🇭', 'швейцария': '🇨🇭', fi: '🇫🇮', 'финляндия': '🇫🇮',
+    'турция': '🇹🇷', tr: '🇹🇷', 'казахстан': '🇰🇿', kz: '🇰🇿',
   };
   const lower = (name ?? '').toLowerCase();
   return m[lower] ?? '🌐';
+}
+
+const MAX_USERS = 100;
+
+function getLoadColor(percent: number): string {
+  // Smooth gradient: green (0%) -> yellow (50%) -> red (100%)
+  const p = Math.min(100, Math.max(0, percent)) / 100;
+  let r: number, g: number, b: number;
+  if (p < 0.5) {
+    // green to yellow
+    const t = p * 2;
+    r = Math.round(73 + (255 - 73) * t);
+    g = Math.round(190 + (175 - 190) * t);
+    b = Math.round(77 + (55 - 77) * t);
+  } else {
+    // yellow to red
+    const t = (p - 0.5) * 2;
+    r = Math.round(255 + (255 - 255) * t);
+    g = Math.round(175 - 175 * t);
+    b = Math.round(55 - 20 * t);
+  }
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function getLoadLabel(percent: number): string {
+  if (percent <= 20) return 'Свободно';
+  if (percent <= 50) return 'Умеренно';
+  if (percent <= 80) return 'Загружен';
+  return 'Перегружен';
+}
+
+function getStatusDotClass(percent: number): string {
+  if (percent <= 20) return 'status-free';
+  if (percent <= 50) return 'status-moderate';
+  if (percent <= 80) return 'status-loaded';
+  return 'status-overloaded';
 }
 
 function parseKeyName(key: string): string {
@@ -106,8 +147,9 @@ export function KeysScreen() {
   const { data: serversRes } = useQuery({
     queryKey: ['servers'],
     queryFn: () => serversApi.list(),
+    refetchInterval: 30000, // auto-refresh every 30s
   });
-  const servers = Array.isArray(serversRes) ? serversRes : (serversRes as { servers?: unknown[] })?.servers ?? [];
+  const servers: ServerOnlineItem[] = (serversRes as { servers?: ServerOnlineItem[] })?.servers ?? [];
 
   const hasActive = (subscriptions as { end_date?: string; status?: string; is_active?: boolean }[]).some(s => {
     const days = daysBetween(s.end_date ?? '');
@@ -161,7 +203,7 @@ export function KeysScreen() {
         </motion.div>
 
         {activeTab === 'servers' && (
-          <motion.div className="tab-content-container" variants={staggerItem}>
+          <motion.div className="tab-content-container" variants={staggerItem} initial={false}>
             {servers.length === 0 ? (
               <div className="empty-state-card">
                 <div className="empty-state-content">
@@ -173,23 +215,54 @@ export function KeysScreen() {
               </div>
             ) : (
               <div className="servers-list">
-                {(servers as { server_id?: string; id?: string; name?: string; country?: string; current_users?: number; max_users?: number }[]).map((server, i) => {
-                  const load = server.current_users != null && server.max_users ? Math.round((server.current_users / server.max_users) * 100) : 0;
-                  const flag = getCountryFlag(server.country ?? server.name ?? '');
+                {servers.map((server, i) => {
+                  const online = server.online ?? 0;
+                  const percent = Math.min(100, Math.round((online / MAX_USERS) * 100));
+                  const barColor = getLoadColor(percent);
+                  const glowColor = barColor;
+                  const flag = getCountryFlag(server.server_name ?? '');
+                  const label = getLoadLabel(percent);
+                  const dotClass = getStatusDotClass(percent);
                   return (
-                    <div key={server.server_id ?? server.id ?? i} className="server-card">
+                    <div key={server.server_id ?? i} className="server-card">
                       <div className="server-card-content">
                         <div className="server-card-header">
                           <div className="server-flag-large">{flag}</div>
-                          <h3 className="server-card-name">{server.name ?? server.country ?? 'VPN'}</h3>
+                          <div className="server-title-section">
+                            <h3 className="server-card-name">{server.server_name ?? 'VPN'}</h3>
+                            <div className="server-status-row">
+                              <span className={`server-status-dot ${dotClass}`} />
+                              <span className="server-status-label">{label}</span>
+                            </div>
+                          </div>
+                          <div className="server-percent-badge" style={{ '--load-color': barColor } as React.CSSProperties}>
+                            <span className="server-percent-value">{percent}</span>
+                            <span className="server-percent-sign">%</span>
+                          </div>
                         </div>
                         <div className="server-card-body">
                           <div className="server-load-info">
-                            <span className="server-load-text">Нагрузка: {server.current_users ?? 0} из {server.max_users ?? '?'}</span>
+                            <div className="server-load-header">
+                              <span className="server-load-text">Онлайн: <strong>{online}</strong> из {MAX_USERS}</span>
+                            </div>
                             <div className="server-load-bar-container">
                               <div className="server-load-bar">
-                                <div className={`server-load-fill ${load >= 80 ? 'high' : load >= 50 ? 'medium' : 'low'}`} style={{ width: `${load}%` }} />
+                                <div
+                                  className="server-load-fill-gradient"
+                                  style={{
+                                    width: `${percent}%`,
+                                    background: `linear-gradient(90deg, #49be6a, ${barColor})`,
+                                    boxShadow: `0 0 12px ${glowColor}40, 0 0 4px ${glowColor}60`,
+                                  }}
+                                />
                               </div>
+                            </div>
+                            <div className="server-load-scale">
+                              <span>0</span>
+                              <span>25</span>
+                              <span>50</span>
+                              <span>75</span>
+                              <span>100</span>
                             </div>
                           </div>
                         </div>

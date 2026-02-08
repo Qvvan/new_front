@@ -6436,18 +6436,18 @@ button:disabled:hover {
 .server-card {
     position: relative;
     background: linear-gradient(135deg,
-        rgba(255, 255, 255, 0.08) 0%,
-        rgba(255, 255, 255, 0.03) 50%,
-        rgba(0, 0, 0, 0.2) 100%
+        rgba(255, 255, 255, 0.07) 0%,
+        rgba(255, 255, 255, 0.02) 50%,
+        rgba(0, 0, 0, 0.15) 100%
     );
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-lg);
     transition: all var(--transition-normal);
     overflow: hidden;
-    box-shadow: 
-        0 4px 20px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
     animation: serverCardFadeIn 0.5s ease-out;
 }
 
@@ -6464,10 +6464,10 @@ button:disabled:hover {
 
 .server-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 
-        0 6px 24px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 /* Контент карточки */
@@ -6493,7 +6493,7 @@ button:disabled:hover {
 }
 
 .server-flag-large {
-    font-size: 32px;
+    font-size: 36px;
     line-height: 1;
     filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
 }
@@ -6501,6 +6501,9 @@ button:disabled:hover {
 /* Секция названия */
 .server-title-section {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .server-card-name {
@@ -6509,6 +6512,75 @@ button:disabled:hover {
     color: var(--text-primary);
     margin: 0;
     line-height: 1.2;
+}
+
+/* Статус-строка рядом с именем */
+.server-status-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.server-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.server-status-dot.status-free {
+    background: #49be6a;
+    box-shadow: 0 0 6px #49be6a80;
+}
+
+.server-status-dot.status-moderate {
+    background: #f0c430;
+    box-shadow: 0 0 6px #f0c43080;
+}
+
+.server-status-dot.status-loaded {
+    background: #f09030;
+    box-shadow: 0 0 6px #f0903080;
+}
+
+.server-status-dot.status-overloaded {
+    background: #ff4757;
+    box-shadow: 0 0 6px #ff475780;
+}
+
+.server-status-label {
+    font-size: 12px;
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+}
+
+/* Процентный бейдж справа */
+.server-percent-badge {
+    display: flex;
+    align-items: baseline;
+    gap: 1px;
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.server-percent-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--load-color, #49be6a);
+    line-height: 1;
+    letter-spacing: -0.5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.server-percent-sign {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--load-color, #49be6a);
+    opacity: 0.7;
 }
 
 /* Тело карточки */
@@ -6523,17 +6595,28 @@ button:disabled:hover {
     gap: var(--spacing-sm);
 }
 
-/* Информация о нагрузке (когда данные есть) */
+/* Информация о нагрузке */
 .server-load-info {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: 6px;
+}
+
+.server-load-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .server-load-text {
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
     color: var(--text-secondary);
+}
+
+.server-load-text strong {
+    color: var(--text-primary);
+    font-weight: var(--font-weight-semibold);
 }
 
 .server-load-bar-container {
@@ -6543,14 +6626,40 @@ button:disabled:hover {
 
 .server-load-bar {
     flex: 1;
-    height: 6px;
-    background: rgba(0, 0, 0, 0.3);
+    height: 8px;
+    background: rgba(255, 255, 255, 0.06);
     border-radius: var(--border-radius-full);
     overflow: hidden;
     position: relative;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
+/* Новый плавный градиентный заполнитель */
+.server-load-fill-gradient {
+    height: 100%;
+    border-radius: var(--border-radius-full);
+    position: relative;
+    overflow: hidden;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 2px;
+}
+
+/* Шкала под прогресс-баром */
+.server-load-scale {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 1px;
+    margin-top: 2px;
+}
+
+.server-load-scale span {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.2);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Легаси стили для совместимости */
 .server-load-fill {
     height: 100%;
     border-radius: var(--border-radius-full);
@@ -6572,31 +6681,10 @@ button:disabled:hover {
     background: linear-gradient(90deg, #ff4757, #ff6b7a);
 }
 
-.server-load-shine {
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg,
-        transparent,
-        rgba(255, 255, 255, 0.4),
-        transparent
-    );
-    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация для снижения нагрузки */
-    display: none; /* Скрываем shine эффект полностью */
-}
-
-/* Неизвестная нагрузка (компактный дизайн) */
+/* Неизвестная нагрузка */
 .server-load-unknown {
     display: flex;
     flex-direction: column;
-}
-
-.server-load-text {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    color: var(--text-secondary);
 }
 
 .unknown-text {
@@ -6612,11 +6700,23 @@ button:disabled:hover {
     }
 
     .server-flag-large {
-        font-size: 28px;
+        font-size: 30px;
     }
 
     .server-card-name {
         font-size: var(--font-size-base);
+    }
+
+    .server-percent-value {
+        font-size: 18px;
+    }
+
+    .server-percent-badge {
+        padding: 5px 10px;
+    }
+
+    .server-load-bar {
+        height: 7px;
     }
 }
 

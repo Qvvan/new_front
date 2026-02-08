@@ -113,8 +113,14 @@ export const giftApi = {
   refund: (id: number) => api.post(`/subscription/gifts/${id}/refund`),
 };
 
+export type ServerOnlineItem = {
+  server_id: number;
+  server_name: string;
+  online: number;
+};
+
 export const serversApi = {
-  list: () => api.get<{ servers?: unknown[] } | unknown[]>('/keys/servers'),
+  list: () => api.get<{ servers?: ServerOnlineItem[] }>('/keys/servers/online'),
 };
 
 export const currencyApi = {
