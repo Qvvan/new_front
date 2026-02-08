@@ -6,7 +6,7 @@ export const pageTransition = {
   initial: { opacity: 0, y: 4 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -2 },
-  transition: { duration: 0.12, ease: [0.25, 0.46, 0.45, 0.94] },
+  transition: { duration: 0.12, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
 };
 
 export const staggerContainer = {
@@ -21,7 +21,7 @@ export const staggerContainer = {
 export const staggerItem = {
   initial: { opacity: 0, y: 4 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.12, ease: [0.25, 0.46, 0.45, 0.94] },
+  transition: { duration: 0.12, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
 };
 
 export const cardHover = {
@@ -41,13 +41,13 @@ export const modalPanel = {
   initial: { opacity: 0, scale: 0.98, y: 8 },
   animate: { opacity: 1, scale: 1, y: 0 },
   exit: { opacity: 0, scale: 0.99, y: 4 },
-  transition: { duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] },
+  transition: { duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
 };
 
 export const slideUp = {
   initial: { opacity: 0, y: 24 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] },
+  transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
 };
 
 export const slideDown = {

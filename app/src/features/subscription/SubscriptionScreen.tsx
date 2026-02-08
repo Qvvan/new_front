@@ -7,6 +7,7 @@ import { useModalsStore } from '../../app/modalsStore';
 import { useToast } from '../../shared/ui/Toast';
 import { useModal } from '../../shared/ui/Modal';
 import { useTelegram } from '../../core/telegram/hooks';
+import { useDeepLinkStore } from '../../core/deeplink';
 import { daysBetween, pluralize, formatDate } from '../../core/utils';
 import { staggerContainer, staggerItem } from '../../shared/motion/variants';
 import { TgsPlayer, ASSETS_GIFS } from '../../shared/ui/TgsPlayer';
@@ -104,11 +105,41 @@ export function SubscriptionScreen() {
   const [serviceSelector, setServiceSelector] = useState<{ open: boolean; mode: 'buy' | 'renew' | 'gift'; subscriptionId?: number }>({ open: false, mode: 'buy' });
   const [giftFlowOpen, setGiftFlowOpen] = useState(false);
   const [activateCodeOpen, setActivateCodeOpen] = useState(false);
+  const [activateCodeInitial, setActivateCodeInitial] = useState<string | undefined>();
   const [dailyBonusModalOpen, setDailyBonusModalOpen] = useState(false);
   const [currencyModalOpen, setCurrencyModalOpen] = useState(false);
   const [renameModal, setRenameModal] = useState<{ open: boolean; subId: number; currentName: string }>({ open: false, subId: 0, currentName: '' });
   const [renameSaving, setRenameSaving] = useState(false);
   const { openInstructions, openSupport, serviceSelector: storeServiceSelector, closeServiceSelector } = useModalsStore();
+
+  /* ── Consume pending deep link action ─────────────────────── */
+  const deepLinkConsumed = useRef(false);
+  useEffect(() => {
+    if (deepLinkConsumed.current) return;
+    // Small delay so component is fully mounted and modals are ready
+    const timer = setTimeout(() => {
+      const action = useDeepLinkStore.getState().consume();
+      if (!action) return;
+      deepLinkConsumed.current = true;
+
+      switch (action.type) {
+        case 'activate-code':
+          if (action.code) setActivateCodeInitial(action.code);
+          setActivateCodeOpen(true);
+          break;
+        case 'services':
+          setServiceSelector({ open: true, mode: action.mode ?? 'buy' });
+          break;
+        case 'gift':
+          setGiftFlowOpen(true);
+          break;
+        case 'daily-bonus':
+          setDailyBonusModalOpen(true);
+          break;
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
   const serviceSelectorOpen = serviceSelector.open || storeServiceSelector?.open === true;
   const serviceSelectorMode = storeServiceSelector?.open ? storeServiceSelector.mode : serviceSelector.mode;
   const serviceSelectorSubscriptionId = storeServiceSelector?.open ? storeServiceSelector.subscriptionId : serviceSelector.subscriptionId;
@@ -470,7 +501,12 @@ export function SubscriptionScreen() {
         onSuccess={() => { refetchSubs(); closeServiceSelectorModal(); }}
       />
       <GiftFlowModal open={giftFlowOpen} onClose={() => setGiftFlowOpen(false)} onSuccess={() => { refetchSubs(); setGiftFlowOpen(false); }} />
-      <ActivateCodeModal open={activateCodeOpen} onClose={() => setActivateCodeOpen(false)} onSuccess={() => { refetchSubs(); setActivateCodeOpen(false); }} />
+      <ActivateCodeModal
+        open={activateCodeOpen}
+        initialCode={activateCodeInitial}
+        onClose={() => { setActivateCodeOpen(false); setActivateCodeInitial(undefined); }}
+        onSuccess={() => { refetchSubs(); setActivateCodeOpen(false); setActivateCodeInitial(undefined); }}
+      />
       <RenameModal
         open={renameModal.open}
         currentName={renameModal.currentName}

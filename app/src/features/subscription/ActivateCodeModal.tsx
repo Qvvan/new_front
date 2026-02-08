@@ -8,9 +8,11 @@ interface ActivateCodeModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  /** Pre-filled code from deep link (e.g. startapp=activate-code__ABC123) */
+  initialCode?: string;
 }
 
-export function ActivateCodeModal({ open, onClose, onSuccess }: ActivateCodeModalProps) {
+export function ActivateCodeModal({ open, onClose, onSuccess, initialCode }: ActivateCodeModalProps) {
   const toast = useToast();
   const tg = useTelegram();
   const [code, setCode] = useState('');
@@ -20,10 +22,10 @@ export function ActivateCodeModal({ open, onClose, onSuccess }: ActivateCodeModa
 
   useEffect(() => {
     if (open) {
-      setCode('');
+      setCode(initialCode ?? '');
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [open]);
+  }, [open, initialCode]);
 
   const handleActivate = async () => {
     const trimmed = code.trim().toUpperCase();

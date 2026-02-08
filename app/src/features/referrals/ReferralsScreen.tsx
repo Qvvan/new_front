@@ -9,7 +9,8 @@ function useReferralLink(): string {
   const tg = useTelegram();
   const userId = tg?.user?.id;
   const bot = 'SuperSummaryBot';
-  return userId ? `https://t.me/${bot}/sky?startapp=${userId}` : '';
+  // ref_ prefix to distinguish from deep link actions while keeping backward compat
+  return userId ? `https://t.me/${bot}/sky?startapp=ref_${userId}` : '';
 }
 
 export function ReferralsScreen() {

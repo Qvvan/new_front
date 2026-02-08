@@ -1,7 +1,15 @@
 import { createHashRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from './AppLayout';
+import {
+  extractStartParam,
+  parseStartParam,
+  getScreenForAction,
+  isReferralParam,
+} from '../core/deeplink';
 
 export type ScreenName = 'subscription' | 'keys' | 'referrals' | 'payments' | 'instructions' | 'support';
+
+/* ── Legacy URL-based deep link parser (backward compat) ─── */
 
 export function parseDeepLink(search: string, hash: string): { screen: ScreenName; params: Record<string, string> } | null {
   const params = new URLSearchParams(search);
@@ -33,15 +41,28 @@ export function parseDeepLink(search: string, hash: string): { screen: ScreenNam
   return null;
 }
 
+/* ── Route entry point ────────────────────────────────────── */
+
 function Home() {
-  const search = typeof window !== 'undefined' ? window.location.search : '';
-  const hash = typeof window !== 'undefined' ? window.location.hash : '';
   const screen = (() => {
+    // 1. Try new Telegram startapp deep link system (priority)
+    const raw = extractStartParam();
+    if (raw && !isReferralParam(raw)) {
+      const action = parseStartParam(raw);
+      if (action) return getScreenForAction(action);
+    }
+
+    // 2. Fallback to legacy URL-based deep links
+    const search = typeof window !== 'undefined' ? window.location.search : '';
+    const hash = typeof window !== 'undefined' ? window.location.hash : '';
     const deep = parseDeepLink(search, hash);
     if (deep) return deep.screen;
+
+    // 3. Simple ?screen= parameter
     const p = new URLSearchParams(search);
     const s = p.get('screen') as ScreenName | null;
     if (s && ['subscription', 'keys', 'referrals', 'payments'].includes(s)) return s;
+
     return 'subscription';
   })();
   return <AppLayout defaultScreen={screen} />;

@@ -24,11 +24,6 @@ function parseKeyName(key: string): string {
   return hash !== -1 ? decodeURIComponent(key.slice(hash + 1)) : 'VPN ключ';
 }
 
-function parseServerFromKey(key: string): { name: string; flag: string } {
-  const name = parseKeyName(key);
-  return { name, flag: getCountryFlag(name) };
-}
-
 type KeyRowItem =
   | { type: 'key'; key: string; keyName: string; serverName: string; serverId: number; port: number }
   | { type: 'unavailable'; serverName: string; serverId: number; port: number; message: string };

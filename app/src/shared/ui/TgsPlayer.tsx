@@ -107,7 +107,6 @@ export function TgsPlayer({
   const containerRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<AnimationItem | null>(null);
   const [error, setError] = useState(false);
-  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -121,7 +120,7 @@ export function TgsPlayer({
       img.style.width = '100%';
       img.style.height = '100%';
       img.style.objectFit = 'contain';
-      img.onload = () => setLoaded(true);
+      img.onload = () => {};
       img.onerror = () => setError(true);
       el.appendChild(img);
       return () => {
@@ -170,7 +169,6 @@ export function TgsPlayer({
         }
 
         if (document.hidden) animation.pause();
-        setLoaded(true);
 
         const onVisibility = () => {
           if (document.hidden) {

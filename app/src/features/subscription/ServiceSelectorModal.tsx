@@ -46,7 +46,7 @@ export function ServiceSelectorModal({ open, mode, subscriptionId, onClose, onSu
     queryFn: () => subscriptionApi.list(),
     enabled: open && mode === 'buy',
   });
-  const subs = Array.isArray(subsRes) ? subsRes : (subsRes as { subscriptions?: { end_date?: string; status?: string }[] })?.subscriptions ?? [];
+  const subs = (Array.isArray(subsRes) ? subsRes : (subsRes as { subscriptions?: { end_date?: string; status?: string }[] })?.subscriptions ?? []) as { end_date?: string; status?: string }[];
   const hasActiveSubscription = subs.some(s => daysBetween(s.end_date ?? '') > 0 && (s.status === 'active' || s.status === 'trial'));
 
   const { data: servicesRes } = useQuery({

@@ -171,11 +171,6 @@ export function InstructionsModal() {
     tg?.haptic.success?.();
   }, [selectedImportUrl, apps, toast, tg]);
 
-  const goToKeys = useCallback(() => {
-    handleClose();
-    navigate('/keys');
-  }, [handleClose, navigate]);
-
   const openSubUrl = useCallback(() => {
     const currentSub = subscriptions.find(s => (s.subscription_id ?? Number(s.id)) === subscriptionId);
     if (currentSub?.sub_url) {
@@ -196,7 +191,6 @@ export function InstructionsModal() {
 
   if (!instructions) return null;
 
-  const stepsLabel = ['Устройство', 'Приложение', 'Настройка'];
   const content = (
     <AnimatePresence>
       <motion.div className="modal-overlay active" {...modalBackdrop} onClick={handleClose}>

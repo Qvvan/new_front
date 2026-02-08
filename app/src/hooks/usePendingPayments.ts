@@ -27,7 +27,6 @@ function enrichPaymentWithService(
     return out;
   }
   out.service_name = out.service_name ?? out.description?.split(' - ')[0] ?? 'VPN подписка';
-  const price = out.price ?? out.amount;
   if ((out.price == null || out.price === 0) && (out.amount == null || out.amount === 0) && out.description) {
     const match = out.description.match(/(\d+)/);
     if (match) out.price = parseInt(match[1], 10);
@@ -60,9 +59,9 @@ export function usePendingPayments() {
           servicesApi.list().catch(() => null),
         ]);
 
-        const services: ServiceItem[] = Array.isArray(servicesRes)
+        const services = (Array.isArray(servicesRes)
           ? servicesRes
-          : (servicesRes as { services?: unknown[] })?.services ?? [];
+          : (servicesRes as { services?: unknown[] })?.services ?? []) as ServiceItem[];
 
         for (const p of pending) {
           const url = p.confirmation_url ?? p.receipt_link ?? p.url ?? p.payment_url;
