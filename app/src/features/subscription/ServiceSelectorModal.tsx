@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { servicesApi, userApi, paymentApi, subscriptionApi } from '../../core/api/endpoints';
+import { clearApiCache } from '../../core/api/client';
+import { useModalsStore } from '../../app/modalsStore';
 import { useToast } from '../../shared/ui/Toast';
 import { useTelegram } from '../../core/telegram/hooks';
 import { formatPrice, formatDurationDays } from '../../core/utils';
@@ -36,7 +38,9 @@ type ServiceItem = {
 export function ServiceSelectorModal({ open, mode, subscriptionId, onClose, onSuccess }: ServiceSelectorModalProps) {
   const toast = useToast();
   const tg = useTelegram();
+  const { openInstructions } = useModalsStore();
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [trialLoading, setTrialLoading] = useState(false);
 
   const { data: user } = useQuery({ queryKey: ['user'], queryFn: () => userApi.getCurrentUser(), enabled: open });
   const userId = (user as { telegram_id?: number })?.telegram_id ?? (user as { user_id?: number })?.user_id;
@@ -62,6 +66,8 @@ export function ServiceSelectorModal({ open, mode, subscriptionId, onClose, onSu
     .filter(s => !s.is_trial)
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || (Number(a.price) - Number(b.price)));
 
+  const isTrialSelected = trialService != null && selectedId === (trialService.service_id ?? trialService.id);
+
   const handleContinue = async () => {
     if (!selectedId || !userId) return;
     tg?.haptic.light();
@@ -69,6 +75,25 @@ export function ServiceSelectorModal({ open, mode, subscriptionId, onClose, onSu
       if (mode === 'gift') {
         onSuccess();
         onClose();
+        return;
+      }
+
+      // If the selected service is a trial — call the trial activation endpoint (no payment)
+      if (isTrialSelected) {
+        setTrialLoading(true);
+        try {
+          await subscriptionApi.activateTrial();
+          toast.success('Пробный период активирован');
+          clearApiCache('/subscription/subscriptions/user');
+          clearApiCache('/user/user');
+          tg?.haptic.success();
+          onSuccess();
+          onClose();
+          // Show instructions after the modal closes
+          setTimeout(() => openInstructions(), 300);
+        } finally {
+          setTrialLoading(false);
+        }
         return;
       }
 
@@ -234,10 +259,16 @@ export function ServiceSelectorModal({ open, mode, subscriptionId, onClose, onSu
               <button
                 type="button"
                 className="btn btn-primary"
-                disabled={!selectedId}
+                disabled={!selectedId || trialLoading}
                 onClick={handleContinue}
               >
-                <i className="fas fa-arrow-right" /> {mode === 'gift' ? 'Далее' : 'Продолжить'}
+                {trialLoading ? (
+                  <><i className="fas fa-spinner fa-spin" /> Активация...</>
+                ) : isTrialSelected ? (
+                  <><i className="fas fa-gift" /> Активировать</>
+                ) : (
+                  <><i className="fas fa-arrow-right" /> {mode === 'gift' ? 'Далее' : 'Продолжить'}</>
+                )}
               </button>
             </div>
           </motion.div>
