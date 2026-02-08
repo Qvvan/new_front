@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { servicesApi, giftApi } from '../../core/api/endpoints';
@@ -114,7 +115,7 @@ export function GiftFlowModal({ open, onClose, onSuccess }: GiftFlowModalProps) 
     }
   }, [selectedServiceId, senderName, message, selectedService, tg, toast, onSuccess, handleClose, showBanner]);
 
-  return (
+  const content = (
     <AnimatePresence>
       {open && (
       <motion.div className="modal-overlay active" {...modalBackdrop} onClick={handleClose}>
@@ -266,4 +267,6 @@ export function GiftFlowModal({ open, onClose, onSuccess }: GiftFlowModalProps) 
       )}
     </AnimatePresence>
   );
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : null;
 }

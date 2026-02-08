@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { servicesApi, userApi, paymentApi, subscriptionApi } from '../../core/api/endpoints';
@@ -173,7 +174,7 @@ export function ServiceSelectorModal({ open, mode, subscriptionId, onClose, onSu
       : '<i class="fas fa-rocket"></i> Выберите подходящий тариф для начала работы с VPN.';
   }
 
-  return (
+  const content = (
     <AnimatePresence>
       {open && (
         <motion.div className="modal-overlay active" {...modalBackdrop} onClick={onClose}>
@@ -276,4 +277,6 @@ export function ServiceSelectorModal({ open, mode, subscriptionId, onClose, onSu
       )}
     </AnimatePresence>
   );
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : null;
 }
