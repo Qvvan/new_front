@@ -338,6 +338,10 @@ export function InstructionsModal() {
                         </div>
                       ) : (
                         <div className="apps-list">
+                          <div className="apps-list-hint">
+                            <i className="fas fa-hand-pointer" />
+                            <span>Нажмите на приложение, чтобы выбрать</span>
+                          </div>
                           {apps.map((app, idx) => (
                             <div
                               key={idx}
@@ -347,13 +351,21 @@ export function InstructionsModal() {
                                 if (app.import_url) setSelectedImportUrl(app.import_url);
                                 tg?.haptic.selection?.();
                               }}
+                              role="button"
+                              tabIndex={0}
                               data-app-index={idx}
                             >
+                              <div className="app-card-radio">
+                                <div className="app-card-radio-dot" />
+                              </div>
                               <div className="app-icon">
                                 <i className={getAppIcon(app.app_name ?? '', deviceType ?? '')} />
                               </div>
                               <div className="app-info">
                                 <h4>{app.app_name ?? 'Приложение'}</h4>
+                                {selectedAppIndex !== idx && (
+                                  <div className="app-tap-hint">Нажмите для выбора</div>
+                                )}
                               </div>
                               <button
                                 type="button"
@@ -366,7 +378,7 @@ export function InstructionsModal() {
                                   setStep(2);
                                 }}
                               >
-                                <i className="fas fa-download" /> Скачать
+                                <i className="fas fa-download" /> <span className="btn-download-label">Скачать</span>
                               </button>
                             </div>
                           ))}
