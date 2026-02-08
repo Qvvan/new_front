@@ -79,7 +79,7 @@ export function usePendingPayments() {
         for (const p of pending) {
           const pid = getPaymentId(p);
           const url = p.confirmation_url ?? p.receipt_link ?? p.url ?? p.payment_url;
-          await storage.addPendingPayment({ ...p, id: pid, payment_url: url, url: url ?? '', confirmation_url: url ?? '' });
+          await storage.addPendingPayment({ ...p, id: pid, payment_id: p.payment_id != null ? String(p.payment_id) : undefined, payment_url: url, url: url ?? '', confirmation_url: url ?? '' });
         }
 
         if (pending.length > 0 && !cancelled) {
@@ -90,6 +90,7 @@ export function usePendingPayments() {
           const toShow = {
             ...oldest,
             id: pid,
+            payment_id: oldest.payment_id != null ? String(oldest.payment_id) : undefined,
             payment_url: paymentUrl,
             url: paymentUrl ?? '',
             confirmation_url: paymentUrl ?? '',

@@ -174,6 +174,7 @@ export function usePaymentPolling() {
             usePaymentBannerStore.getState().show({
               ...next,
               id: nextId,
+              payment_id: next.payment_id != null ? String(next.payment_id) : undefined,
               status: 'pending',
               payment_url: nextUrl,
               url: nextUrl ?? '',
