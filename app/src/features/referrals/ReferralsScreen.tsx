@@ -24,13 +24,12 @@ export function ReferralsScreen() {
   });
   const referrals = Array.isArray(refsRes) ? refsRes : (refsRes as { referrals?: unknown[] })?.referrals ?? [];
 
+  const typedRefs = referrals as { user?: Record<string, unknown>; bonus_granted?: boolean; bonus_days?: number }[];
   const stats = {
     total_count: referrals.length,
-    partners: (referrals as { user?: { trial_activated?: boolean }; bonus_granted?: boolean }[]).filter(r =>
-      r.user?.trial_activated === true || r.bonus_granted === true
-    ).length,
+    partners: typedRefs.filter(r => r.bonus_granted === true).length,
   };
-  const bonusDays = stats.partners * 15;
+  const bonusDays = typedRefs.reduce((sum, r) => sum + (r.bonus_days ?? 0), 0);
 
   const shareToTelegram = () => {
     const name = tg?.user?.first_name ?? 'Друг';
@@ -101,11 +100,11 @@ export function ReferralsScreen() {
             </div>
           ) : (
             <div className="referrals-list">
-              {(referrals as { user?: { name?: string; username?: string; photo_url?: string; trial_activated?: boolean }; bonus_granted?: boolean; created_at?: string }[]).map((ref, i) => {
+              {(referrals as { user?: { name?: string; username?: string; photo_url?: string }; bonus_granted?: boolean; bonus_days?: number; created_at?: string }[]).map((ref, i) => {
                 const u = ref.user ?? ref;
                 const name = (u as { name?: string }).name ?? (u as { username?: string }).username ?? 'Пользователь';
                 const photoUrl = (u as { photo_url?: string }).photo_url;
-                const isActive = (u as { trial_activated?: boolean }).trial_activated === true || ref.bonus_granted === true;
+                const isActive = ref.bonus_granted === true;
                 return (
                   <div key={i} className="referral-item">
                     <div className="referral-item-avatar">
@@ -129,7 +128,7 @@ export function ReferralsScreen() {
                     </div>
                     <div className="referral-item-info">
                       <div className="referral-item-name">{name}</div>
-                      <div className={`referral-item-status ${isActive ? 'text-green' : 'text-secondary'}`}>{isActive ? 'Активен' : 'Приглашен'}</div>
+                      <div className={`referral-item-status ${isActive ? 'text-green' : 'text-secondary'}`}>{isActive ? `+${ref.bonus_days ?? 0} дн. бонус` : 'Приглашен'}</div>
                     </div>
                     <div className="referral-item-date">{ref.created_at ? formatDate(ref.created_at, 'relative') : ''}</div>
                   </div>
