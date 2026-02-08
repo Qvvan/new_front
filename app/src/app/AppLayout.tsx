@@ -14,6 +14,8 @@ import { SupportModal } from '../features/support/SupportModal';
 import { parseDeepLink, type ScreenName } from './routes';
 import { useModalsStore } from './modalsStore';
 import { usePendingPayments } from '../hooks/usePendingPayments';
+import { usePaymentPolling } from '../hooks/usePaymentPolling';
+import { PaymentSuccessOverlay } from '../shared/ui/PaymentSuccessOverlay';
 import { pageTransition } from '../shared/motion/variants';
 import {
   extractStartParam,
@@ -40,6 +42,7 @@ export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
   const [loading, setLoading] = useState(true);
   const [, setSearchParams] = useSearchParams();
   usePendingPayments();
+  const { successPayment, dismissSuccess } = usePaymentPolling();
 
   const { openInstructions, openSupport } = useModalsStore();
 
@@ -162,6 +165,7 @@ export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
         <ToastContainer />
         <InstructionsModal />
         <SupportModal />
+        <PaymentSuccessOverlay payment={successPayment} onDismiss={dismissSuccess} />
       </div>
     </NavContext.Provider>
   );

@@ -8,6 +8,7 @@ import { formatPrice, formatDurationDays } from '../../core/utils';
 import { modalBackdrop, modalPanel } from '../../shared/motion/variants';
 import { TgsPlayer, ASSETS_GIFS } from '../../shared/ui/TgsPlayer';
 import { daysBetween } from '../../core/utils';
+import { usePaymentBannerStore } from '../../shared/ui/PaymentBanner';
 
 interface ServiceSelectorModalProps {
   open: boolean;
@@ -70,15 +71,51 @@ export function ServiceSelectorModal({ open, mode, subscriptionId, onClose, onSu
         onClose();
         return;
       }
+
+      type PaymentRes = {
+        payment?: { id?: string; payment_id?: number | string; confirmation_url?: string };
+        confirmation_url?: string;
+        url?: string;
+        id?: string;
+        payment_id?: number | string;
+      };
+
+      let res: PaymentRes | undefined;
+
       if (mode === 'buy') {
-        const res = await paymentApi.createSubscription({ service_id: selectedId }, userId) as { payment?: { confirmation_url?: string }; confirmation_url?: string; url?: string };
-        const url = res?.payment?.confirmation_url ?? res?.confirmation_url ?? res?.url;
-        if (url) tg?.openLink?.(url); else toast.error('Не получена ссылка на оплату');
+        res = await paymentApi.createSubscription({ service_id: selectedId }, userId) as PaymentRes;
       } else if (mode === 'renew' && subscriptionId) {
-        const res = await paymentApi.createRenewal({ subscription_id: subscriptionId, service_id: selectedId }, userId) as { payment?: { confirmation_url?: string }; confirmation_url?: string; url?: string };
-        const url = res?.payment?.confirmation_url ?? res?.confirmation_url ?? res?.url;
-        if (url) tg?.openLink?.(url); else toast.error('Не получена ссылка на оплату');
+        res = await paymentApi.createRenewal({ subscription_id: subscriptionId, service_id: selectedId }, userId) as PaymentRes;
       }
+
+      const url = res?.payment?.confirmation_url ?? res?.confirmation_url ?? res?.url;
+
+      if (url) {
+        tg?.openLink?.(url);
+
+        // Show payment banner immediately so user sees the pending payment
+        const selectedService = allServices.find(s => (s.service_id ?? s.id) === selectedId);
+        const rawId = res?.payment?.payment_id ?? res?.payment?.id ?? res?.payment_id ?? res?.id;
+        const paymentId = rawId != null ? String(rawId) : `payment_${Date.now()}`;
+        usePaymentBannerStore.getState().show({
+          id: paymentId,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          confirmation_url: url,
+          payment_url: url,
+          url,
+          service_name: selectedService?.name,
+          service_id: selectedId,
+          price: selectedService?.price,
+          service_duration: selectedService?.duration_days != null
+            ? formatDurationDays(selectedService.duration_days)
+            : undefined,
+          mode: mode === 'renew' ? 'renew' : 'buy',
+        });
+      } else {
+        toast.error('Не получена ссылка на оплату');
+      }
+
       onSuccess();
       onClose();
     } catch (err: unknown) {

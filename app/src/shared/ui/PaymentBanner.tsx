@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice } from '../../core/utils';
 
-interface PendingPayment {
+export interface PendingPayment {
   id: string;
   payment_id?: string;
   status?: string;
@@ -18,6 +18,8 @@ interface PendingPayment {
   price?: number;
   amount?: number;
   description?: string;
+  /** 'buy' = new subscription, 'renew' = renewal, 'gift' = gift */
+  mode?: 'buy' | 'renew' | 'gift';
 }
 
 interface PaymentBannerState {

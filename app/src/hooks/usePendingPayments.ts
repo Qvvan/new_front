@@ -6,6 +6,19 @@ import { usePaymentBannerStore } from '../shared/ui/PaymentBanner';
 
 type ServiceItem = { id?: number; service_id?: number; name?: string; price?: number; duration_days?: number };
 
+/** Convert backend payment_type to our UI mode */
+function paymentTypeToMode(type?: string): 'buy' | 'renew' | 'gift' | undefined {
+  if (type === 'renewal') return 'renew';
+  if (type === 'subscription') return 'buy';
+  if (type === 'gift') return 'gift';
+  return undefined;
+}
+
+/** Get a stable string ID from the API item (payment_id is a number) */
+function getPaymentId(p: PendingPaymentApiItem): string {
+  return String(p.payment_id ?? p.id ?? '');
+}
+
 function enrichPaymentWithService(
   payment: PendingPaymentApiItem,
   services: ServiceItem[],
@@ -64,16 +77,26 @@ export function usePendingPayments() {
           : (servicesRes as { services?: unknown[] })?.services ?? []) as ServiceItem[];
 
         for (const p of pending) {
+          const pid = getPaymentId(p);
           const url = p.confirmation_url ?? p.receipt_link ?? p.url ?? p.payment_url;
-          await storage.addPendingPayment({ ...p, payment_url: url, url: url ?? '', confirmation_url: url ?? '' });
+          await storage.addPendingPayment({ ...p, id: pid, payment_url: url, url: url ?? '', confirmation_url: url ?? '' });
         }
 
         if (pending.length > 0 && !cancelled) {
           const sorted = [...pending].sort((a, b) => new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime());
           const oldest = enrichPaymentWithService(sorted[0], services);
           const paymentUrl = oldest.confirmation_url ?? oldest.receipt_link ?? oldest.url ?? oldest.payment_url;
-          const toShow = { ...oldest, payment_url: paymentUrl, url: paymentUrl ?? '', confirmation_url: paymentUrl ?? '', status: 'pending' as const };
-          if (toShow.payment_url || toShow.url) showBanner(toShow);
+          const pid = getPaymentId(oldest);
+          const toShow = {
+            ...oldest,
+            id: pid,
+            payment_url: paymentUrl,
+            url: paymentUrl ?? '',
+            confirmation_url: paymentUrl ?? '',
+            status: 'pending' as const,
+            mode: paymentTypeToMode(oldest.payment_type),
+          };
+          if (pid && (toShow.payment_url || toShow.url)) showBanner(toShow);
         }
       } catch {
         await storage.clearPendingPayments();

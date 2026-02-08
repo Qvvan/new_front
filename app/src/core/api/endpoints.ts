@@ -40,7 +40,11 @@ export const paymentApi = {
 };
 
 export type PendingPaymentApiItem = {
-  id: string;
+  id?: string;
+  /** Actual payment ID from the backend (number) */
+  payment_id?: number;
+  /** 'renewal' | 'subscription' | 'gift' */
+  payment_type?: string;
   status?: string;
   created_at?: string;
   confirmation_url?: string;
@@ -48,10 +52,13 @@ export type PendingPaymentApiItem = {
   url?: string;
   receipt_link?: string;
   service_id?: number;
+  subscription_id?: number;
+  gift_id?: number | null;
   service_name?: string;
   service_duration?: string;
   price?: number;
   amount?: number;
+  currency?: string;
   description?: string;
 };
 
