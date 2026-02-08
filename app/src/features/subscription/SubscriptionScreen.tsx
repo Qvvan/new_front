@@ -414,10 +414,11 @@ export function SubscriptionScreen() {
                   <div className="subscription-compact-actions">
                     {!isTrial && !isExpired && (
                       <div className="subscription-compact-auto-renewal" data-subscription-id={subId} onClick={() => handleAutoRenewalToggle(subId, !!sub.auto_renewal)} role="button" tabIndex={0} title="Автопродление">
+                        <span className="auto-renewal-label">Автопродление</span>
                         <div className={`toggle-switch-compact ${sub.auto_renewal ? 'active' : ''}`}><div className="toggle-slider-compact" /></div>
                       </div>
                     )}
-                    <button type="button" className="btn-trial-activation btn-renew-compact" onClick={() => handleRenew(subId)} data-action="renew" data-subscription-id={subId}>
+                    <button type="button" className="btn-trial-activation btn-renew-compact" onClick={() => handleRenew(subId)} data-action="renew" data-subscription-id={subId} title="Продлить подписку" aria-label="Продлить подписку">
                       <div className="btn-trial-bg"><div className="btn-trial-shine" /><div className="btn-trial-glow" /></div>
                       <div className="btn-trial-content">
                         <div className="trial-icon-wrapper"><i className="fas fa-sync-alt" /></div>
