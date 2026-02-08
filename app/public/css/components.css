@@ -6610,6 +6610,77 @@ body.page-hidden [style*="animation"] {
     line-height: 1.5;
 }
 
+/* Empty State for Instructions Modal */
+.subscription-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--spacing-xl) var(--spacing-lg);
+    gap: var(--spacing-md);
+}
+
+.empty-state-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: var(--spacing-sm);
+}
+
+.empty-state-icon i {
+    font-size: 28px;
+    color: var(--text-secondary);
+}
+
+.empty-state-icon--warning {
+    background: linear-gradient(135deg, rgba(255, 159, 67, 0.15), rgba(255, 71, 87, 0.08));
+    border-color: rgba(255, 159, 67, 0.25);
+}
+
+.empty-state-icon--warning i {
+    color: var(--accent-orange);
+}
+
+.empty-state-icon--success {
+    background: linear-gradient(135deg, rgba(73, 170, 77, 0.15), rgba(73, 170, 77, 0.05));
+    border-color: rgba(73, 170, 77, 0.25);
+}
+
+.empty-state-icon--success i {
+    color: var(--accent-green);
+}
+
+.empty-state-title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.empty-state-description {
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
+    max-width: 320px;
+}
+
+.btn-empty-state {
+    margin-top: var(--spacing-md);
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+}
+
 .subscriptions-list {
     display: flex;
     flex-direction: column;

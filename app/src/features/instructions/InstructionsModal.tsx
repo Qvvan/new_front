@@ -208,15 +208,18 @@ export function InstructionsModal() {
             {view === 'subscription' ? (
               <div className="subscription-selection-content">
                 {subscriptions.length === 0 && (
-                  <>
-                    <div className="subscription-selection-message">
-                      <i className="fas fa-info-circle" />
-                      <p>У вас нет активной подписки. Для просмотра инструкций необходимо приобрести подписку.</p>
+                  <div className="subscription-empty-state">
+                    <div className="empty-state-icon">
+                      <i className="fas fa-box-open" />
                     </div>
-                    <button type="button" className="btn btn-primary" onClick={handleBuySubscription}>
-                      <i className="fas fa-shopping-cart" /> Купить подписку
+                    <h3 className="empty-state-title">Нет активной подписки</h3>
+                    <p className="empty-state-description">
+                      Для просмотра инструкций по настройке VPN необходимо приобрести подписку
+                    </p>
+                    <button type="button" className="btn btn-activation btn-empty-state" onClick={handleBuySubscription}>
+                      <i className="fas fa-rocket" /> Купить подписку
                     </button>
-                  </>
+                  </div>
                 )}
                 {subscriptions.length === 1 && (() => {
                   const sub = subscriptions[0];
@@ -225,27 +228,35 @@ export function InstructionsModal() {
                   const isActive = days > 0 && (sub.status === 'active' || sub.status === 'trial');
                   if (!isActive) {
                     return (
-                      <>
-                        <div className="subscription-selection-message">
-                          <i className="fas fa-exclamation-triangle" />
-                          <p>{days <= 0 ? 'Ваша подписка просрочена.' : 'Ваша подписка истекает.'}</p>
-                          <p>Для просмотра инструкций необходимо продлить подписку.</p>
+                      <div className="subscription-empty-state subscription-empty-state--expired">
+                        <div className="empty-state-icon empty-state-icon--warning">
+                          <i className="fas fa-clock" />
                         </div>
-                        <button type="button" className="btn btn-primary" onClick={() => handleRenewSubscription(subId)}>
+                        <h3 className="empty-state-title">
+                          {days <= 0 ? 'Подписка истекла' : 'Подписка заканчивается'}
+                        </h3>
+                        <p className="empty-state-description">
+                          Продлите подписку, чтобы продолжить пользоваться VPN и просматривать инструкции
+                        </p>
+                        <button type="button" className="btn btn-activation btn-empty-state" onClick={() => handleRenewSubscription(subId)}>
                           <i className="fas fa-sync-alt" /> Продлить подписку
                         </button>
-                      </>
+                      </div>
                     );
                   }
                   return (
-                    <>
-                      <div className="subscription-selection-message">
-                        <p>Ваша подписка активна. Нажмите «К инструкциям».</p>
+                    <div className="subscription-empty-state subscription-empty-state--active">
+                      <div className="empty-state-icon empty-state-icon--success">
+                        <i className="fas fa-check-circle" />
                       </div>
-                      <button type="button" className="btn btn-primary" onClick={() => handleSelectSubscription(subId)}>
+                      <h3 className="empty-state-title">Подписка активна</h3>
+                      <p className="empty-state-description">
+                        Нажмите кнопку ниже, чтобы перейти к инструкциям по настройке
+                      </p>
+                      <button type="button" className="btn btn-activation btn-empty-state" onClick={() => handleSelectSubscription(subId)}>
                         <i className="fas fa-arrow-right" /> К инструкциям
                       </button>
-                    </>
+                    </div>
                   );
                 })()}
                 {subscriptions.length > 1 && (
