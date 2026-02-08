@@ -114,10 +114,9 @@ export function GiftFlowModal({ open, onClose, onSuccess }: GiftFlowModalProps) 
     }
   }, [selectedServiceId, senderName, message, selectedService, tg, toast, onSuccess, handleClose, showBanner]);
 
-  if (!open) return null;
-
   return (
     <AnimatePresence>
+      {open && (
       <motion.div className="modal-overlay active" {...modalBackdrop} onClick={handleClose}>
         <motion.div className="modal modal-services modal-gift-flow" {...modalPanel} onClick={e => e.stopPropagation()}>
           <div className="modal-header">
@@ -264,6 +263,7 @@ export function GiftFlowModal({ open, onClose, onSuccess }: GiftFlowModalProps) 
           </div>
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 }

@@ -94,10 +94,9 @@ export function DailyBonusModal({ open, onClose }: DailyBonusModalProps) {
     claimDailyBonus.mutate();
   };
 
-  if (!open) return null;
-
   const content = (
     <AnimatePresence>
+      {open && (
       <motion.div
         className="modal-overlay active"
         {...modalBackdrop}
@@ -184,6 +183,7 @@ export function DailyBonusModal({ open, onClose }: DailyBonusModalProps) {
           </div>
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 

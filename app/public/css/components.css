@@ -794,7 +794,7 @@
     }
 }
 
-/* Modal Components */
+/* Modal Components — анимация управляется Framer Motion, CSS только layout */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -806,22 +806,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity var(--transition-normal), visibility var(--transition-normal);
-    pointer-events: none; /* По умолчанию не блокируем клики */
+    /* Никаких CSS transitions — Framer Motion управляет opacity */
 }
 
 .modal-overlay.active {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto; /* Разрешаем клики когда активен */
-}
-
-/* Скрытие модалки инструкций при показе другой модалки */
-#instructionsModal[style*="display: none"] {
-    z-index: 999 !important;
-    pointer-events: none !important;
+    pointer-events: auto;
 }
 
 .modal {
@@ -829,29 +818,21 @@
     max-width: 400px;
     min-width: 280px;
     max-height: 85vh;
-    background: #0a0a0a !important; /* ✅ Прямой непрозрачный цвет вместо переменной */
+    background: #0a0a0a !important;
     border: 1px solid var(--border-dark);
     border-radius: var(--border-radius-xl);
     overflow: hidden;
-    transform: translateY(20px) scale(0.95);
-    opacity: 1 !important; /* ✅ Явно устанавливаем непрозрачность */
-    transition: transform var(--transition-normal), opacity var(--transition-normal);
+    /* Никаких CSS transitions/transform — Framer Motion управляет scale/y/opacity */
     box-shadow: var(--shadow-xl);
     display: flex;
     flex-direction: column;
-    will-change: transform, opacity; /* Оптимизация анимации */
-    contain: layout style paint; /* Изоляция для предотвращения дергания */
+    will-change: transform, opacity;
+    contain: layout style paint;
 }
 
 .modal-header,
 .modal-actions {
-    flex-shrink: 0;       /* ← НЕ сжимаются */
-}
-
-.modal-overlay.active .modal {
-    transform: translateY(0) scale(1);
-    opacity: 1 !important; /* ✅ Явно устанавливаем непрозрачность для активного модального окна */
-    background: var(--bg-secondary) !important; /* ✅ Гарантируем непрозрачный фон */
+    flex-shrink: 0;
 }
 
 .modal-header {
@@ -3758,16 +3739,16 @@ body.page-hidden .loadShine {
     position: relative;
     z-index: 2;
     text-align: center;
-    padding: var(--spacing-2xl);
+    padding: var(--spacing-lg);
     max-width: 300px;
 }
 
 .empty-state-card {
     position: relative;
-    margin: var(--spacing-2xl) 0;
+    margin: var(--spacing-lg) 0;
     border-radius: var(--border-radius-xl);
     overflow: hidden;
-    min-height: 320px;
+    min-height: 220px;
     display: flex;
     align-items: center;
     justify-content: center;

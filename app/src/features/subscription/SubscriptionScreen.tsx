@@ -280,30 +280,34 @@ export function SubscriptionScreen() {
         {subscriptions.length === 0 ? (
           <motion.div className="empty-state-card" variants={staggerItem}>
             <div className="empty-state-content">
-              <div className="empty-state-icon-gif">
-                <TgsPlayer src={trialActivated ? `${ASSETS_GIFS}/gift-opened.png` : `${ASSETS_GIFS}/gift-animate.tgs`} fallbackIcon="fas fa-gift" width={80} height={80} />
-              </div>
-              <h3 className="empty-state-title">Нет активных подписок</h3>
-              <div className="empty-state-actions">
-                {!trialActivated ? (
-                  <button type="button" className="btn-trial-activation" onClick={handleTrial} disabled={activateTrial.isPending} data-action="activate-trial">
-                    <div className="btn-trial-bg"><div className="btn-trial-shine" /><div className="btn-trial-glow" /></div>
-                    <div className="btn-trial-content">
-                      <div className="trial-icon-wrapper"><TgsPlayer src={`${ASSETS_GIFS}/gift-animate.tgs`} fallbackIcon="fas fa-gift" width={40} height={40} /></div>
-                      <div className="trial-text">
-                        <span className="trial-main">Пробный период</span>
-                        <span className="trial-sub">5 дней бесплатно</span>
-                      </div>
-                      <div className="trial-arrow"><i className="fas fa-arrow-right" /></div>
-                    </div>
-                  </button>
-                ) : (
-                  <div className="trial-used-notice">
-                    <div className="trial-used-icon"><TgsPlayer src={`${ASSETS_GIFS}/gift-opened.png`} fallbackIcon="fas fa-check-circle" width={24} height={24} /></div>
-                    <span>Пробный период использован</span>
+              {!trialActivated ? (
+                <>
+                  <div className="empty-state-icon-gif">
+                    <TgsPlayer src={`${ASSETS_GIFS}/gift-animate.tgs`} fallbackIcon="fas fa-gift" width={80} height={80} />
                   </div>
-                )}
-              </div>
+                  <h3 className="empty-state-title">Нет активных подписок</h3>
+                  <div className="empty-state-actions">
+                    <button type="button" className="btn-trial-activation" onClick={handleTrial} disabled={activateTrial.isPending} data-action="activate-trial">
+                      <div className="btn-trial-bg"><div className="btn-trial-shine" /><div className="btn-trial-glow" /></div>
+                      <div className="btn-trial-content">
+                        <div className="trial-icon-wrapper"><TgsPlayer src={`${ASSETS_GIFS}/gift-animate.tgs`} fallbackIcon="fas fa-gift" width={40} height={40} /></div>
+                        <div className="trial-text">
+                          <span className="trial-main">Пробный период</span>
+                          <span className="trial-sub">5 дней бесплатно</span>
+                        </div>
+                        <div className="trial-arrow"><i className="fas fa-arrow-right" /></div>
+                      </div>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="empty-state-icon-gif">
+                    <TgsPlayer src={`${ASSETS_GIFS}/empty-profiles.tgs`} fallbackIcon="fas fa-shield-alt" width={80} height={80} />
+                  </div>
+                  <h3 className="empty-state-title">Нет активных подписок</h3>
+                </>
+              )}
             </div>
           </motion.div>
         ) : (

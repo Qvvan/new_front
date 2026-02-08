@@ -202,8 +202,6 @@ export function SupportModal() {
 
   /* ── рендер ── */
 
-  if (!support) return null;
-
   const faqContent = faqId ? FAQ_CONTENT[faqId] : null;
 
   const viewTitle =
@@ -215,6 +213,7 @@ export function SupportModal() {
 
   return (
     <AnimatePresence>
+      {support && (
       <motion.div
         className="modal-overlay active"
         {...modalBackdrop}
@@ -367,6 +366,7 @@ export function SupportModal() {
           </div>
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 }

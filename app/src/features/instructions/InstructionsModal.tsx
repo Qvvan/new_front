@@ -189,10 +189,9 @@ export function InstructionsModal() {
     tg?.openTelegramLink?.(SUPPORT_URL) ?? tg?.openLink?.(SUPPORT_URL) ?? window.open(SUPPORT_URL, '_blank');
   }, [handleClose, tg]);
 
-  if (!instructions) return null;
-
   const content = (
     <AnimatePresence>
+      {instructions && (
       <motion.div className="modal-overlay active" {...modalBackdrop} onClick={handleClose}>
         <motion.div className="modal modal-instructions" {...modalPanel} onClick={e => e.stopPropagation()}>
           <div className="modal-header">
@@ -434,6 +433,7 @@ export function InstructionsModal() {
           </div>
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 

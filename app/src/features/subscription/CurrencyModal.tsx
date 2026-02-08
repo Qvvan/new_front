@@ -30,10 +30,9 @@ export function CurrencyModal({ open, onClose }: CurrencyModalProps) {
   const currencyName = balance.currency_name ?? 'Dragon Coins';
   const currencyCode = balance.currency_code ?? 'DRG';
 
-  if (!open) return null;
-
   const content = (
     <AnimatePresence>
+      {open && (
       <motion.div
         className="modal-overlay active"
         {...modalBackdrop}
@@ -105,6 +104,7 @@ export function CurrencyModal({ open, onClose }: CurrencyModalProps) {
           </div>
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 

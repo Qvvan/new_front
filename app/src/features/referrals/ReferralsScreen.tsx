@@ -102,14 +102,31 @@ export function ReferralsScreen() {
             </div>
           ) : (
             <div className="referrals-list">
-              {(referrals as { user?: { name?: string; username?: string }; bonus_granted?: boolean; created_at?: string }[]).map((ref, i) => {
+              {(referrals as { user?: { name?: string; username?: string; photo_url?: string; trial_activated?: boolean }; bonus_granted?: boolean; created_at?: string }[]).map((ref, i) => {
                 const u = ref.user ?? ref;
                 const name = (u as { name?: string }).name ?? (u as { username?: string }).username ?? 'Пользователь';
+                const photoUrl = (u as { photo_url?: string }).photo_url;
                 const isActive = (u as { trial_activated?: boolean }).trial_activated === true || ref.bonus_granted === true;
                 return (
                   <div key={i} className="referral-item">
                     <div className="referral-item-avatar">
-                      <i className={`fas ${isActive ? 'fa-crown text-green' : 'fa-user-plus'}`} />
+                      {photoUrl ? (
+                        <>
+                          <img
+                            src={photoUrl}
+                            alt={name}
+                            className="referral-avatar-img"
+                            onError={e => {
+                              (e.currentTarget as HTMLImageElement).style.display = 'none';
+                              const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                          <i className={`referral-avatar-fallback fas ${isActive ? 'fa-crown text-green' : 'fa-user'}`} />
+                        </>
+                      ) : (
+                        <i className={`fas ${isActive ? 'fa-crown text-green' : 'fa-user-plus'}`} />
+                      )}
                     </div>
                     <div className="referral-item-info">
                       <div className="referral-item-name">{name}</div>
