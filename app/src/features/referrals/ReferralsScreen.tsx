@@ -46,7 +46,6 @@ export function ReferralsScreen() {
 
   return (
     <div className="screen active" id="referralsScreen">
-      <div className="content-wrapper">
         <div className="section">
           <h2 className="section-title">
             <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8 }}><TgsPlayer src={`${ASSETS_GIFS}/referral-invite.tgs`} fallbackIcon="fas fa-users" width={32} height={32} /></span>
@@ -139,7 +138,6 @@ export function ReferralsScreen() {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 }

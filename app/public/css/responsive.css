@@ -435,8 +435,8 @@
 
 @media (min-width: 768px) {
     .screen {
-        padding: var(--spacing-xl) var(--spacing-3xl);
-        max-width: 1200px;
+        padding: var(--spacing-xl) var(--spacing-lg);
+        max-width: 500px;
         margin: 0 auto;
     }
 
@@ -445,10 +445,6 @@
         max-width: 800px;
         margin-left: auto;
         margin-right: auto;
-    }
-
-    .content-wrapper {
-        max-width: 500px; /* Немного шире на планшетах */
     }
 }
 
@@ -465,39 +461,31 @@
 }
 
 @media (min-width: 1200px) {
-    .content-wrapper {
-        max-width: 600px; /* Еще шире на больших экранах */
+    .screen {
+        max-width: 600px;
     }
 }
 
 @media (max-width: 576px) {
     .screen {
-        padding: var(--spacing-xs) 0; /* ← Почти нет отступов */
+        padding: var(--spacing-lg) var(--spacing-sm);
     }
 
     .card {
-        margin: var(--spacing-xs) var(--spacing-sm); /* ← Минимальные отступы */
+        margin: var(--spacing-xs) var(--spacing-sm);
         padding: var(--spacing-lg);
     }
 }
 
 @media (max-width: 360px) {
     .screen {
-        padding: 2px 0; /* ← УЛЬТРА-минимум */
-    }
-
-    .content-wrapper {
-        padding: 0 4px; /* ← Только 4px по краям */
+        padding: var(--spacing-md) 4px;
     }
 }
 
 @media (max-width: 320px) {
     .screen {
-        padding: 0; /* ← Вообще без отступов */
-    }
-
-    .content-wrapper {
-        padding: 0 2px; /* ← 2px - абсолютный минимум */
+        padding: var(--spacing-sm) 2px;
     }
 }
 
@@ -553,7 +541,7 @@
         padding-right: env(safe-area-inset-right);
     }
 
-    .content-wrapper {
+    .screen {
         /* Убираем дополнительные отступы если safe area уже учтена */
         padding-left: max(var(--spacing-md), env(safe-area-inset-left));
         padding-right: max(var(--spacing-md), env(safe-area-inset-right));
@@ -562,7 +550,7 @@
 
 /* Ландшафтная ориентация */
 @media (orientation: landscape) and (max-height: 500px) {
-    .content-wrapper {
+    .screen {
         /* Уменьшаем отступы в ландшафте */
         padding-top: var(--spacing-md);
         padding-bottom: var(--spacing-md);

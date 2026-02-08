@@ -142,7 +142,7 @@ export function KeysScreen() {
 
   return (
     <div className="screen active" id="keysScreen">
-      <motion.div className="content-wrapper" variants={staggerContainer} initial="initial" animate="animate">
+      <motion.div variants={staggerContainer} initial="initial" animate="animate">
         <motion.div className="section" variants={staggerItem}>
           <h2 className="section-title">
             <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8 }}><TgsPlayer src={`${ASSETS_GIFS}/vpn-access.tgs`} fallbackIcon="fas fa-shield-alt" width={32} height={32} /></span>

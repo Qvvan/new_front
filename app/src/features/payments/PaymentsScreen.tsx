@@ -295,7 +295,6 @@ export function PaymentsScreen() {
 
   return (
     <div className="screen active" id="paymentsScreen">
-      <div className="content-wrapper">
         <div className="section">
           <h2 className="section-title">
             <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8 }}><TgsPlayer src={`${ASSETS_GIFS}/empty-profiles.tgs`} fallbackIcon="fas fa-history" width={28} height={28} /></span>
@@ -365,7 +364,6 @@ export function PaymentsScreen() {
             </div>
           ))
         )}
-      </div>
     </div>
   );
 }

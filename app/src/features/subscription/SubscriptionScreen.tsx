@@ -261,7 +261,7 @@ export function SubscriptionScreen() {
 
   return (
     <div className="screen active" id="subscriptionScreen">
-      <motion.div className="content-wrapper" variants={staggerContainer} initial="initial" animate="animate">
+      <motion.div variants={staggerContainer} initial="initial" animate="animate">
         <motion.div className="subscription-top-bar" variants={staggerItem}>
           <button type="button" className="daily-bonus-button" onClick={() => setDailyBonusModalOpen(true)} data-action="show-daily-bonus-modal">
             <div className="daily-bonus-button-icon">

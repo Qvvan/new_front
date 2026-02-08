@@ -671,14 +671,14 @@ body.page-hidden [class*="infinite"] {
 }
 
 @media (min-width: 768px) {
-    .content-wrapper {
-        max-width: 500px; /* ← Было 428px, теперь 500px */
+    .screen {
+        max-width: 500px;
     }
 }
 
 @media (min-width: 1024px) {
-    .content-wrapper {
-        max-width: 550px; /* ← На больших экранах еще шире */
+    .screen {
+        max-width: 550px;
     }
 }
 

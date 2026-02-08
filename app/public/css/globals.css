@@ -257,9 +257,13 @@ p {
     width: 100%;
     min-height: 100%;
 
-    /* 🔥 Убираем все отступы - контент управляется через content-wrapper */
-    padding: 0;
-    margin: 0;
+    /* Центрируем контент (перенесено из content-wrapper) */
+    max-width: var(--max-width-mobile);
+    margin: 0 auto;
+    padding: var(--spacing-lg) var(--spacing-md);
+    padding-left: max(var(--spacing-md), var(--safe-area-left));
+    padding-right: max(var(--spacing-md), var(--safe-area-right));
+    z-index: var(--z-base);
 
     /* Переходы */
     opacity: 0;
@@ -284,27 +288,7 @@ p {
     height: 100%;
 }
 
-/* 🔥 Content wrapper - ЗДЕСЬ контролируем отступы контента */
-.content-wrapper {
-    /* Центрируем контент */
-    max-width: var(--max-width-mobile);
-    margin: 0 auto;
-    width: 100%;
-
-    /* 🔥 Контролируемые отступы для контента */
-    padding: var(--spacing-lg) var(--spacing-md);
-
-    /* Минимальная высота для корректного отображения */
-    min-height: 100%;
-
-    /* Позиционирование */
-    position: relative;
-    z-index: var(--z-base);
-
-    /* Дополнительные отступы для safe area (если нужно) */
-    padding-left: max(var(--spacing-md), var(--safe-area-left));
-    padding-right: max(var(--spacing-md), var(--safe-area-right));
-}
+/* content-wrapper удален — стили перенесены в .screen */
 
 /* Background Effects */
 .background-glow {
@@ -414,7 +398,7 @@ p {
 
 /* Экстра-маленькие экраны */
 @media (max-width: 360px) {
-    .content-wrapper {
+    .screen {
         padding: var(--spacing-md) var(--spacing-xs);
         padding-left: max(var(--spacing-xs), var(--safe-area-left));
         padding-right: max(var(--spacing-xs), var(--safe-area-right));
@@ -423,7 +407,7 @@ p {
 
 /* Очень маленькие экраны */
 @media (max-width: 320px) {
-    .content-wrapper {
+    .screen {
         padding: var(--spacing-sm) 2px;
         padding-left: max(2px, var(--safe-area-left));
         padding-right: max(2px, var(--safe-area-right));
@@ -432,7 +416,7 @@ p {
 
 /* Средние экраны */
 @media (max-width: 480px) {
-    .content-wrapper {
+    .screen {
         padding: var(--spacing-lg) var(--spacing-sm);
         padding-left: max(var(--spacing-sm), var(--safe-area-left));
         padding-right: max(var(--spacing-sm), var(--safe-area-right));
@@ -441,8 +425,8 @@ p {
 
 /* Планшеты и больше */
 @media (min-width: 768px) {
-    .content-wrapper {
-        max-width: 600px; /* Немного шире на планшетах */
+    .screen {
+        max-width: 600px;
         padding: var(--spacing-xl) var(--spacing-lg);
     }
 }
@@ -456,21 +440,21 @@ p {
         margin: 0;
     }
 
-    .content-wrapper {
-        max-width: 700px; /* Оптимальная ширина для чтения */
+    .screen {
+        max-width: 700px;
     }
 }
 
 /* Большие десктопы */
 @media (min-width: 1200px) {
-    .content-wrapper {
+    .screen {
         max-width: 800px;
     }
 }
 
 /* 🔥 Ландшафтная ориентация */
 @media (orientation: landscape) and (max-height: 500px) {
-    .content-wrapper {
+    .screen {
         padding-top: var(--spacing-md);
         padding-bottom: var(--spacing-md);
     }
@@ -495,7 +479,7 @@ p {
         padding-right: max(var(--safe-area-right), 0px);
     }
 
-    .content-wrapper {
+    .screen {
         /* Дополнительная защита от заезда под вырез */
         padding-left: max(var(--spacing-md), var(--safe-area-left));
         padding-right: max(var(--spacing-md), var(--safe-area-right));
