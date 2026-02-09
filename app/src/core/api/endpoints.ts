@@ -123,6 +123,30 @@ export const serversApi = {
   list: () => api.get<{ servers?: ServerOnlineItem[] }>('/keys/servers/online'),
 };
 
+export type StoryItem = {
+  id: number;
+  title: string;
+  description: string | null;
+  content_type: 'image' | 'video';
+  media_url: string;
+  thumbnail_url: string | null;
+  priority: number;
+  expires_at: string | null;
+  created_at: string;
+  is_viewed?: boolean;
+};
+
+export const storiesApi = {
+  checkUnviewed: () =>
+    api.get<{ has_unviewed: boolean; count: number }>('/user/stories/unviewed/check'),
+  getFeed: () =>
+    api.get<StoryItem[]>('/user/stories/feed'),
+  getUnviewed: () =>
+    api.get<StoryItem[]>('/user/stories/unviewed'),
+  markViewed: (storyId: number) =>
+    api.post<void>('/user/stories/view', { story_id: storyId }),
+};
+
 export const currencyApi = {
   getBalance: () => api.get<{ balance?: number }>('/user/currency/balance'),
   getTransactions: (params?: { limit?: number; offset?: number }) =>

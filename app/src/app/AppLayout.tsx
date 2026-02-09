@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, createContext, useContext } from 'react';
+import { useState, useCallback, useEffect, createContext, useContext, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LoadingOverlay } from '../shared/ui/LoadingOverlay';
@@ -11,6 +11,9 @@ import { ReferralsScreen } from '../features/referrals/ReferralsScreen';
 import { PaymentsScreen } from '../features/payments/PaymentsScreen';
 import { InstructionsModal } from '../features/instructions/InstructionsModal';
 import { SupportModal } from '../features/support/SupportModal';
+import { StoriesViewer } from '../features/stories/StoriesViewer';
+import { useStoriesStore } from '../features/stories/storiesStore';
+import { storiesApi } from '../core/api/endpoints';
 import { parseDeepLink, type ScreenName } from './routes';
 import { useModalsStore } from './modalsStore';
 import { usePendingPayments } from '../hooks/usePendingPayments';
@@ -116,6 +119,37 @@ export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
     return () => clearTimeout(t);
   }, []);
 
+  /* ── Auto-show stories on first launch ─────────────────────── */
+  const storiesChecked = useRef(false);
+  useEffect(() => {
+    if (storiesChecked.current) return;
+    storiesChecked.current = true;
+
+    (async () => {
+      try {
+        const check = await storiesApi.checkUnviewed();
+        if (!check?.has_unviewed) return;
+        useStoriesStore.getState().setHasUnviewed(true, check.count);
+
+        const feed = await storiesApi.getFeed();
+        if (!feed || feed.length === 0) return;
+        const store = useStoriesStore.getState();
+        store.setStories(feed);
+
+        // Open at first unviewed story
+        const firstUnviewed = feed.findIndex((s) => !s.is_viewed);
+        if (firstUnviewed >= 0) {
+          // Small delay so the app renders first
+          setTimeout(() => {
+            useStoriesStore.getState().open(firstUnviewed);
+          }, 400);
+        }
+      } catch {
+        // Silent — don't break the app if stories endpoint fails
+      }
+    })();
+  }, []);
+
   const navigate = useCallback((to: ScreenName, pushState = true) => {
     setScreen(to);
     if (pushState) setSearchParams({ screen: to }, { replace: false });
@@ -166,6 +200,7 @@ export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
         <InstructionsModal />
         <SupportModal />
         <PaymentSuccessOverlay payment={successPayment} onDismiss={dismissSuccess} />
+        <StoriesViewer />
       </div>
     </NavContext.Provider>
   );

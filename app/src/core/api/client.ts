@@ -87,6 +87,7 @@ export async function apiRequest<T>(
   const promise = (async (): Promise<T> => {
     const response = await fetch(url, config);
     if (!response.ok) await handleErrorResponse(response);
+    if (response.status === 204) return undefined as T;
     const result = (await response.json()) as T;
     // After a successful mutation (non-GET, non-cacheable POST), clear the response cache
     // so that subsequent React Query refetches get fresh data instead of stale cached responses

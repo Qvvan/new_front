@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { userApi, subscriptionApi, currencyApi, servicesApi } from '../../core/api/endpoints';
+import { userApi, subscriptionApi, currencyApi, servicesApi, storiesApi } from '../../core/api/endpoints';
 import { clearApiCache } from '../../core/api/client';
 import { useModalsStore } from '../../app/modalsStore';
 import { useToast } from '../../shared/ui/Toast';
@@ -16,6 +16,8 @@ import { GiftFlowModal } from './GiftFlowModal';
 import { ActivateCodeModal } from './ActivateCodeModal';
 import { DailyBonusModal } from './DailyBonusModal';
 import { CurrencyModal } from './CurrencyModal';
+import { useStoriesStore } from '../stories/storiesStore';
+import '../stories/stories.css';
 
 type Sub = {
   subscription_id?: number;
@@ -94,6 +96,53 @@ function RenameModal({ open, currentName, onSave, onClose, saving }: {
         </div>
       </div>
     </div>
+  );
+}
+
+function StoriesButton() {
+  const { hasUnviewed, unviewedCount, open, setStories, setHasUnviewed } = useStoriesStore();
+  const tg = useTelegram();
+
+  const handleClick = useCallback(async () => {
+    tg?.haptic.light();
+    try {
+      const feed = await storiesApi.getFeed();
+      if (feed && feed.length > 0) {
+        setStories(feed);
+        const firstUnviewed = feed.findIndex((s) => !s.is_viewed);
+        open(firstUnviewed >= 0 ? firstUnviewed : 0);
+      }
+    } catch {
+      // silent
+    }
+  }, [tg, setStories, open]);
+
+  // Initial check for unviewed
+  useEffect(() => {
+    storiesApi.checkUnviewed().then((res) => {
+      if (res) setHasUnviewed(res.has_unviewed, res.count);
+    }).catch(() => {});
+  }, [setHasUnviewed]);
+
+  return (
+    <button
+      type="button"
+      className={`stories-top-button${hasUnviewed ? ' has-unviewed' : ''}`}
+      onClick={handleClick}
+      aria-label="Stories"
+    >
+      <div className="stories-top-button-ring" />
+      <div className="stories-top-button-inner">
+        <div className="stories-top-button-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none" />
+          </svg>
+        </div>
+      </div>
+      {hasUnviewed && unviewedCount > 0 && (
+        <span className="stories-unviewed-badge">{unviewedCount}</span>
+      )}
+    </button>
   );
 }
 
@@ -270,6 +319,7 @@ export function SubscriptionScreen() {
             </div>
             <span className="daily-bonus-button-text">Бонус</span>
           </button>
+          <StoriesButton />
           <button type="button" className="currency-balance-button" onClick={() => setCurrencyModalOpen(true)} data-action="show-currency-info-modal">
             <div className="currency-balance-icon"><i className="fas fa-coins" /></div>
             <span className="currency-balance-amount">{Number(balance).toFixed(0)}</span>
