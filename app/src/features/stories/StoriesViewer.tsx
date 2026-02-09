@@ -10,13 +10,13 @@ const RESTART_THRESHOLD = 0.12;
 
 export function StoriesViewer() {
   const { isOpen, stories, currentIndex, next, prev, close, markViewed } = useStoriesStore();
-  const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [mediaReady, setMediaReady] = useState(false);
   const [closing, setClosing] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const currentFillRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
   const rafRef = useRef(0);
   const startTimeRef = useRef(0);
@@ -28,6 +28,13 @@ export function StoriesViewer() {
 
   const story = stories[currentIndex];
   const isVideo = story?.content_type === 'video';
+
+  /* ── Direct DOM progress update (no React re-render) ───────── */
+  const setFillProgress = useCallback((p: number) => {
+    if (currentFillRef.current) {
+      currentFillRef.current.style.transform = `scaleX(${p})`;
+    }
+  }, []);
 
   /* ── Close with animation ─────────────────────────────────── */
   const handleClose = useCallback(() => {
@@ -50,12 +57,19 @@ export function StoriesViewer() {
   /* ── Reset on story change ────────────────────────────────── */
   useEffect(() => {
     if (!isOpen || !story) return;
-    setProgress(0);
     setIsPaused(false);
     setMediaReady(false);
     progressRef.current = 0;
     elapsedBeforePauseRef.current = 0;
     cancelAnimationFrame(rafRef.current);
+
+    // Reset fill bar instantly
+    requestAnimationFrame(() => {
+      if (currentFillRef.current) {
+        currentFillRef.current.style.transition = 'none';
+        currentFillRef.current.style.transform = 'scaleX(0)';
+      }
+    });
 
     if (!isVideo) {
       durationRef.current = IMAGE_DURATION;
@@ -67,11 +81,16 @@ export function StoriesViewer() {
     // for video, mediaReady is set via onLoadedData
   }, [isOpen, currentIndex, story?.id, isVideo, story?.media_url]);
 
-  /* ── Image progress animation (rAF) ──────────────────────── */
+  /* ── Image progress animation (rAF → direct DOM) ──────────── */
   useEffect(() => {
     if (!isOpen || isVideo || !mediaReady || isPaused) {
       cancelAnimationFrame(rafRef.current);
       return;
+    }
+
+    // Ensure no CSS transition interferes with rAF updates
+    if (currentFillRef.current) {
+      currentFillRef.current.style.transition = 'none';
     }
 
     startTimeRef.current = performance.now() - elapsedBeforePauseRef.current;
@@ -80,7 +99,7 @@ export function StoriesViewer() {
       const elapsed = performance.now() - startTimeRef.current;
       const p = Math.min(elapsed / durationRef.current, 1);
       progressRef.current = p;
-      setProgress(p);
+      setFillProgress(p);
 
       if (p >= 1) {
         next();
@@ -103,7 +122,6 @@ export function StoriesViewer() {
       v.pause();
     } else if (mediaReady) {
       v.play().catch(() => {
-        // autoplay blocked — try muted
         v.muted = true;
         v.play().catch(() => {});
       });
@@ -120,6 +138,10 @@ export function StoriesViewer() {
         v.play().catch(() => {});
       });
     }
+    // Enable CSS transition for smooth video progress interpolation
+    if (currentFillRef.current) {
+      currentFillRef.current.style.transition = 'transform 0.25s linear';
+    }
     setMediaReady(true);
   }, []);
 
@@ -128,8 +150,8 @@ export function StoriesViewer() {
     if (!v || !v.duration) return;
     const p = v.currentTime / v.duration;
     progressRef.current = p;
-    setProgress(p);
-  }, []);
+    setFillProgress(p);
+  }, [setFillProgress]);
 
   const onVideoEnded = useCallback(() => {
     next();
@@ -181,7 +203,7 @@ export function StoriesViewer() {
           // Restart current
           progressRef.current = 0;
           elapsedBeforePauseRef.current = 0;
-          setProgress(0);
+          setFillProgress(0);
           if (isVideo && videoRef.current) {
             videoRef.current.currentTime = 0;
             videoRef.current.play().catch(() => {});
@@ -190,7 +212,7 @@ export function StoriesViewer() {
         }
       }
     },
-    [next, prev, isVideo],
+    [next, prev, isVideo, setFillProgress],
   );
 
   const handlePointerCancel = useCallback(() => {
@@ -215,7 +237,7 @@ export function StoriesViewer() {
         else {
           progressRef.current = 0;
           elapsedBeforePauseRef.current = 0;
-          setProgress(0);
+          setFillProgress(0);
           if (videoRef.current) videoRef.current.currentTime = 0;
           startTimeRef.current = performance.now();
         }
@@ -223,7 +245,7 @@ export function StoriesViewer() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, handleClose, next, prev]);
+  }, [isOpen, handleClose, next, prev, setFillProgress]);
 
   /* ── Lock body scroll ─────────────────────────────────────── */
   useEffect(() => {
@@ -258,22 +280,22 @@ export function StoriesViewer() {
 
           {/* ── Progress bars ────────────────────────────────── */}
           <div className="stories-progress-container">
-            {stories.map((s, i) => (
-              <div key={s.id} className="stories-progress-track">
-                <div
-                  className="stories-progress-fill"
-                  style={{
-                    transform: `scaleX(${
-                      i < currentIndex ? 1 : i === currentIndex ? progress : 0
-                    })`,
-                    transition:
-                      i === currentIndex
-                        ? 'none'
-                        : 'transform 0.3s ease',
-                  }}
-                />
-              </div>
-            ))}
+            {stories.map((s, i) => {
+              const isCurrent = i === currentIndex;
+              return (
+                <div key={s.id} className="stories-progress-track">
+                  <div
+                    ref={isCurrent ? currentFillRef : undefined}
+                    className="stories-progress-fill"
+                    style={
+                      isCurrent
+                        ? undefined
+                        : { transform: i < currentIndex ? 'scaleX(1)' : 'scaleX(0)' }
+                    }
+                  />
+                </div>
+              );
+            })}
           </div>
 
           {/* ── Header ───────────────────────────────────────── */}
@@ -374,40 +396,6 @@ export function StoriesViewer() {
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerCancel}
           />
-
-          {/* ── Pause indicator ──────────────────────────────── */}
-          <AnimatePresence>
-            {isPaused && (
-              <motion.div
-                className="stories-paused-badge"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.15 }}
-              >
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                  <rect
-                    x="9"
-                    y="7"
-                    width="5"
-                    height="18"
-                    rx="1.5"
-                    fill="white"
-                    fillOpacity="0.9"
-                  />
-                  <rect
-                    x="18"
-                    y="7"
-                    width="5"
-                    height="18"
-                    rx="1.5"
-                    fill="white"
-                    fillOpacity="0.9"
-                  />
-                </svg>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>

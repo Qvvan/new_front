@@ -100,7 +100,7 @@ function RenameModal({ open, currentName, onSave, onClose, saving }: {
 }
 
 function StoriesButton() {
-  const { hasUnviewed, unviewedCount, open, setStories, setHasUnviewed } = useStoriesStore();
+  const { hasUnviewed, unviewedCount, stories, open, setStories, setHasUnviewed } = useStoriesStore();
   const tg = useTelegram();
 
   const handleClick = useCallback(async () => {
@@ -117,12 +117,25 @@ function StoriesButton() {
     }
   }, [tg, setStories, open]);
 
-  // Initial check for unviewed
+  // Initial check + preload feed for thumbnail
   useEffect(() => {
     storiesApi.checkUnviewed().then((res) => {
       if (res) setHasUnviewed(res.has_unviewed, res.count);
     }).catch(() => {});
-  }, [setHasUnviewed]);
+
+    // Preload feed to get thumbnail if not already loaded
+    if (stories.length === 0) {
+      storiesApi.getFeed().then((feed) => {
+        if (feed && feed.length > 0) setStories(feed);
+      }).catch(() => {});
+    }
+  }, [setHasUnviewed, setStories, stories.length]);
+
+  // Pick first story's thumbnail for preview
+  const previewStory = stories.find((s) => !s.is_viewed) ?? stories[0];
+  const previewUrl = previewStory
+    ? (previewStory.thumbnail_url || previewStory.media_url)
+    : null;
 
   return (
     <button
@@ -133,11 +146,20 @@ function StoriesButton() {
     >
       <div className="stories-top-button-ring" />
       <div className="stories-top-button-inner">
-        <div className="stories-top-button-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none" />
-          </svg>
-        </div>
+        {previewUrl ? (
+          <img
+            className="stories-top-button-preview"
+            src={previewUrl}
+            alt=""
+            draggable={false}
+          />
+        ) : (
+          <div className="stories-top-button-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none" />
+            </svg>
+          </div>
+        )}
       </div>
       {hasUnviewed && unviewedCount > 0 && (
         <span className="stories-unviewed-badge">{unviewedCount}</span>
