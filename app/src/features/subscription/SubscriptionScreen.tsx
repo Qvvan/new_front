@@ -109,7 +109,9 @@ function StoriesButton() {
       const feed = await storiesApi.getFeed();
       if (feed && feed.length > 0) {
         setStories(feed);
-        const firstUnviewed = feed.findIndex((s) => !s.is_viewed);
+        // Read reordered array from store (viewed left, unviewed right)
+        const reordered = useStoriesStore.getState().stories;
+        const firstUnviewed = reordered.findIndex((s) => !s.is_viewed);
         open(firstUnviewed >= 0 ? firstUnviewed : 0);
       }
     } catch {

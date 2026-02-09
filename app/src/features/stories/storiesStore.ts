@@ -25,7 +25,13 @@ export const useStoriesStore = create<StoriesState>((set, get) => ({
   hasUnviewed: false,
   unviewedCount: 0,
 
-  setStories: (stories) => set({ stories }),
+  setStories: (stories) => {
+    // Chronological order: oldest (left) → newest (right)
+    const sorted = [...stories].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    );
+    set({ stories: sorted });
+  },
 
   open: (index = 0) => set({ isOpen: true, currentIndex: index }),
 

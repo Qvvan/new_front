@@ -133,11 +133,11 @@ export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
 
         const feed = await storiesApi.getFeed();
         if (!feed || feed.length === 0) return;
-        const store = useStoriesStore.getState();
-        store.setStories(feed);
+        useStoriesStore.getState().setStories(feed);
 
-        // Open at first unviewed story
-        const firstUnviewed = feed.findIndex((s) => !s.is_viewed);
+        // Open at first unviewed story (reordered: viewed left, unviewed right)
+        const reordered = useStoriesStore.getState().stories;
+        const firstUnviewed = reordered.findIndex((s) => !s.is_viewed);
         if (firstUnviewed >= 0) {
           // Small delay so the app renders first
           setTimeout(() => {
