@@ -29,6 +29,7 @@
     --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
     --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.6);
+    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.25);
 
     /* Gradients */
     --gradient-card: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
@@ -72,8 +73,10 @@
     /* Layout - Полуполноэкранный режим */
     --max-width-mobile: 500px;    /* Увеличиваем для лучшего использования экрана */
     --max-width-desktop: 100%;
+    --header-height: 56px;
     --nav-height: 80px;
     --payment-banner-height: 70px;
+    --nav-bg: #111111;
 
     /* 🔥 Новые переменные для полуполноэкранного режима */
     --telegram-header-height: 0px;  /* Минимизируем отступ от заголовка Telegram */
@@ -88,6 +91,11 @@
     --transition-fast: 0.15s ease;
     --transition-normal: 0.3s ease;
     --transition-slow: 0.5s ease;
+
+    /* Currency / balance (Dragon Coins) */
+    --currency-icon-start: #FFD700;
+    --currency-icon-end: #FFA500;
+    --gradient-currency: linear-gradient(135deg, var(--currency-icon-start), var(--currency-icon-end));
 
     /* Aliases for components.css */
     --color-surface: #0a0a0a;

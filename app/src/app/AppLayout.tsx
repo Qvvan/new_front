@@ -8,7 +8,9 @@ import { ToastContainer } from '../shared/ui/Toast';
 import { SubscriptionScreen } from '../features/subscription/SubscriptionScreen';
 import { KeysScreen } from '../features/keys/KeysScreen';
 import { ReferralsScreen } from '../features/referrals/ReferralsScreen';
-import { PaymentsScreen } from '../features/payments/PaymentsScreen';
+import { CurrencyModal } from '../features/subscription/CurrencyModal';
+import { DailyBonusModal } from '../features/subscription/DailyBonusModal';
+import { HistoryModal } from '../shared/ui/HistoryModal';
 import { InstructionsModal } from '../features/instructions/InstructionsModal';
 import { SupportModal } from '../features/support/SupportModal';
 import { StoriesViewer } from '../features/stories/StoriesViewer';
@@ -41,13 +43,25 @@ export function useAppNavigate() {
 }
 
 export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
-  const [screen, setScreen] = useState<ScreenName>(defaultScreen ?? 'subscription');
+  const [screen, setScreen] = useState<ScreenName>(
+    defaultScreen === 'payments' ? 'subscription' : (defaultScreen ?? 'subscription')
+  );
   const [loading, setLoading] = useState(true);
   const [, setSearchParams] = useSearchParams();
   usePendingPayments();
   const { successPayment, dismissSuccess } = usePaymentPolling();
 
-  const { openInstructions, openSupport } = useModalsStore();
+  const {
+    openInstructions,
+    openSupport,
+    dailyBonusOpen,
+    closeDailyBonus,
+    currencyOpen,
+    closeCurrency,
+    historyOpen,
+    openHistory,
+    closeHistory,
+  } = useModalsStore();
 
   /* ── Deep link dispatch on mount ──────────────────────────── */
   useEffect(() => {
@@ -57,7 +71,12 @@ export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
       const action = parseStartParam(raw);
       if (action) {
         const target = getScreenForAction(action);
-        setScreen(target);
+        if (target === 'payments') {
+          setScreen('subscription');
+          useModalsStore.getState().openHistory();
+        } else {
+          setScreen(target);
+        }
 
         // Actions handled at layout level (global modals)
         if (action.type === 'instructions') {
@@ -83,7 +102,12 @@ export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
     // 2. Fallback: legacy URL query/hash deep links
     const deep = parseDeepLink(window.location.search, window.location.hash);
     if (deep) {
-      setScreen(deep.screen);
+      if (deep.screen === 'payments') {
+        setScreen('subscription');
+        useModalsStore.getState().openHistory();
+      } else {
+        setScreen(deep.screen);
+      }
 
       // Convert legacy params to new deep link actions
       const a = deep.params.action;
@@ -118,6 +142,14 @@ export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
     const t = setTimeout(() => setLoading(false), 150);
     return () => clearTimeout(t);
   }, []);
+
+  /* When deep link or URL asks for payments screen, open history modal instead */
+  useEffect(() => {
+    if (defaultScreen === 'payments') {
+      setScreen('subscription');
+      useModalsStore.getState().openHistory();
+    }
+  }, [defaultScreen]);
 
   /* ── Auto-show stories on first launch ─────────────────────── */
   const storiesChecked = useRef(false);
@@ -188,15 +220,13 @@ export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
                 <ReferralsScreen />
               </motion.div>
             )}
-            {screen === 'payments' && (
-              <motion.div key="pay" {...pageTransition} style={{ height: '100%' }}>
-                <PaymentsScreen />
-              </motion.div>
-            )}
           </AnimatePresence>
         </main>
         <BottomNav currentScreen={screen} onNavigate={navigate} />
         <ToastContainer />
+        <CurrencyModal open={currencyOpen} onClose={closeCurrency} />
+        <DailyBonusModal open={dailyBonusOpen} onClose={closeDailyBonus} />
+        <HistoryModal open={historyOpen} onClose={closeHistory} />
         <InstructionsModal />
         <SupportModal />
         <PaymentSuccessOverlay payment={successPayment} onDismiss={dismissSuccess} />

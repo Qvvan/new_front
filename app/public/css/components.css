@@ -117,7 +117,7 @@
         rgba(255, 255, 255, 0.03) 45%,
         rgba(0, 0, 0, 0.02) 100%
     );
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-card);
 }
 
 .subscription-card::before {
@@ -870,6 +870,144 @@
     background: var(--bg-accent);
     border-color: var(--border-light);
     color: var(--text-primary);
+}
+
+/* History modal (full-screen panel from TopBar) */
+.history-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+}
+
+.history-modal-panel {
+    width: 100%;
+    max-width: var(--max-width-mobile);
+    max-height: 90vh;
+    height: 90vh;
+    background: var(--bg-primary);
+    border-radius: var(--border-radius-xl) var(--border-radius-xl) 0 0;
+    border: 1px solid var(--border-dark);
+    border-bottom: none;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.history-modal-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    padding-top: calc(var(--spacing-lg) + env(safe-area-inset-top, 0px));
+    border-bottom: 1px solid var(--border-dark);
+    background: var(--bg-secondary);
+}
+
+.history-modal-title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.history-modal-close {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius-md);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    color: var(--text-secondary);
+    font-size: 18px;
+}
+
+.history-modal-close:hover {
+    background: var(--bg-accent);
+    color: var(--text-primary);
+}
+
+.history-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: var(--spacing-md) var(--spacing-lg);
+    -webkit-overflow-scrolling: touch;
+}
+
+/* History modal tabs */
+.history-tabs-nav {
+    display: flex;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) 0 var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-dark);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.history-tabs-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.history-tab-button {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-dark);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    white-space: nowrap;
+}
+
+.history-tab-button i {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.history-tab-button:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border-light);
+}
+
+.history-tab-button.active {
+    background: rgba(255, 159, 67, 0.15);
+    color: var(--accent-orange);
+    border-color: rgba(255, 159, 67, 0.4);
+    box-shadow: var(--shadow-sm);
+}
+
+.pending-payment-modal-body {
+    padding: var(--spacing-xl);
+}
+
+.pending-payment-modal-body .payment-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
 }
 
 .modal-close i {
@@ -5505,6 +5643,37 @@ button:disabled:hover {
     gap: var(--spacing-md);
 }
 
+.subscription-top-bar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.subscription-top-bar-right .currency-balance-button {
+    margin-left: 0;
+}
+
+.subscription-top-bar .top-bar-icon-btn.subscription-top-bar-bell {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    font-size: 20px;
+    color: var(--text-primary);
+    background: var(--glass-bg);
+    border-color: var(--glass-border);
+}
+
+.subscription-top-bar .top-bar-icon-btn.subscription-top-bar-bell:hover {
+    color: var(--accent-orange);
+    background: rgba(255, 159, 67, 0.12);
+    border-color: rgba(255, 159, 67, 0.25);
+}
+
+.subscription-top-bar .top-bar-icon-btn.subscription-top-bar-bell i {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
 .daily-bonus-button,
 .currency-balance-button {
     display: flex;
@@ -5677,7 +5846,7 @@ button:disabled:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #FFD700, #FFA500);
+    background: var(--gradient-currency);
     border-radius: var(--border-radius-md);
     color: white;
 }
@@ -5689,7 +5858,7 @@ button:disabled:hover {
 .currency-balance-amount {
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-bold);
-    color: #FFFFFF; /* Белый цвет для четкости */
+    color: var(--text-primary);
     font-variant-numeric: tabular-nums;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     letter-spacing: 0.3px;
@@ -5698,7 +5867,7 @@ button:disabled:hover {
 .currency-balance-code {
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-semibold);
-    color: #FFFFFF; /* Белый цвет для четкости */
+    color: var(--text-primary);
     text-transform: uppercase;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     letter-spacing: 0.5px;
@@ -5951,7 +6120,7 @@ button:disabled:hover {
 
 /* Текущий день, который забирают - яркая желтая плашка */
 .daily-bonus-card-horizontal.next {
-    border-color: #FFD700;
+    border-color: var(--currency-icon-start);
     border-width: 3px;
     background: linear-gradient(145deg, 
         rgba(255, 215, 0, 0.45), 
@@ -6020,7 +6189,7 @@ button:disabled:hover {
 
 .bonus-card-amount i {
     font-size: 20px;
-    color: #FFD700;
+    color: var(--currency-icon-start);
 }
 
 .bonus-card-amount .amount-value {
@@ -6157,7 +6326,7 @@ button:disabled:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #FFD700, #FFA500);
+    background: var(--gradient-currency);
     border-radius: 50%;
     color: white;
     font-size: 24px;
@@ -6340,7 +6509,7 @@ button:disabled:hover {
 .bonus-animation-amount {
     font-size: 36px;
     font-weight: var(--font-weight-bold);
-    color: #FFD700;
+    color: var(--currency-icon-start);
     text-shadow: 0 0 20px rgba(255, 215, 0, 0.8),
                  0 0 40px rgba(255, 215, 0, 0.5),
                  0 2px 8px rgba(0, 0, 0, 0.5);

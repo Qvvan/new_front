@@ -11,12 +11,10 @@ import { useDeepLinkStore } from '../../core/deeplink';
 import { daysBetween, pluralize, formatDate } from '../../core/utils';
 import { staggerContainer, staggerItem } from '../../shared/motion/variants';
 import { TgsPlayer, ASSETS_GIFS } from '../../shared/ui/TgsPlayer';
+import { useStoriesStore } from '../stories/storiesStore';
 import { ServiceSelectorModal } from './ServiceSelectorModal';
 import { GiftFlowModal } from './GiftFlowModal';
 import { ActivateCodeModal } from './ActivateCodeModal';
-import { DailyBonusModal } from './DailyBonusModal';
-import { CurrencyModal } from './CurrencyModal';
-import { useStoriesStore } from '../stories/storiesStore';
 import '../stories/stories.css';
 
 type Sub = {
@@ -109,7 +107,6 @@ function StoriesButton() {
       const feed = await storiesApi.getFeed();
       if (feed && feed.length > 0) {
         setStories(feed);
-        // Read reordered array from store (viewed left, unviewed right)
         const reordered = useStoriesStore.getState().stories;
         const firstUnviewed = reordered.findIndex((s) => !s.is_viewed);
         open(firstUnviewed >= 0 ? firstUnviewed : 0);
@@ -119,13 +116,10 @@ function StoriesButton() {
     }
   }, [tg, setStories, open]);
 
-  // Initial check + preload feed for thumbnail
   useEffect(() => {
     storiesApi.checkUnviewed().then((res) => {
       if (res) setHasUnviewed(res.has_unviewed, res.count);
     }).catch(() => {});
-
-    // Preload feed to get thumbnail if not already loaded
     if (stories.length === 0) {
       storiesApi.getFeed().then((feed) => {
         if (feed && feed.length > 0) setStories(feed);
@@ -133,16 +127,10 @@ function StoriesButton() {
     }
   }, [setHasUnviewed, setStories, stories.length]);
 
-  // Don't show the stories button icon when there are no stories
-  if (stories.length === 0) {
-    return null;
-  }
+  if (stories.length === 0) return null;
 
-  // Pick first story's thumbnail for preview
   const previewStory = stories.find((s) => !s.is_viewed) ?? stories[0];
-  const previewUrl = previewStory
-    ? (previewStory.thumbnail_url || previewStory.media_url)
-    : null;
+  const previewUrl = previewStory ? (previewStory.thumbnail_url || previewStory.media_url) : null;
 
   return (
     <button
@@ -154,12 +142,7 @@ function StoriesButton() {
       <div className="stories-top-button-ring" />
       <div className="stories-top-button-inner">
         {previewUrl ? (
-          <img
-            className="stories-top-button-preview"
-            src={previewUrl}
-            alt=""
-            draggable={false}
-          />
+          <img className="stories-top-button-preview" src={previewUrl} alt="" draggable={false} />
         ) : (
           <div className="stories-top-button-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -184,11 +167,9 @@ export function SubscriptionScreen() {
   const [giftFlowOpen, setGiftFlowOpen] = useState(false);
   const [activateCodeOpen, setActivateCodeOpen] = useState(false);
   const [activateCodeInitial, setActivateCodeInitial] = useState<string | undefined>();
-  const [dailyBonusModalOpen, setDailyBonusModalOpen] = useState(false);
-  const [currencyModalOpen, setCurrencyModalOpen] = useState(false);
   const [renameModal, setRenameModal] = useState<{ open: boolean; subId: number; currentName: string }>({ open: false, subId: 0, currentName: '' });
   const [renameSaving, setRenameSaving] = useState(false);
-  const { openInstructions, openSupport, serviceSelector: storeServiceSelector, closeServiceSelector } = useModalsStore();
+  const { openInstructions, openSupport, openDailyBonus, openCurrency, openHistory, serviceSelector: storeServiceSelector, closeServiceSelector } = useModalsStore();
 
   /* ── Consume pending deep link action ─────────────────────── */
   const deepLinkConsumed = useRef(false);
@@ -212,12 +193,12 @@ export function SubscriptionScreen() {
           setGiftFlowOpen(true);
           break;
         case 'daily-bonus':
-          setDailyBonusModalOpen(true);
+          openDailyBonus();
           break;
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, []);
+  }, [openDailyBonus]);
   const serviceSelectorOpen = serviceSelector.open || storeServiceSelector?.open === true;
   const serviceSelectorMode = storeServiceSelector?.open ? storeServiceSelector.mode : serviceSelector.mode;
   const serviceSelectorSubscriptionId = storeServiceSelector?.open ? storeServiceSelector.subscriptionId : serviceSelector.subscriptionId;
@@ -342,19 +323,24 @@ export function SubscriptionScreen() {
     <div className="screen active" id="subscriptionScreen">
       <motion.div variants={staggerContainer} initial="initial" animate="animate">
         <motion.div className="subscription-top-bar" variants={staggerItem}>
-          <button type="button" className="daily-bonus-button" onClick={() => setDailyBonusModalOpen(true)} data-action="show-daily-bonus-modal">
+          <button type="button" className="daily-bonus-button" onClick={() => { tg?.haptic.light(); openDailyBonus(); }} data-action="show-daily-bonus-modal" aria-label="Ежедневный бонус">
             <div className="daily-bonus-button-icon">
               <i className="fas fa-gift" />
-              {canClaimBonus && <span className="bonus-claim-indicator blinking" />}
+              {canClaimBonus && <span className="bonus-claim-indicator" />}
             </div>
             <span className="daily-bonus-button-text">Бонус</span>
           </button>
           <StoriesButton />
-          <button type="button" className="currency-balance-button" onClick={() => setCurrencyModalOpen(true)} data-action="show-currency-info-modal">
-            <div className="currency-balance-icon"><i className="fas fa-coins" /></div>
-            <span className="currency-balance-amount">{Number(balance).toFixed(0)}</span>
-            <span className="currency-balance-code">DRG</span>
-          </button>
+          <div className="subscription-top-bar-right">
+            <button type="button" className="top-bar-icon-btn subscription-top-bar-bell" onClick={() => { tg?.haptic.light(); openHistory(); }} aria-label="История операций">
+              <i className="fas fa-bell" />
+            </button>
+            <button type="button" className="currency-balance-button" onClick={() => { tg?.haptic.light(); openCurrency(); }} data-action="show-currency-info-modal" aria-label="Баланс Dragon Coins">
+              <div className="currency-balance-icon"><i className="fas fa-coins" /></div>
+              <span className="currency-balance-amount">{Number(balance).toFixed(0)}</span>
+              <span className="currency-balance-code">DRG</span>
+            </button>
+          </div>
         </motion.div>
 
         {subscriptions.length === 0 ? (
@@ -567,9 +553,6 @@ export function SubscriptionScreen() {
           </div>
         </motion.div>
       </motion.div>
-
-      <DailyBonusModal open={dailyBonusModalOpen} onClose={() => setDailyBonusModalOpen(false)} />
-      <CurrencyModal open={currencyModalOpen} onClose={() => setCurrencyModalOpen(false)} />
 
       <ServiceSelectorModal
         open={serviceSelectorOpen}
