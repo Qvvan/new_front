@@ -11,10 +11,14 @@ interface ModalOptions {
   onCancel?: () => void;
 }
 
+export interface ShowConfirmOptions {
+  confirmText?: string;
+}
+
 const ModalContext = createContext<{
   show: (opts: ModalOptions) => void;
   hide: () => void;
-  showConfirm: (title: string, message: string) => Promise<boolean>;
+  showConfirm: (title: string, message: string, options?: ShowConfirmOptions) => Promise<boolean>;
 } | null>(null);
 
 export function ModalProvider({ children }: { children: ReactNode }) {
@@ -24,7 +28,8 @@ export function ModalProvider({ children }: { children: ReactNode }) {
   const show = useCallback((o: ModalOptions) => setOpts(o), []);
   const hide = useCallback(() => { setOpts(null); confirmResolveRef.current = null; }, []);
 
-  const showConfirm = useCallback((title: string, message: string) => {
+  const showConfirm = useCallback((title: string, message: string, options?: ShowConfirmOptions) => {
+    const confirmText = options?.confirmText ?? 'OK';
     return new Promise<boolean>(resolve => {
       confirmResolveRef.current = resolve;
       setOpts({
@@ -32,7 +37,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
         content: <p style={{ whiteSpace: 'pre-wrap' }}>{message}</p>,
         buttons: [
           { id: 'cancel', text: 'Отмена', action: 'cancel' },
-          { id: 'ok', text: 'OK', type: 'primary', action: 'confirm' },
+          { id: 'ok', text: confirmText, type: 'primary', action: 'confirm' },
         ],
         onCancel: () => { confirmResolveRef.current?.(false); hide(); },
         onConfirm: () => { confirmResolveRef.current?.(true); hide(); },
@@ -76,7 +81,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
               >
                 <div className="modal-header">
                   <div className="modal-title">{opts.title}</div>
-                  <button type="button" className="modal-close" onClick={hide} aria-label="Закрыть">×</button>
+                  <button type="button" className="modal-close" onClick={hide} aria-label="Закрыть"><i className="fas fa-times" /></button>
                 </div>
                 <div className="modal-body">{opts.content}</div>
                 {opts.buttons?.length ? (

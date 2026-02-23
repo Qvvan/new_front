@@ -298,7 +298,7 @@ export function PaymentsScreen() {
         <div className="section">
           <h2 className="section-title">
             <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8 }}><TgsPlayer src={`${ASSETS_GIFS}/empty-profiles.tgs`} fallbackIcon="fas fa-history" width={28} height={28} /></span>
-            История платежей
+            История операций
           </h2>
         </div>
         {allActions.length === 0 ? (
@@ -307,7 +307,7 @@ export function PaymentsScreen() {
               <TgsPlayer src={`${ASSETS_GIFS}/empty-profiles.tgs`} fallbackIcon="fas fa-credit-card" width={80} height={80} />
             </div>
             <h3 className="empty-state-title">Нет платежей</h3>
-            <p className="empty-state-text">История платежей появится здесь</p>
+            <p className="empty-state-text">История операций появится здесь</p>
           </div>
         ) : (
           [...byDate.entries()].sort((a, b) => b[0].localeCompare(a[0])).map(([dateKey, actions]) => (

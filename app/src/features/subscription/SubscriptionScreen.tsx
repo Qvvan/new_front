@@ -63,7 +63,7 @@ function RenameModal({ open, currentName, onSave, onClose, saving }: {
       <div className="modal rename-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-title">Переименовать подписку</div>
-          <button type="button" className="modal-close" onClick={onClose} aria-label="Закрыть">×</button>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Закрыть"><i className="fas fa-times" /></button>
         </div>
         <div className="modal-body">
           <p className="rename-description">Придумайте удобное название для вашей подписки, чтобы легко её различать</p>
@@ -132,6 +132,11 @@ function StoriesButton() {
       }).catch(() => {});
     }
   }, [setHasUnviewed, setStories, stories.length]);
+
+  // Don't show the stories button icon when there are no stories
+  if (stories.length === 0) {
+    return null;
+  }
 
   // Pick first story's thumbnail for preview
   const previewStory = stories.find((s) => !s.is_viewed) ?? stories[0];
@@ -309,7 +314,8 @@ export function SubscriptionScreen() {
   const handleTrial = useCallback(async () => {
     const ok = await modal.showConfirm(
       'Активировать пробный период?',
-      'Бесплатно 5 дней. После окончания подписка автоматически не продлится.'
+      'Бесплатно 5 дней. После окончания подписка автоматически не продлится.',
+      { confirmText: 'Активировать' }
     );
     if (ok) activateTrial.mutate();
   }, [modal, activateTrial]);

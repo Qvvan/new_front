@@ -399,9 +399,19 @@
     }
 
     .payment-banner-content {
-        flex-direction: column;
+        padding: var(--spacing-sm) var(--spacing-md);
         gap: var(--spacing-sm);
-        text-align: center;
+    }
+
+    .payment-banner .payment-info {
+        min-width: 0;
+    }
+
+    .payment-banner .payment-title,
+    .payment-banner .payment-subtitle {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .tabs-nav {

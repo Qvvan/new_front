@@ -421,7 +421,7 @@ export function InstructionsModal() {
               </>
             )}
           </div>
-          <div className="modal-actions">
+          <div className={`modal-actions${view === 'subscription' ? ' modal-actions--single' : ''}`}>
             {view === 'subscription' && (
               <button type="button" className="btn btn-secondary" onClick={handleClose}>Отмена</button>
             )}
