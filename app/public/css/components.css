@@ -1414,6 +1414,10 @@ body.page-hidden .loadShine {
     background: var(--bg-secondary);
 }
 
+.subscription-compact.active .subscription-compact-details p {
+    color: var(--accent-green);
+}
+
 .subscription-compact.active:hover {
     border-color: var(--border-light);
     background: var(--bg-tertiary);

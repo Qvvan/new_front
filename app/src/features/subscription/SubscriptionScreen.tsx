@@ -1,5 +1,20 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
+
+const SUBSCRIPTION_COMPACT_BREAKPOINT = 576;
+
+function useIsSmallScreen(maxWidth: number = SUBSCRIPTION_COMPACT_BREAKPOINT) {
+  const [isSmall, setIsSmall] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(`(max-width: ${maxWidth}px)`).matches : false
+  );
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${maxWidth}px)`);
+    const handler = () => setIsSmall(mql.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, [maxWidth]);
+  return isSmall;
+}
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { userApi, subscriptionApi, currencyApi, servicesApi, storiesApi } from '../../core/api/endpoints';
 import { clearApiCache } from '../../core/api/client';
@@ -170,6 +185,7 @@ export function SubscriptionScreen() {
   const [renameModal, setRenameModal] = useState<{ open: boolean; subId: number; currentName: string }>({ open: false, subId: 0, currentName: '' });
   const [renameSaving, setRenameSaving] = useState(false);
   const { openInstructions, openSupport, openDailyBonus, openCurrency, openHistory, serviceSelector: storeServiceSelector, closeServiceSelector } = useModalsStore();
+  const isSmallScreen = useIsSmallScreen();
 
   /* ── Consume pending deep link action ─────────────────────── */
   const deepLinkConsumed = useRef(false);
@@ -370,7 +386,7 @@ export function SubscriptionScreen() {
             </div>
           </motion.div>
         ) : (
-          subscriptions.length === 1 ? (() => {
+          subscriptions.length === 1 && !isSmallScreen ? (() => {
             const sub = subscriptions[0];
             const subExpired = daysBetween(sub?.end_date ?? '') <= 0;
             return (

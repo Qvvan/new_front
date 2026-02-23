@@ -11,6 +11,61 @@
         margin: var(--spacing-md);
     }
 
+    /* Карточка подписки — компактнее на маленьких экранах */
+    .subscription-card {
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .subscription-card .subscription-header {
+        margin-bottom: var(--spacing-lg);
+        gap: var(--spacing-sm);
+    }
+
+    .subscription-card .subscription-title-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        border-radius: 12px;
+    }
+
+    .subscription-card .subscription-title {
+        font-size: var(--font-size-lg);
+    }
+
+    .subscription-card .time-remaining {
+        margin-bottom: var(--spacing-lg);
+        padding: var(--spacing-md) var(--spacing-sm);
+    }
+
+    .subscription-card .days-left {
+        font-size: 2.25rem;
+    }
+
+    .subscription-card .auto-renewal {
+        margin-bottom: var(--spacing-lg);
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    .subscription-card .auto-renewal-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .subscription-card .subscription-actions .btn-renew.btn-trial-activation {
+        min-height: 52px;
+        max-width: 100%;
+    }
+
+    .subscription-card .subscription-actions .btn-renew .trial-icon-wrapper {
+        width: 28px;
+        height: 28px;
+    }
+
+    .subscription-card .subscription-actions .btn-renew .trial-main {
+        font-size: var(--font-size-sm);
+    }
+
     .subscription-main {
         margin: var(--spacing-lg) var(--spacing-md);
         padding: var(--spacing-xl);
@@ -64,6 +119,86 @@
     }
 }
 
+/* Очень маленькие экраны — карточка подписки ещё компактнее */
+@media (max-width: 420px) {
+    .subscription-card {
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .subscription-card .subscription-header {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .subscription-card .subscription-title-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+        border-radius: 10px;
+    }
+
+    .subscription-card .subscription-title {
+        font-size: var(--font-size-base);
+    }
+
+    .subscription-card .subscription-type-label {
+        font-size: 11px;
+    }
+
+    .subscription-card .subscription-rename-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+    }
+
+    .subscription-card .time-remaining {
+        margin-bottom: var(--spacing-md);
+        padding: var(--spacing-sm);
+    }
+
+    .subscription-card .days-left {
+        font-size: 2rem;
+    }
+
+    .subscription-card .days-label {
+        font-size: var(--font-size-xs);
+    }
+
+    .subscription-card .auto-renewal {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .subscription-card .auto-renewal-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .subscription-card .auto-renewal-text h4 {
+        font-size: var(--font-size-sm);
+    }
+
+    .subscription-card .auto-renewal-text p {
+        font-size: var(--font-size-xs);
+    }
+
+    .subscription-card .subscription-actions .btn-renew.btn-trial-activation {
+        min-height: 48px;
+    }
+
+    .subscription-card .subscription-actions .btn-renew .btn-trial-content {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .subscription-card .subscription-actions .btn-renew .trial-icon-wrapper {
+        width: 24px;
+        height: 24px;
+    }
+
+    .subscription-card .subscription-actions .btn-renew .trial-main {
+        font-size: var(--font-size-sm);
+    }
+}
+
 /* Extra small devices (portrait phones, less than 360px) */
 @media (max-width: 360px) {
     :root {
@@ -83,6 +218,18 @@
     .subscription-main {
         margin: var(--spacing-md) var(--spacing-sm);
         padding: var(--spacing-lg);
+    }
+
+    .subscription-card {
+        padding: var(--spacing-sm);
+    }
+
+    .subscription-card .days-left {
+        font-size: 1.75rem;
+    }
+
+    .subscription-card .subscription-actions .btn-renew.btn-trial-activation {
+        min-height: 44px;
     }
 
     .action-card {
