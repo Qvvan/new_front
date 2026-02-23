@@ -309,6 +309,37 @@ button:active:not(:disabled),
   line-height: 1;
 }
 
+/* Модалка успешной покупки подарка */
+.modal-gift-success .gift-success-intro {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 var(--spacing-lg);
+}
+.modal-gift-success .gift-success-code-block {
+  margin-bottom: var(--spacing-lg);
+}
+.modal-gift-success .gift-success-code-block .gift-code-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+.modal-gift-success .gift-success-code-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
+}
+.modal-gift-success .gift-success-summary {
+  margin-top: 0;
+}
+.modal-gift-success .gift-success-loading {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: var(--spacing-xl);
+}
+
 /* Детали подарка: как в старом коде */
 .payment-details .gift-code-container {
   display: flex;

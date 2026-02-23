@@ -217,8 +217,16 @@ export function PaymentsHistoryContent() {
   };
 
   const showGiftDetails = (gift: {
-    gift_id?: string; id?: string; gift_code?: string; status?: string; recipient_user_id?: number;
-    created_at?: string; activated_at?: string;
+    gift_id?: string; id?: string; gift_code?: string; status?: string; recipient_user_id?: number | null;
+    recipient_name?: string | null;
+    created_at?: string; activated_at?: string | null;
+    message?: string | null;
+    sender_display_name?: string | null;
+    activated_by_user_id?: number | null;
+    activated_by_me?: boolean;
+    activated_by_name?: string | null;
+    activated_by_fullname?: string | null;
+    activated_by_username?: string | null;
   }) => {
     const statusText = gift.status === 'activated' ? 'Активирован' : gift.status === 'pending' ? 'Ожидает активации' : gift.status === 'canceled' ? 'Отменен' : 'Неизвестно';
     const handleCopyCode = async () => {
@@ -229,6 +237,22 @@ export function PaymentsHistoryContent() {
         tg?.haptic?.light?.();
       } else toast.error('Не удалось скопировать');
     };
+
+    const hasActivatorInfo = gift.activated_by_me === true ||
+      gift.activated_by_user_id != null ||
+      (gift.activated_by_name != null && gift.activated_by_name !== '') ||
+      (gift.activated_by_fullname != null && gift.activated_by_fullname !== '') ||
+      (gift.activated_by_username != null && gift.activated_by_username !== '');
+    const isActivatorMe = gift.activated_by_me === true ||
+      (userId != null && gift.activated_by_user_id != null && gift.activated_by_user_id === userId);
+    const activatorDisplayName = gift.activated_by_name ?? gift.activated_by_fullname ?? gift.activated_by_username ?? (gift.activated_by_user_id != null ? `ID ${gift.activated_by_user_id}` : null);
+    const activatorLabel = gift.status === 'activated' && hasActivatorInfo
+      ? (isActivatorMe ? 'Вы активировали' : activatorDisplayName ? `Активировал: ${activatorDisplayName}` : null)
+      : null;
+
+    const recipientDisplay = (gift.recipient_name != null && gift.recipient_name !== '')
+      ? gift.recipient_name
+      : (gift.recipient_user_id != null ? `ID: ${gift.recipient_user_id}` : null);
 
     modal.show({
       title: 'Детали подарка',
@@ -249,16 +273,34 @@ export function PaymentsHistoryContent() {
               </div>
             </div>
           )}
-          {gift.recipient_user_id != null && (
+          {(gift.sender_display_name != null && gift.sender_display_name !== '') && (
+            <div className="payment-detail-item">
+              <span className="detail-label">Имя дарителя</span>
+              <span className="detail-value">{gift.sender_display_name}</span>
+            </div>
+          )}
+          {gift.message != null && gift.message !== '' && (
+            <div className="payment-detail-item">
+              <span className="detail-label">Сообщение</span>
+              <span className="detail-value">{gift.message}</span>
+            </div>
+          )}
+          {recipientDisplay != null && (
             <div className="payment-detail-item">
               <span className="detail-label">Получатель</span>
-              <span className="detail-value">ID: {gift.recipient_user_id}</span>
+              <span className="detail-value">{recipientDisplay}</span>
             </div>
           )}
           {gift.activated_at && (
             <div className="payment-detail-item">
-              <span className="detail-label">Активирован</span>
+              <span className="detail-label">Дата активации</span>
               <span className="detail-value">{formatDate(gift.activated_at, 'long')}</span>
+            </div>
+          )}
+          {activatorLabel != null && (
+            <div className="payment-detail-item">
+              <span className="detail-label">Кто активировал</span>
+              <span className="detail-value">{activatorLabel}</span>
             </div>
           )}
           <div className="payment-detail-item">

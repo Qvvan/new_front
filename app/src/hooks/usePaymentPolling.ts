@@ -11,6 +11,8 @@ export interface SuccessfulPayment {
   service_name?: string;
   /** 'buy' | 'renew' | 'gift' — determines overlay text and post-dismiss action */
   paymentType?: 'buy' | 'renew' | 'gift';
+  /** For gift: id подарка, чтобы открыть модалку с промокодом. Если бекенд отдаёт в истории платежей — подставляется здесь. */
+  giftId?: number | null;
 }
 
 /** Matches the actual API history response shape */
@@ -24,6 +26,8 @@ type HistoryPayment = {
   price?: number;
   service_name?: string;
   description?: string;
+  /** Для платежей типа gift — id подарка для модалки успеха */
+  gift_id?: number | null;
 };
 
 /** Convert backend payment_type to our UI mode */
@@ -135,9 +139,11 @@ export function usePaymentPolling() {
                 if (succeeded) {
                   trackingInfo.price = found.amount ?? found.price ?? trackingInfo.price;
                   trackingInfo.service_name = found.service_name ?? trackingInfo.service_name;
-                  // Use payment_type from history if we don't have mode from the banner
                   if (!trackingInfo.paymentType || trackingInfo.paymentType === 'buy') {
                     trackingInfo.paymentType = apiTypeToMode(found.payment_type) ?? trackingInfo.paymentType;
+                  }
+                  if (found.gift_id != null) {
+                    trackingInfo.giftId = found.gift_id;
                   }
                 }
               } else {
@@ -152,6 +158,7 @@ export function usePaymentPolling() {
                     trackingInfo.price = recent.amount ?? recent.price ?? trackingInfo.price;
                     trackingInfo.service_name = recent.service_name ?? trackingInfo.service_name;
                     trackingInfo.paymentType = apiTypeToMode(recent.payment_type) ?? trackingInfo.paymentType;
+                    if (recent.gift_id != null) trackingInfo.giftId = recent.gift_id;
                   }
                 }
               }

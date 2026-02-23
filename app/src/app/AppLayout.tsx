@@ -13,6 +13,7 @@ import { DailyBonusModal } from '../features/subscription/DailyBonusModal';
 import { HistoryModal } from '../shared/ui/HistoryModal';
 import { InstructionsModal } from '../features/instructions/InstructionsModal';
 import { SupportModal } from '../features/support/SupportModal';
+import { GiftSuccessModal } from '../features/subscription/GiftSuccessModal';
 import { StoriesViewer } from '../features/stories/StoriesViewer';
 import { useStoriesStore } from '../features/stories/storiesStore';
 import { storiesApi } from '../core/api/endpoints';
@@ -229,6 +230,7 @@ export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
         <HistoryModal open={historyOpen} onClose={closeHistory} />
         <InstructionsModal />
         <SupportModal />
+        <GiftSuccessModal />
         <PaymentSuccessOverlay payment={successPayment} onDismiss={dismissSuccess} />
         <StoriesViewer />
       </div>

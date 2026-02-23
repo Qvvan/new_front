@@ -7,6 +7,8 @@ interface ModalsState {
   dailyBonusOpen: boolean;
   currencyOpen: boolean;
   historyOpen: boolean;
+  /** После покупки подарка: открыть модалку с промокодом и инструкцией. giftId может быть null — тогда берём последний из «Отправленные». */
+  giftSuccess: { open: boolean; giftId: number | null };
   openInstructions: () => void;
   closeInstructions: () => void;
   openSupport: () => void;
@@ -19,6 +21,8 @@ interface ModalsState {
   closeCurrency: () => void;
   openHistory: () => void;
   closeHistory: () => void;
+  openGiftSuccess: (giftId: number | null) => void;
+  closeGiftSuccess: () => void;
 }
 
 export const useModalsStore = create<ModalsState>(set => ({
@@ -40,4 +44,7 @@ export const useModalsStore = create<ModalsState>(set => ({
   closeCurrency: () => set({ currencyOpen: false }),
   openHistory: () => set({ historyOpen: true }),
   closeHistory: () => set({ historyOpen: false }),
+  giftSuccess: { open: false, giftId: null },
+  openGiftSuccess: (giftId) => set({ giftSuccess: { open: true, giftId } }),
+  closeGiftSuccess: () => set({ giftSuccess: { open: false, giftId: null } }),
 }));

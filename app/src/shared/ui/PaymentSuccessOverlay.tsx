@@ -14,21 +14,24 @@ interface Props {
  * Full-screen overlay shown when a pending payment succeeds.
  * - New subscription ('buy'): shows success + opens Instructions modal on dismiss.
  * - Renewal ('renew'): shows renewal success, just dismisses.
- * - Gift ('gift'): shows gift success, just dismisses.
+ * - Gift ('gift'): shows gift success, then opens GiftSuccessModal with promocode and instructions.
  */
 export function PaymentSuccessOverlay({ payment, onDismiss }: Props) {
-  const { openInstructions } = useModalsStore();
+  const { openInstructions, openGiftSuccess } = useModalsStore();
   const tg = useTelegram();
 
   const pType = payment?.paymentType ?? 'buy';
   const needsInstructions = pType === 'buy';
+  const isGift = pType === 'gift';
 
   const handleClick = () => {
     tg?.haptic.success?.();
     onDismiss();
-    // Only open instructions for new subscriptions
     if (needsInstructions) {
       setTimeout(() => openInstructions(), 300);
+    } else if (isGift) {
+      const giftId = (payment as { giftId?: number | null })?.giftId ?? null;
+      setTimeout(() => openGiftSuccess(giftId), 300);
     }
   };
 

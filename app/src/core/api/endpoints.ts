@@ -97,6 +97,14 @@ export const servicesApi = {
   get: (id: number) => api.get(`/services/${id}`),
 };
 
+/**
+ * Подарки (промокоды). В объекте подарка используются поля:
+ * - Кто активировал (приоритет): activated_by_name → activated_by_fullname → activated_by_username
+ * - activated_by_user_id, activated_by_me — для «Вы активировали»
+ * - message, sender_display_name — сообщение и имя дарителя
+ * - recipient_user_id, recipient_name — получатель (имя или ID)
+ * В истории платежей для типа gift желательно возвращать gift_id в элементе платежа.
+ */
 export const giftApi = {
   create: (data: { service_id: number; recipient_user_id?: number; message?: string; sender_display_name?: string }) =>
     api.post('/subscription/gifts', data),
