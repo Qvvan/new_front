@@ -31,6 +31,7 @@ import { ServiceSelectorModal } from './ServiceSelectorModal';
 import { GiftFlowModal } from './GiftFlowModal';
 import { ActivateCodeModal } from './ActivateCodeModal';
 import '../stories/stories.css';
+import { useAppNavigate } from '../../app/AppLayout';
 
 type Sub = {
   subscription_id?: number;
@@ -150,20 +151,18 @@ function StoriesButton() {
   return (
     <button
       type="button"
-      className={`stories-top-button${hasUnviewed ? ' has-unviewed' : ''}`}
+      className={`nexus-stories-btn${hasUnviewed ? ' has-unviewed' : ''}`}
       onClick={handleClick}
       aria-label="Stories"
     >
-      <div className="stories-top-button-ring" />
-      <div className="stories-top-button-inner">
+      <div className="nexus-stories-ring" />
+      <div className="nexus-stories-inner">
         {previewUrl ? (
-          <img className="stories-top-button-preview" src={previewUrl} alt="" draggable={false} />
+          <img src={previewUrl} alt="" draggable={false} />
         ) : (
-          <div className="stories-top-button-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none" />
-            </svg>
-          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none" style={{ color: 'rgba(255,255,255,0.7)' }} />
+          </svg>
         )}
       </div>
       {hasUnviewed && unviewedCount > 0 && (
@@ -173,7 +172,46 @@ function StoriesButton() {
   );
 }
 
+/** Circular arc hero showing days remaining */
+function SubHeroOrb({ days, isActive, isExpired }: { days: number; isActive: boolean; isExpired: boolean }) {
+  const R = 58;
+  const circumference = 2 * Math.PI * R;
+  const arcProgress = isExpired ? 0 : Math.min(1, Math.max(0, days / 30));
+  const strokeDashoffset = circumference * (1 - arcProgress);
+  const orbClass = isExpired ? 'nexus-orb--expired' : isActive ? 'nexus-orb--active' : 'nexus-orb--inactive';
+  const arcClass = isExpired ? 'nexus-orb-arc--expired' : isActive ? 'nexus-orb-arc--active' : 'nexus-orb-arc--inactive';
+  const strokeColor = isExpired ? '#ef4444' : isActive ? 'url(#nx-arc-grad)' : '#a855f7';
+
+  return (
+    <div className="nexus-orb-wrap">
+      <svg className="nexus-orb-svg" viewBox="0 0 144 144" width={144} height={144}>
+        <defs>
+          <linearGradient id="nx-arc-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#00d4ff" />
+            <stop offset="100%" stopColor="#a855f7" />
+          </linearGradient>
+        </defs>
+        {/* Background track */}
+        <circle cx="72" cy="72" r={R} className="nexus-orb-track" />
+        {/* Progress arc */}
+        <circle
+          cx="72" cy="72" r={R}
+          className={`nexus-orb-arc ${arcClass}`}
+          stroke={strokeColor}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          style={{ transformOrigin: '72px 72px', transform: 'rotate(-90deg)' }}
+        />
+      </svg>
+      <div className={`nexus-orb ${orbClass}`}>
+        <i className="fas fa-shield-alt nexus-orb-icon" />
+      </div>
+    </div>
+  );
+}
+
 export function SubscriptionScreen() {
+  const { navigate } = useAppNavigate();
   const toast = useToast();
   const modal = useModal();
   const tg = useTelegram();
@@ -185,13 +223,11 @@ export function SubscriptionScreen() {
   const [renameModal, setRenameModal] = useState<{ open: boolean; subId: number; currentName: string }>({ open: false, subId: 0, currentName: '' });
   const [renameSaving, setRenameSaving] = useState(false);
   const { openInstructions, openSupport, openDailyBonus, openCurrency, openHistory, serviceSelector: storeServiceSelector, closeServiceSelector } = useModalsStore();
-  const isSmallScreen = useIsSmallScreen();
 
   /* ── Consume pending deep link action ─────────────────────── */
   const deepLinkConsumed = useRef(false);
   useEffect(() => {
     if (deepLinkConsumed.current) return;
-    // Small delay so component is fully mounted and modals are ready
     const timer = setTimeout(() => {
       const action = useDeepLinkStore.getState().consume();
       if (!action) return;
@@ -215,6 +251,7 @@ export function SubscriptionScreen() {
     }, 300);
     return () => clearTimeout(timer);
   }, [openDailyBonus]);
+
   const serviceSelectorOpen = serviceSelector.open || storeServiceSelector?.open === true;
   const serviceSelectorMode = storeServiceSelector?.open ? storeServiceSelector.mode : serviceSelector.mode;
   const serviceSelectorSubscriptionId = storeServiceSelector?.open ? storeServiceSelector.subscriptionId : serviceSelector.subscriptionId;
@@ -335,239 +372,330 @@ export function SubscriptionScreen() {
     }
   }, [modal, refetchSubs, toast, tg]);
 
+  // Computed state for UX-driven CTA
+  const activeSubs = subscriptions.filter(s => {
+    const days = daysBetween(s.end_date ?? '');
+    return days > 0 && (s.status === 'active' || s.status === 'trial' || (s as { is_active?: boolean }).is_active);
+  });
+  const primarySub = activeSubs[0] ?? subscriptions[0];
+  const hasActive = activeSubs.length > 0;
+  const hasExpiredOnly = subscriptions.length > 0 && activeSubs.length === 0;
+  const primaryDays = primarySub ? Math.abs(daysBetween(primarySub.end_date ?? '')) : 0;
+  const primaryIsExpired = primarySub ? daysBetween(primarySub.end_date ?? '') <= 0 : false;
+  const primaryId = primarySub ? (primarySub.subscription_id ?? Number(primarySub.id)) : 0;
+
   return (
     <div className="screen active" id="subscriptionScreen">
       <motion.div variants={staggerContainer} initial="initial" animate="animate">
-        <motion.div className="subscription-top-bar" variants={staggerItem}>
-          <button type="button" className="daily-bonus-button" onClick={() => { tg?.haptic.light(); openDailyBonus(); }} data-action="show-daily-bonus-modal" aria-label="Ежедневный бонус">
-            <div className="daily-bonus-button-icon">
-              <i className="fas fa-gift" />
-              {canClaimBonus && <span className="bonus-claim-indicator" />}
-            </div>
-            <span className="daily-bonus-button-text">Бонус</span>
-          </button>
-          <StoriesButton />
-          <div className="subscription-top-bar-right">
-            <button type="button" className="top-bar-icon-btn subscription-top-bar-bell" onClick={() => { tg?.haptic.light(); openHistory(); }} aria-label="История операций">
+
+        {/* ── Top Bar — Clean & Minimal ── */}
+        <motion.div className="nexus-topbar" variants={staggerItem}>
+          <div className="nexus-topbar-left">
+            <span className="nexus-brand-name">
+              <i className="fas fa-dragon" style={{ color: 'var(--nx-cyan)', marginRight: 6 }} />
+              SkyDragon
+            </span>
+          </div>
+          <div className="nexus-topbar-right">
+            <StoriesButton />
+            {balance > 0 && (
+              <button
+                type="button"
+                className="nexus-balance-chip"
+                onClick={() => { tg?.haptic.light(); openCurrency(); }}
+                data-action="show-currency-info-modal"
+                aria-label="Баланс Dragon Coins"
+              >
+                <i className="fas fa-coins" />
+                <span>{Number(balance).toFixed(0)}</span>
+                <span className="nexus-balance-chip-code">DRG</span>
+              </button>
+            )}
+            <button
+              type="button"
+              className="nexus-icon-btn"
+              onClick={() => { tg?.haptic.light(); openHistory(); }}
+              aria-label="История операций"
+            >
               <i className="fas fa-bell" />
-            </button>
-            <button type="button" className="currency-balance-button" onClick={() => { tg?.haptic.light(); openCurrency(); }} data-action="show-currency-info-modal" aria-label="Баланс Dragon Coins">
-              <div className="currency-balance-icon"><i className="fas fa-coins" /></div>
-              <span className="currency-balance-amount">{Number(balance).toFixed(0)}</span>
-              <span className="currency-balance-code">DRG</span>
             </button>
           </div>
         </motion.div>
 
-        {subscriptions.length === 0 ? (
-          <motion.div className="empty-state-card" variants={staggerItem}>
-            <div className="empty-state-content">
-              <div className="empty-state-icon-gif">
-                <TgsPlayer src={`${ASSETS_GIFS}/empty-profiles.tgs`} fallbackIcon="fas fa-shield-alt" width={80} height={80} />
-              </div>
-              <h3 className="empty-state-title">Нет активных подписок</h3>
-              {!trialActivated ? (
-                <div className="empty-state-actions">
-                  <button type="button" className="btn-trial-activation" onClick={handleTrial} disabled={activateTrial.isPending} data-action="activate-trial">
-                    <div className="btn-trial-bg"><div className="btn-trial-shine" /><div className="btn-trial-glow" /></div>
-                    <div className="btn-trial-content">
-                      <div className="trial-icon-wrapper"><TgsPlayer src={`${ASSETS_GIFS}/gift-animate.tgs`} fallbackIcon="fas fa-gift" width={40} height={40} /></div>
-                      <div className="trial-text">
-                        <span className="trial-main">Пробный период</span>
-                        <span className="trial-sub">5 дней бесплатно</span>
-                      </div>
-                      <div className="trial-arrow"><i className="fas fa-arrow-right" /></div>
-                    </div>
-                  </button>
+        {/* ── Hero Orb — always shown ── */}
+        <motion.div variants={staggerItem}>
+          <div className="nexus-hero">
+            {subscriptions.length === 0 ? (
+              <>
+                <SubHeroOrb days={0} isActive={false} isExpired={false} />
+                <div className="nexus-hero-days">
+                  <span className="nexus-hero-days-count nexus-hero-days-count--inactive">—</span>
+                  <span className="nexus-hero-days-label">нет подписки</span>
                 </div>
-              ) : (
-                <p className="empty-state-text">Приобретите подписку для доступа к VPN</p>
+              </>
+            ) : (
+              <>
+                <SubHeroOrb days={primaryDays} isActive={hasActive} isExpired={primaryIsExpired} />
+                <div className="nexus-hero-days">
+                  <span className={`nexus-hero-days-count nexus-hero-days-count--${primaryIsExpired ? 'expired' : 'active'}`}>
+                    {primaryDays}
+                  </span>
+                  <span className="nexus-hero-days-label">
+                    {primaryIsExpired
+                      ? 'дней назад истекла'
+                      : pluralize(primaryDays, ['день остался', 'дня осталось', 'дней осталось'])}
+                  </span>
+                </div>
+                <div className={`nexus-status-badge nexus-status-badge--${primaryIsExpired ? 'expired' : 'active'}`}>
+                  {!primaryIsExpired && <span className="nexus-status-dot" />}
+                  {primaryIsExpired ? 'Истекла' : 'Активна'}
+                </div>
+              </>
+            )}
+          </div>
+        </motion.div>
+
+        {/* ── Primary CTA — One button, state-driven ── */}
+        <motion.div variants={staggerItem}>
+          {hasActive && (
+            <button
+              type="button"
+              className="nexus-cta-hero"
+              onClick={() => { tg?.haptic.light(); navigate('keys'); }}
+            >
+              <i className="fas fa-key" />
+              <span>Мои VPN ключи</span>
+            </button>
+          )}
+          {hasExpiredOnly && (
+            <button
+              type="button"
+              className="nexus-cta-hero nexus-cta-hero--warn"
+              onClick={() => handleRenew(primaryId)}
+            >
+              <i className="fas fa-sync-alt" />
+              <span>Продлить подписку</span>
+            </button>
+          )}
+          {subscriptions.length === 0 && (
+            <div className="nexus-cta-pair">
+              {!trialActivated && (
+                <button
+                  type="button"
+                  className="nexus-trial-btn"
+                  onClick={handleTrial}
+                  disabled={activateTrial.isPending}
+                  data-action="activate-trial"
+                >
+                  <div className="nexus-trial-icon">
+                    <TgsPlayer src={`${ASSETS_GIFS}/gift-animate.tgs`} fallbackIcon="fas fa-gift" width={40} height={40} />
+                  </div>
+                  <div className="nexus-trial-text">
+                    <span className="nexus-trial-main">Пробный период</span>
+                    <span className="nexus-trial-sub">5 дней бесплатно</span>
+                  </div>
+                  <div className="nexus-trial-arrow"><i className="fas fa-chevron-right" /></div>
+                </button>
               )}
+              <button
+                type="button"
+                className="nexus-cta-hero"
+                onClick={handleBuy}
+                data-action="buy"
+                style={trialActivated ? {} : { marginTop: 10 }}
+              >
+                <i className="fas fa-plus" />
+                <span>Купить подписку</span>
+              </button>
+            </div>
+          )}
+        </motion.div>
+
+        {/* ── Quick Action Chips — horizontal scroll ── */}
+        <motion.div variants={staggerItem}>
+          <div className="nexus-chips-row">
+            <button type="button" className="nexus-chip" onClick={handleInstructions} data-action="instructions">
+              <i className="fas fa-book-open" /><span>Инструкции</span>
+            </button>
+            <button type="button" className="nexus-chip" onClick={handleSupport} data-action="support">
+              <i className="fas fa-comment-dots" /><span>Поддержка</span>
+            </button>
+            <button type="button" className="nexus-chip" onClick={handleBuy} data-action="buy">
+              <i className="fas fa-plus" /><span>Купить</span>
+            </button>
+            <button type="button" className="nexus-chip" onClick={handleGift} data-action="gift">
+              <i className="fas fa-gift" /><span>Подарить</span>
+            </button>
+            <button type="button" className="nexus-chip" onClick={handleActivateCode} data-action="activate-code">
+              <i className="fas fa-key" /><span>Активировать</span>
+            </button>
+            <button type="button" className="nexus-chip" onClick={handleNewsChannel} data-action="news-channel">
+              <i className="fas fa-newspaper" /><span>Канал</span>
+            </button>
+          </div>
+        </motion.div>
+
+        {/* ── Daily Bonus Card — only when can_claim ── */}
+        {canClaimBonus && (
+          <motion.div variants={staggerItem}>
+            <div
+              className="nexus-bonus-card"
+              onClick={() => { tg?.haptic.light(); openDailyBonus(); }}
+              role="button"
+              tabIndex={0}
+              data-action="show-daily-bonus-modal"
+            >
+              <div className="nexus-bonus-card-icon">
+                <TgsPlayer src={`${ASSETS_GIFS}/gift-animate.tgs`} fallbackIcon="fas fa-gift" width={36} height={36} />
+              </div>
+              <div className="nexus-bonus-card-text">
+                <div className="nexus-bonus-card-title">Ежедневный бонус</div>
+                <div className="nexus-bonus-card-sub">Доступен к получению!</div>
+              </div>
+              <i className="fas fa-chevron-right nexus-bonus-card-arrow" />
             </div>
           </motion.div>
-        ) : (
-          subscriptions.length === 1 && !isSmallScreen ? (() => {
-            const sub = subscriptions[0];
-            const subExpired = daysBetween(sub?.end_date ?? '') <= 0;
-            return (
-          <motion.div className={`card subscription-card subscription-card--${subExpired ? 'expired' : 'active'}`} variants={staggerItem} data-subscription-id={sub.subscription_id ?? sub.id}>
-            {(() => {
-              const subId = sub.subscription_id ?? Number(sub.id);
-              const days = daysBetween(sub.end_date ?? '');
-              const isExpired = days <= 0;
-              const isTrial = isTrialSubscription(sub);
-              const statusClass = isExpired ? 'expired' : 'active';
-              const statusText = isExpired ? 'Истекла' : 'Активна';
-              const renewalDate = formatDate(sub.end_date ?? '', 'long');
-              const autoRenewalText = sub.auto_renewal && !isExpired ? `Продление ${renewalDate}` : `Завершится ${renewalDate}`;
-              return (
-                <>
-                  <div className="subscription-header">
-                    <div className="subscription-title-row">
-                      <span className={`subscription-title-icon ${isTrial ? 'trial' : 'vpn'}`} aria-hidden>
+        )}
+
+        {/* ── Subscription Details — below fold ── */}
+        {subscriptions.length === 1 && (() => {
+          const sub = subscriptions[0];
+          const subId = sub.subscription_id ?? Number(sub.id);
+          const days = daysBetween(sub.end_date ?? '');
+          const isExpired = days <= 0;
+          const isTrial = isTrialSubscription(sub);
+          const renewalDate = formatDate(sub.end_date ?? '', 'long');
+          const autoRenewalText = sub.auto_renewal && !isExpired ? `Продление ${renewalDate}` : `Завершится ${renewalDate}`;
+          return (
+            <motion.div variants={staggerItem}>
+              <div className={`nexus-sub-card nexus-sub-card--${isExpired ? 'expired' : 'active'}`} data-subscription-id={subId}>
+                <div className="nexus-sub-name">
+                  <i className={`fas ${isTrial ? 'fa-gift' : 'fa-shield-alt'}`}
+                     style={{ color: isExpired ? 'var(--nx-red)' : 'var(--nx-cyan)', marginRight: 6 }} />
+                  <h2>{getDisplayName(sub)}</h2>
+                  <button
+                    type="button"
+                    className="nexus-rename-btn"
+                    onClick={() => handleRename(sub)}
+                    title="Переименовать"
+                    aria-label="Переименовать подписку"
+                  >
+                    <i className="fas fa-pen" />
+                  </button>
+                </div>
+                {sub.custom_name && <div className="nexus-sub-type-label">{getServiceTypeName(sub)}</div>}
+                {!isExpired && !isTrial && (
+                  <div
+                    className="nexus-renewal"
+                    data-subscription-id={subId}
+                    onClick={() => handleAutoRenewalToggle(subId, !!sub.auto_renewal)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className="nexus-renewal-info">
+                      <div style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <TgsPlayer src={`${ASSETS_GIFS}/auto-renewal.tgs`} fallbackIcon="fas fa-sync-alt" width={28} height={28} />
+                      </div>
+                      <div className="nexus-renewal-text">
+                        <h4>Автопродление</h4>
+                        <p>{autoRenewalText}</p>
+                      </div>
+                    </div>
+                    <div className={`nexus-toggle${sub.auto_renewal ? ' on' : ''}`}>
+                      <div className="nexus-toggle-knob" />
+                    </div>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className="nexus-renew-btn"
+                  onClick={() => handleRenew(subId)}
+                  data-action="renew"
+                  data-subscription-id={subId}
+                >
+                  <i className="fas fa-sync-alt" /> Продлить подписку
+                </button>
+              </div>
+            </motion.div>
+          );
+        })()}
+
+        {/* ── Multiple subscriptions compact list ── */}
+        {subscriptions.length > 1 && (
+          <motion.div variants={staggerItem}>
+            <div className="nexus-section-label">Ваши подписки</div>
+            <div className="nexus-subs-list">
+              {subscriptions.map((sub) => {
+                const subId = sub.subscription_id ?? Number(sub.id);
+                const days = daysBetween(sub.end_date ?? '');
+                const isExpired = days <= 0;
+                const isTrial = isTrialSubscription(sub);
+                return (
+                  <div
+                    key={subId}
+                    className={`nexus-sub-compact${isExpired ? ' nexus-sub-compact--expired' : ''}`}
+                    data-subscription-id={subId}
+                  >
+                    <div className="nexus-sub-compact-left">
+                      <div className={`nexus-sub-compact-icon${isExpired ? ' nexus-sub-compact-icon--expired' : ''}`}>
                         <i className={`fas ${isTrial ? 'fa-gift' : 'fa-shield-alt'}`} />
-                      </span>
-                      <div className="subscription-title-group">
-                        <div className="subscription-title-name">
-                          <h2 className="subscription-title">{getDisplayName(sub)}</h2>
-                          <button type="button" className="subscription-rename-btn" onClick={() => handleRename(sub)} title="Переименовать" aria-label="Переименовать подписку">
+                      </div>
+                      <div className="nexus-sub-compact-details">
+                        <div className="nexus-sub-compact-name">
+                          {getDisplayName(sub)}
+                          <button
+                            type="button"
+                            className="nexus-rename-btn-compact"
+                            onClick={(e) => { e.stopPropagation(); handleRename(sub); }}
+                            aria-label="Переименовать"
+                          >
                             <i className="fas fa-pen" />
                           </button>
                         </div>
-                        {sub.custom_name && (
-                          <span className="subscription-type-label">{getServiceTypeName(sub)}</span>
-                        )}
+                        {sub.custom_name && <div className="nexus-sub-compact-type">{getServiceTypeName(sub)}</div>}
                       </div>
                     </div>
-                    <div className={`subscription-status ${statusClass}`}>
-                      {statusClass === 'active' && <span className="subscription-status-dot" aria-hidden />}
-                      <span>{statusText}</span>
-                    </div>
-                  </div>
-                  <div className="subscription-info">
-                    <div className="time-remaining">
-                      <div className={`days-left ${isExpired ? 'text-red' : ''}`}>{Math.abs(days)}</div>
-                      <div className="days-label">
-                        {isExpired ? 'дней назад истекла' : `${pluralize(days, ['день остался', 'дня осталось', 'дней осталось'])}`}
-                      </div>
-                    </div>
-                  </div>
-                  {!isExpired && !isTrial && (
-                    <div className="auto-renewal" data-subscription-id={subId} onClick={() => handleAutoRenewalToggle(subId, !!sub.auto_renewal)} role="button" tabIndex={0}>
-                      <div className="auto-renewal-info">
-                        <div className="auto-renewal-icon"><TgsPlayer src={`${ASSETS_GIFS}/auto-renewal.tgs`} fallbackIcon="fas fa-sync-alt" width={32} height={32} /></div>
-                        <div className="auto-renewal-text">
-                          <h4>Автопродление</h4>
-                          <p className="auto-renewal-status">{autoRenewalText}</p>
+                    <div className="nexus-sub-compact-right">
+                      {!isTrial && !isExpired && (
+                        <div
+                          className="nexus-compact-renewal"
+                          onClick={() => handleAutoRenewalToggle(subId, !!sub.auto_renewal)}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          <span className="nexus-compact-renewal-label">Авто</span>
+                          <div className={`nexus-toggle-sm${sub.auto_renewal ? ' on' : ''}`}>
+                            <div className="nexus-toggle-sm-knob" />
+                          </div>
                         </div>
-                      </div>
-                      <div className={`toggle-switch ${sub.auto_renewal ? 'active' : ''}`}><div className="toggle-slider" /></div>
-                    </div>
-                  )}
-                  <div className="subscription-actions">
-                    <button type="button" className="btn-trial-activation btn-renew" onClick={() => handleRenew(subId)} data-action="renew" data-subscription-id={subId}>
-                      <div className="btn-trial-bg"><div className="btn-trial-shine" /><div className="btn-trial-glow" /></div>
-                      <div className="btn-trial-content">
-                        <div className="trial-icon-wrapper"><i className="fas fa-sync-alt" /></div>
-                        <div className="trial-text">
-                          <span className="trial-main">{isExpired ? 'Продлить подписку' : 'Продлить подписку'}</span>
-                        </div>
-                        <div className="trial-arrow"><i className="fas fa-arrow-right" /></div>
-                      </div>
-                    </button>
-                  </div>
-                </>
-              );
-            })()}
-          </motion.div>
-            );
-          })() : (
-          <motion.div className="subscriptions-compact" variants={staggerItem}>
-            {subscriptions.map((sub) => {
-              const subId = sub.subscription_id ?? Number(sub.id);
-              const days = daysBetween(sub.end_date ?? '');
-              const isExpired = days <= 0;
-              const isTrial = isTrialSubscription(sub);
-              const statusClass = isExpired ? 'expired' : 'active';
-              const statusText = isExpired ? 'Истекла' : 'Активна';
-              return (
-                <div key={subId} className={`subscription-compact ${statusClass}`} data-subscription-id={subId}>
-                  <div className="subscription-compact-info">
-                    <div className="subscription-compact-icon">
-                      <i className={`fas ${isTrial ? 'fa-gift' : 'fa-shield-alt'}`} />
-                    </div>
-                    <div className="subscription-compact-details">
-                      <div className="subscription-compact-name-row">
-                        <h4>{getDisplayName(sub)}</h4>
-                        <button type="button" className="subscription-rename-btn subscription-rename-btn--compact" onClick={(e) => { e.stopPropagation(); handleRename(sub); }} title="Переименовать" aria-label="Переименовать подписку">
-                          <i className="fas fa-pen" />
-                        </button>
-                      </div>
-                      {sub.custom_name && (
-                        <span className="subscription-type-label subscription-type-label--compact">{getServiceTypeName(sub)}</span>
                       )}
-                      <p>{statusText}</p>
+                      <div className="nexus-sub-compact-days">
+                        <div className={`nexus-sub-compact-days-count${isExpired ? ' nexus-sub-compact-days-count--expired' : ''}`}>
+                          {Math.abs(days)}
+                        </div>
+                        <div className="nexus-sub-compact-days-label">
+                          {isExpired ? 'дн. назад' : 'дн. осталось'}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="nexus-renew-btn"
+                        style={{ width: 'auto', padding: '8px 14px', marginTop: 0, fontSize: 12 }}
+                        onClick={() => handleRenew(subId)}
+                        data-action="renew"
+                        data-subscription-id={subId}
+                        title="Продлить"
+                      >
+                        <i className="fas fa-sync-alt" />
+                      </button>
                     </div>
                   </div>
-                  <div className="subscription-compact-status">
-                    <div className={`subscription-compact-days ${isExpired ? 'text-red' : ''}`}>{Math.abs(days)}</div>
-                    <div className="subscription-compact-label">{isExpired ? 'дн. назад' : 'дн. осталось'}</div>
-                  </div>
-                  <div className="subscription-compact-actions">
-                    {!isTrial && !isExpired && (
-                      <div className="subscription-compact-auto-renewal" data-subscription-id={subId} onClick={() => handleAutoRenewalToggle(subId, !!sub.auto_renewal)} role="button" tabIndex={0} title="Автопродление">
-                        <span className="auto-renewal-label">Автопродление</span>
-                        <div className={`toggle-switch-compact ${sub.auto_renewal ? 'active' : ''}`}><div className="toggle-slider-compact" /></div>
-                      </div>
-                    )}
-                    <button type="button" className="btn-trial-activation btn-renew-compact" onClick={() => handleRenew(subId)} data-action="renew" data-subscription-id={subId} title="Продлить подписку" aria-label="Продлить подписку">
-                      <div className="btn-trial-bg"><div className="btn-trial-shine" /><div className="btn-trial-glow" /></div>
-                      <div className="btn-trial-content">
-                        <div className="trial-icon-wrapper"><i className="fas fa-sync-alt" /></div>
-                        <div className="trial-text"><span className="trial-main">Продлить</span></div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </motion.div>
-          )
         )}
 
-        <motion.div className="subscription-bottom-actions" variants={staggerItem}>
-          <button type="button" className="btn btn-primary btn-action-primary" onClick={handleBuy} data-action="buy">
-            <i className="fas fa-plus" /> Новая подписка
-          </button>
-          <button type="button" className="btn btn-secondary btn-action-secondary" onClick={handleGift} data-action="gift">
-            <i className="fas fa-gift" /> Подарить подписку
-          </button>
-        </motion.div>
-
-        <motion.div className="section" variants={staggerItem}>
-          <h2 className="section-title">
-            <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8 }}><TgsPlayer src={`${ASSETS_GIFS}/management.tgs`} fallbackIcon="fas fa-cog" width={32} height={32} /></span>
-            Управление
-          </h2>
-          <div className="notcoin-actions-grid">
-            <div className="notcoin-action-card" onClick={handleInstructions} role="button" tabIndex={0} data-action="instructions">
-              <div className="notcoin-action-content">
-                <div className="notcoin-action-text">
-                  <div className="notcoin-action-title">Инструкции</div>
-                  <div className="notcoin-action-subtitle">Как настроить VPN</div>
-                </div>
-                <div className="notcoin-decorative-icon"><i className="fas fa-book-open" /></div>
-              </div>
-            </div>
-            <div className="notcoin-action-card" onClick={handleSupport} role="button" tabIndex={0} data-action="support">
-              <div className="notcoin-action-content">
-                <div className="notcoin-action-text">
-                  <div className="notcoin-action-title">Поддержка</div>
-                  <div className="notcoin-action-subtitle">Помощь 24/7</div>
-                </div>
-                <div className="notcoin-decorative-icon"><i className="fas fa-comment-dots" /></div>
-              </div>
-            </div>
-            <div className="notcoin-action-card" onClick={handleActivateCode} role="button" tabIndex={0} data-action="activate-code">
-              <div className="notcoin-action-content">
-                <div className="notcoin-action-text">
-                  <div className="notcoin-action-title">Активировать код</div>
-                  <div className="notcoin-action-subtitle">Введите код подарка</div>
-                </div>
-                <div className="notcoin-decorative-icon"><i className="fas fa-key" /></div>
-              </div>
-            </div>
-            <div className="notcoin-action-card" onClick={handleNewsChannel} role="button" tabIndex={0} data-action="news-channel">
-              <div className="notcoin-action-content">
-                <div className="notcoin-action-text">
-                  <div className="notcoin-action-title">Новости</div>
-                  <div className="notcoin-action-subtitle">Актуальные обновления</div>
-                </div>
-                <div className="notcoin-decorative-icon"><i className="fas fa-newspaper" /></div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
       </motion.div>
 
       <ServiceSelectorModal

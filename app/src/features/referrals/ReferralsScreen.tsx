@@ -1,15 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { referralApi } from '../../core/api/endpoints';
 import { useToast } from '../../shared/ui/Toast';
 import { useTelegram } from '../../core/telegram/hooks';
 import { copyToClipboard, formatDate } from '../../core/utils';
 import { TgsPlayer, ASSETS_GIFS } from '../../shared/ui/TgsPlayer';
+import { staggerContainer, staggerItem } from '../../shared/motion/variants';
 
 function useReferralLink(): string {
   const tg = useTelegram();
   const userId = tg?.user?.id;
   const bot = 'SuperSummaryBot';
-  // ref_ prefix to distinguish from deep link actions while keeping backward compat
   return userId ? `https://t.me/${bot}/sky?startapp=ref_${userId}` : '';
 }
 
@@ -45,98 +46,156 @@ export function ReferralsScreen() {
 
   return (
     <div className="screen active" id="referralsScreen">
-        <div className="section">
-          <h2 className="section-title">
-            <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8 }}><TgsPlayer src={`${ASSETS_GIFS}/referral-invite.tgs`} fallbackIcon="fas fa-users" width={32} height={32} /></span>
-            Приглашай друзей
-          </h2>
-          <p className="section-subtitle">Получай бонусы за каждого друга</p>
-        </div>
-        <div className="referral-stats-grid">
-          <div className="stat-card"><div className="stat-number">{stats.total_count}</div><div className="stat-label">Приглашено рефералов</div></div>
-          <div className="stat-card"><div className="stat-number">{bonusDays}</div><div className="stat-label">Бонусных дней</div></div>
-          <div className="stat-card"><div className="stat-number">{stats.partners}</div><div className="stat-label">Активных</div></div>
-        </div>
-        <div className="section">
-          <div className="share-actions-grid">
-            <div className="share-action-card" onClick={shareToTelegram} role="button" tabIndex={0}>
-              <div className="share-action-icon"><TgsPlayer src={`${ASSETS_GIFS}/telegram-share.tgs`} fallbackIcon="fab fa-telegram-plane" width={40} height={40} /></div>
-              <div className="share-action-title">Telegram</div>
-              <div className="share-action-subtitle">Нескольким друзьям</div>
+      <motion.div variants={staggerContainer} initial="initial" animate="animate">
+
+        {/* Hero */}
+        <motion.div className="nexus-ref-hero" variants={staggerItem}>
+          <div className="nexus-ref-hero-icon">
+            <TgsPlayer src={`${ASSETS_GIFS}/referral-invite.tgs`} fallbackIcon="fas fa-users" width={36} height={36} />
+          </div>
+          <div className="nexus-ref-title">Приглашай друзей</div>
+          <div className="nexus-ref-subtitle">Получай бонусы за каждого друга</div>
+        </motion.div>
+
+        {/* Stats */}
+        <motion.div className="nexus-stats-row" variants={staggerItem}>
+          <div className="nexus-stat-card">
+            <div className="nexus-stat-value">{stats.total_count}</div>
+            <div className="nexus-stat-label">Приглашено рефералов</div>
+          </div>
+          <div className="nexus-stat-card">
+            <div className="nexus-stat-value" style={{ color: 'var(--nx-cyan)' }}>{bonusDays}</div>
+            <div className="nexus-stat-label">Бонусных дней</div>
+          </div>
+          <div className="nexus-stat-card">
+            <div className="nexus-stat-value" style={{ color: 'var(--nx-green)' }}>{stats.partners}</div>
+            <div className="nexus-stat-label">Активных</div>
+          </div>
+        </motion.div>
+
+        {/* Share Buttons */}
+        <motion.div variants={staggerItem}>
+          <div className="nexus-section-label">Поделиться</div>
+          <div className="nexus-share-grid">
+            <div className="nexus-share-card" onClick={shareToTelegram} role="button" tabIndex={0}>
+              <div className="nexus-share-icon nexus-share-icon--tg">
+                <TgsPlayer src={`${ASSETS_GIFS}/telegram-share.tgs`} fallbackIcon="fab fa-telegram-plane" width={32} height={32} />
+              </div>
+              <div className="nexus-share-title">Telegram</div>
+              <div className="nexus-share-subtitle">Нескольким друзьям</div>
             </div>
-            <div className="share-action-card" onClick={shareToTelegram} role="button" tabIndex={0}>
-              <div className="share-action-icon"><TgsPlayer src={`${ASSETS_GIFS}/story-share.tgs`} fallbackIcon="fas fa-bolt" width={40} height={40} /></div>
-              <div className="share-action-title">Stories</div>
-              <div className="share-action-subtitle">В свою историю</div>
+
+            <div className="nexus-share-card" onClick={shareToTelegram} role="button" tabIndex={0}>
+              <div className="nexus-share-icon nexus-share-icon--stories">
+                <TgsPlayer src={`${ASSETS_GIFS}/story-share.tgs`} fallbackIcon="fas fa-bolt" width={32} height={32} />
+              </div>
+              <div className="nexus-share-title">Stories</div>
+              <div className="nexus-share-subtitle">В свою историю</div>
             </div>
-            <div className="share-action-card" onClick={async () => { if (navigator.share) await navigator.share({ title: 'Dragon VPN', text: 'Присоединяйся!', url: link }); else shareToTelegram(); }} role="button" tabIndex={0}>
-              <div className="share-action-icon"><TgsPlayer src={`${ASSETS_GIFS}/multiple-share.tgs`} fallbackIcon="fas fa-share-alt" width={40} height={40} /></div>
-              <div className="share-action-title">Другие</div>
-              <div className="share-action-subtitle">WhatsApp, VK...</div>
+
+            <div
+              className="nexus-share-card"
+              onClick={async () => {
+                if (navigator.share) await navigator.share({ title: 'Dragon VPN', text: 'Присоединяйся!', url: link });
+                else shareToTelegram();
+              }}
+              role="button"
+              tabIndex={0}
+            >
+              <div className="nexus-share-icon nexus-share-icon--other">
+                <TgsPlayer src={`${ASSETS_GIFS}/multiple-share.tgs`} fallbackIcon="fas fa-share-alt" width={32} height={32} />
+              </div>
+              <div className="nexus-share-title">Другие</div>
+              <div className="nexus-share-subtitle">WhatsApp, VK...</div>
             </div>
           </div>
-        </div>
-        <div className="section">
-          <div className="referral-link-card">
-            <div className="referral-link-header">
+        </motion.div>
+
+        {/* Referral Link */}
+        <motion.div variants={staggerItem}>
+          <div className="nexus-ref-link-card">
+            <div className="nexus-ref-link-icon">
               <i className="fas fa-link" />
-              <div className="referral-link-info">
-                <h4>Твоя ссылка-приглашение</h4>
-                <p>Код: {tg?.user?.id ?? ''}</p>
-              </div>
             </div>
-            <button type="button" className="btn btn-sm btn-primary" onClick={copyLink}><i className="fas fa-copy" /> Копировать</button>
+            <div className="nexus-ref-link-info">
+              <div className="nexus-ref-link-title">Твоя ссылка-приглашение</div>
+              <div className="nexus-ref-link-code">Код: {tg?.user?.id ?? '—'}</div>
+            </div>
+            <button
+              type="button"
+              className="nexus-btn-sm nexus-btn-sm--primary"
+              onClick={copyLink}
+            >
+              <i className="fas fa-copy" /> Копировать
+            </button>
           </div>
-        </div>
-        <div className="section">
-          <h3 className="section-title"><i className="fas fa-users" /> Твои друзья</h3>
+        </motion.div>
+
+        {/* Friends List */}
+        <motion.div variants={staggerItem}>
+          <div className="nexus-section-label">Твои друзья</div>
           {referrals.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">
-                <TgsPlayer src={`${ASSETS_GIFS}/empty-referrals.tgs`} fallbackIcon="fas fa-users" width={80} height={80} />
+            <div className="nexus-empty">
+              <div className="nexus-empty-icon">
+                <TgsPlayer src={`${ASSETS_GIFS}/empty-referrals.tgs`} fallbackIcon="fas fa-users" width={50} height={50} />
               </div>
-              <h3 className="empty-state-title">Пока нет друзей</h3>
-              <p className="empty-state-text">Поделись ссылкой и начни зарабатывать бонусы</p>
+              <h3 className="nexus-empty-title">Пока нет друзей</h3>
+              <p className="nexus-empty-text">Поделись ссылкой и начни зарабатывать бонусы</p>
             </div>
           ) : (
-            <div className="referrals-list">
-              {(referrals as { user?: { name?: string; username?: string; photo_url?: string }; bonus_granted?: boolean; bonus_days?: number; created_at?: string }[]).map((ref, i) => {
+            <div className="nexus-friends-list">
+              {(referrals as {
+                user?: { name?: string; username?: string; photo_url?: string };
+                bonus_granted?: boolean;
+                bonus_days?: number;
+                created_at?: string;
+              }[]).map((ref, i) => {
                 const u = ref.user ?? ref;
                 const name = (u as { name?: string }).name ?? (u as { username?: string }).username ?? 'Пользователь';
                 const photoUrl = (u as { photo_url?: string }).photo_url;
                 const isActive = ref.bonus_granted === true;
                 return (
-                  <div key={i} className="referral-item">
-                    <div className="referral-item-avatar">
+                  <div key={i} className="nexus-friend-card">
+                    <div className="nexus-friend-avatar">
                       {photoUrl ? (
                         <>
                           <img
                             src={photoUrl}
                             alt={name}
-                            className="referral-avatar-img"
+                            className="nexus-friend-avatar-img"
                             onError={e => {
                               (e.currentTarget as HTMLImageElement).style.display = 'none';
                               const fallback = e.currentTarget.nextElementSibling as HTMLElement | null;
                               if (fallback) fallback.style.display = 'flex';
                             }}
                           />
-                          <i className={`referral-avatar-fallback fas ${isActive ? 'fa-crown text-green' : 'fa-user'}`} />
+                          <div className="nexus-friend-avatar-fallback">
+                            <i className={`fas ${isActive ? 'fa-crown' : 'fa-user'}`}
+                               style={{ color: isActive ? 'var(--nx-amber)' : 'var(--nx-violet)' }} />
+                          </div>
                         </>
                       ) : (
-                        <i className={`fas ${isActive ? 'fa-crown text-green' : 'fa-user-plus'}`} />
+                        <i className={`fas ${isActive ? 'fa-crown' : 'fa-user-plus'}`}
+                           style={{ color: isActive ? 'var(--nx-amber)' : 'var(--nx-violet)' }} />
                       )}
                     </div>
-                    <div className="referral-item-info">
-                      <div className="referral-item-name">{name}</div>
-                      <div className={`referral-item-status ${isActive ? 'text-green' : 'text-secondary'}`}>{isActive ? `+${ref.bonus_days ?? 0} дн. бонус` : 'Приглашен'}</div>
+                    <div className="nexus-friend-info">
+                      <div className="nexus-friend-name">{name}</div>
+                      <div className={`nexus-friend-status nexus-friend-status--${isActive ? 'active' : 'pending'}`}>
+                        {isActive ? `+${ref.bonus_days ?? 0} дн. бонус` : 'Приглашён'}
+                      </div>
                     </div>
-                    <div className="referral-item-date">{ref.created_at ? formatDate(ref.created_at, 'relative') : ''}</div>
+                    <div className="nexus-friend-date">
+                      {ref.created_at ? formatDate(ref.created_at, 'relative') : ''}
+                    </div>
                   </div>
                 );
               })}
             </div>
           )}
-        </div>
+        </motion.div>
+
+      </motion.div>
     </div>
   );
 }

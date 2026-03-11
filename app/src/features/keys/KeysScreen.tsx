@@ -27,17 +27,14 @@ function getCountryFlag(name: string): string {
 const MAX_USERS = 100;
 
 function getLoadColor(percent: number): string {
-  // Smooth gradient: green (0%) -> yellow (50%) -> red (100%)
   const p = Math.min(100, Math.max(0, percent)) / 100;
   let r: number, g: number, b: number;
   if (p < 0.5) {
-    // green to yellow
     const t = p * 2;
     r = Math.round(73 + (255 - 73) * t);
     g = Math.round(190 + (175 - 190) * t);
     b = Math.round(77 + (55 - 77) * t);
   } else {
-    // yellow to red
     const t = (p - 0.5) * 2;
     r = Math.round(255 + (255 - 255) * t);
     g = Math.round(175 - 175 * t);
@@ -54,10 +51,10 @@ function getLoadLabel(percent: number): string {
 }
 
 function getStatusDotClass(percent: number): string {
-  if (percent <= 20) return 'status-free';
-  if (percent <= 50) return 'status-moderate';
-  if (percent <= 80) return 'status-loaded';
-  return 'status-overloaded';
+  if (percent <= 20) return 'nx-dot-free';
+  if (percent <= 50) return 'nx-dot-moderate';
+  if (percent <= 80) return 'nx-dot-loaded';
+  return 'nx-dot-overloaded';
 }
 
 function parseKeyName(key: string): string {
@@ -77,7 +74,7 @@ export function KeysScreen() {
   const { navigate } = useAppNavigate();
   const toast = useToast();
   const tg = useTelegram();
-  const [activeTab, setActiveTab] = useState<'servers' | 'keys'>('servers');
+  const [activeTab, setActiveTab] = useState<'servers' | 'keys'>('keys');
 
   const { data: user } = useQuery({
     queryKey: ['user'],
@@ -148,7 +145,7 @@ export function KeysScreen() {
   const { data: serversRes } = useQuery({
     queryKey: ['servers'],
     queryFn: () => serversApi.list(),
-    refetchInterval: 30000, // auto-refresh every 30s
+    refetchInterval: 30000,
   });
   const servers: ServerOnlineItem[] = (serversRes as { servers?: ServerOnlineItem[] })?.servers ?? [];
 
@@ -186,87 +183,108 @@ export function KeysScreen() {
   return (
     <div className="screen active" id="keysScreen">
       <motion.div variants={staggerContainer} initial="initial" animate="animate">
-        <motion.div className="section" variants={staggerItem}>
-          <h2 className="section-title">
-            <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8 }}><TgsPlayer src={`${ASSETS_GIFS}/vpn-access.tgs`} fallbackIcon="fas fa-shield-alt" width={32} height={32} /></span>
-            VPN Доступ
-          </h2>
-        </motion.div>
-        <motion.div className="tabs" variants={staggerItem}>
-          <div className="tabs-nav">
-            <button type="button" className={`tab-button ${activeTab === 'servers' ? 'active' : ''}`} onClick={() => setActiveTab('servers')}>
-              <i className="fas fa-server" /> Сервера
-            </button>
-            <button type="button" className={`tab-button ${activeTab === 'keys' ? 'active' : ''}`} onClick={() => setActiveTab('keys')}>
-              <i className="fas fa-key" /> Ключи
-            </button>
-          </div>
+
+        {/* Heading */}
+        <motion.div className="nexus-screen-heading" variants={staggerItem}>
+          <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <TgsPlayer src={`${ASSETS_GIFS}/vpn-access.tgs`} fallbackIcon="fas fa-shield-alt" width={28} height={28} />
+          </span>
+          <h2>VPN Доступ</h2>
         </motion.div>
 
+        {/* Profile card — above tabs when active */}
+        {hasActive && profileUrl && (
+          <motion.div variants={staggerItem}>
+            <div className="nexus-profile-card">
+              <div className="nexus-profile-header">
+                <span className="nexus-profile-label">Основной профиль VPN</span>
+                <span className="nexus-profile-status">
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--nx-green)', display: 'inline-block' }} />
+                  Активен
+                </span>
+              </div>
+              <div className="nexus-profile-url">
+                {profileUrl.length > 55 ? profileUrl.slice(0, 50) + '…' : profileUrl}
+              </div>
+              <div className="nexus-profile-actions">
+                <button type="button" className="nexus-btn-sm nexus-btn-sm--secondary" onClick={() => copyProfile(profileUrl)}>
+                  <i className="fas fa-copy" /> Скопировать
+                </button>
+                <button type="button" className="nexus-btn-sm nexus-btn-sm--primary" onClick={() => installProfile(profileUrl)}>
+                  <i className="fas fa-download" /> Установить
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Pill Tab Switcher */}
+        <motion.div className="nexus-pill-tabs" variants={staggerItem}>
+          <button
+            type="button"
+            className={`nexus-pill-tab${activeTab === 'servers' ? ' active' : ''}`}
+            onClick={() => setActiveTab('servers')}
+          >
+            <i className="fas fa-server" /> Сервера
+          </button>
+          <button
+            type="button"
+            className={`nexus-pill-tab${activeTab === 'keys' ? ' active' : ''}`}
+            onClick={() => setActiveTab('keys')}
+          >
+            <i className="fas fa-key" /> Ключи
+          </button>
+        </motion.div>
+
+        {/* ── Servers Tab ── */}
         {activeTab === 'servers' && (
-          <motion.div className="tab-content-container" variants={staggerItem} initial={false}>
+          <motion.div variants={staggerItem} initial={false}>
             {servers.length === 0 ? (
-              <div className="empty-state-card">
-                <div className="empty-state-content">
-                  <div className="empty-state-icon-gif">
-                    <TgsPlayer src={`${ASSETS_GIFS}/empty-profiles.tgs`} fallbackIcon="fas fa-server" width={80} height={80} />
-                  </div>
-                  <h3 className="empty-state-title">Серверы временно недоступны</h3>
+              <div className="nexus-empty">
+                <div className="nexus-empty-icon">
+                  <TgsPlayer src={`${ASSETS_GIFS}/empty-profiles.tgs`} fallbackIcon="fas fa-server" width={50} height={50} />
                 </div>
+                <h3 className="nexus-empty-title">Серверы временно недоступны</h3>
               </div>
             ) : (
-              <div className="servers-list">
+              <div className="nexus-server-list">
                 {servers.map((server, i) => {
                   const online = server.online ?? 0;
                   const percent = Math.min(100, Math.round((online / MAX_USERS) * 100));
                   const barColor = getLoadColor(percent);
-                  const glowColor = barColor;
                   const flag = getCountryFlag(server.server_name ?? '');
                   const label = getLoadLabel(percent);
                   const dotClass = getStatusDotClass(percent);
                   return (
-                    <div key={server.server_id ?? i} className="server-card">
-                      <div className="server-card-content">
-                        <div className="server-card-header">
-                          <div className="server-flag-large">{flag}</div>
-                          <div className="server-title-section">
-                            <h3 className="server-card-name">{server.server_name ?? 'VPN'}</h3>
-                            <div className="server-status-row">
-                              <span className={`server-status-dot ${dotClass}`} />
-                              <span className="server-status-label">{label}</span>
-                            </div>
-                          </div>
-                          <div className="server-percent-badge" style={{ '--load-color': barColor } as React.CSSProperties}>
-                            <span className="server-percent-value">{percent}</span>
-                            <span className="server-percent-sign">%</span>
+                    <div key={server.server_id ?? i} className="nexus-server-card">
+                      <div className="nexus-server-header">
+                        <span className="nexus-server-flag">{flag}</span>
+                        <div className="nexus-server-info">
+                          <div className="nexus-server-name">{server.server_name ?? 'VPN'}</div>
+                          <div className="nexus-server-status">
+                            <span className={`nexus-server-status-dot ${dotClass}`} />
+                            <span style={{ color: barColor }}>{label}</span>
                           </div>
                         </div>
-                        <div className="server-card-body">
-                          <div className="server-load-info">
-                            <div className="server-load-header">
-                              <span className="server-load-text">Онлайн: <strong>{online}</strong> из {MAX_USERS}</span>
-                            </div>
-                            <div className="server-load-bar-container">
-                              <div className="server-load-bar">
-                                <div
-                                  className="server-load-fill-gradient"
-                                  style={{
-                                    width: `${percent}%`,
-                                    background: `linear-gradient(90deg, #49be6a, ${barColor})`,
-                                    boxShadow: `0 0 12px ${glowColor}40, 0 0 4px ${glowColor}60`,
-                                  }}
-                                />
-                              </div>
-                            </div>
-                            <div className="server-load-scale">
-                              <span>0</span>
-                              <span>25</span>
-                              <span>50</span>
-                              <span>75</span>
-                              <span>100</span>
-                            </div>
-                          </div>
+                        <div className="nexus-server-percent" style={{ color: barColor }}>
+                          {percent}<span style={{ fontSize: 12, opacity: 0.7 }}>%</span>
                         </div>
+                      </div>
+                      <div className="nexus-load-bar-wrap">
+                        <div
+                          className="nexus-load-bar"
+                          style={{
+                            width: `${percent}%`,
+                            background: `linear-gradient(90deg, #49be6a, ${barColor})`,
+                            boxShadow: `0 0 8px ${barColor}40`,
+                          }}
+                        />
+                      </div>
+                      <div className="nexus-server-meta">
+                        <span>Онлайн: {online} / {MAX_USERS}</span>
+                        <span style={{ display: 'flex', gap: 8 }}>
+                          <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+                        </span>
                       </div>
                     </div>
                   );
@@ -276,58 +294,42 @@ export function KeysScreen() {
           </motion.div>
         )}
 
+        {/* ── Keys Tab ── */}
         {activeTab === 'keys' && (
-          <motion.div className="tab-content-container" variants={staggerItem} initial={false}>
+          <motion.div variants={staggerItem} initial={false}>
             {!hasActive ? (
-              <div className="empty-state-card">
-                <div className="empty-state-content">
-                  <div className="empty-state-icon-gif">
-                    <TgsPlayer src={`${ASSETS_GIFS}/empty-profiles.tgs`} fallbackIcon="fas fa-key" width={80} height={80} />
-                  </div>
-                  <h3 className="empty-state-title">Доступно с подпиской</h3>
-                  <p className="empty-state-text">Оформите подписку чтобы получить VPN ключи</p>
-                  <div className="empty-state-actions">
-                    <button type="button" className="btn-subscription-purchase" onClick={() => navigate('subscription')}>
-                      <div className="btn-purchase-bg" />
-                      <div className="btn-purchase-content">
-                        <i className="fas fa-bolt" />
-                        <span>Оформить подписку</span>
-                      </div>
-                    </button>
-                  </div>
+              <div className="nexus-empty">
+                <div className="nexus-empty-icon">
+                  <TgsPlayer src={`${ASSETS_GIFS}/empty-profiles.tgs`} fallbackIcon="fas fa-key" width={50} height={50} />
+                </div>
+                <h3 className="nexus-empty-title">Доступно с подпиской</h3>
+                <p className="nexus-empty-text">Оформите подписку чтобы получить VPN ключи</p>
+                <div style={{ marginTop: 12 }}>
+                  <button
+                    type="button"
+                    className="nexus-purchase-btn"
+                    onClick={() => navigate('subscription')}
+                  >
+                    <i className="fas fa-bolt" />
+                    <span>Оформить подписку</span>
+                  </button>
                 </div>
               </div>
             ) : totalKeys === 0 ? (
-              <div className="empty-state-card">
-                <div className="empty-state-content">
-                  <div className="empty-state-icon-gif">
-                    <TgsPlayer src={`${ASSETS_GIFS}/empty-profiles.tgs`} fallbackIcon="fas fa-key" width={80} height={80} />
-                  </div>
-                  <h3 className="empty-state-title">Нет ключей</h3>
-                  <p className="empty-state-text">Ключи появятся после активации подписки</p>
+              <div className="nexus-empty">
+                <div className="nexus-empty-icon">
+                  <TgsPlayer src={`${ASSETS_GIFS}/empty-profiles.tgs`} fallbackIcon="fas fa-key" width={50} height={50} />
                 </div>
+                <h3 className="nexus-empty-title">Нет ключей</h3>
+                <p className="nexus-empty-text">Ключи появятся после активации подписки</p>
               </div>
             ) : (
-              <div className="keys-content">
-                {profileUrl && (
-                  <div className="main-profile-card">
-                    <div className="main-profile-header">
-                      <h4>Основной профиль VPN</h4>
-                      <span className="profile-status active">Активен</span>
-                    </div>
-                    <div className="main-profile-content">
-                      <div className="profile-url-display"><code>{profileUrl.length > 50 ? profileUrl.slice(0, 45) + '...' : profileUrl}</code></div>
-                      <div className="profile-actions">
-                        <button type="button" className="btn btn-sm btn-secondary" onClick={() => copyProfile(profileUrl)}><i className="fas fa-copy" /> Скопировать</button>
-                        <button type="button" className="btn btn-sm btn-primary" onClick={() => installProfile(profileUrl)}><i className="fas fa-download" /> Установить</button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+              <div>
+                {/* Key groups */}
                 {(keyGroups ?? []).map((group) => (
-                  <div key={group.subscriptionId} className="keys-subscription-group">
+                  <div key={group.subscriptionId} className="nexus-key-group">
                     {multipleSubscriptions && (
-                      <div className="keys-group-header">
+                      <div className="nexus-key-group-header">
                         <i className="fas fa-shield-alt" />
                         <span>{group.subscriptionName}</span>
                       </div>
@@ -335,12 +337,28 @@ export function KeysScreen() {
                     {group.keys.map((item, i) => {
                       const flag = getCountryFlag(item.serverName);
                       return (
-                        <div key={`key-${group.subscriptionId}-${i}`} className="key-row" onClick={() => copyKey(item.key)} role="button" tabIndex={0}>
-                          <div className="key-info">
-                            <div className="key-name"><span className="server-flag">{flag}</span> <span className="key-label">{item.keyName}</span></div>
-                            <div className="key-preview">{item.key.length > 60 ? item.key.slice(0, 50) + '…' : item.key}</div>
+                        <div
+                          key={`key-${group.subscriptionId}-${i}`}
+                          className="nexus-key-card"
+                          onClick={() => copyKey(item.key)}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          <span className="nexus-key-flag">{flag}</span>
+                          <div className="nexus-key-info">
+                            <div className="nexus-key-name">{item.keyName}</div>
+                            <div className="nexus-key-preview">
+                              {item.key.length > 55 ? item.key.slice(0, 48) + '…' : item.key}
+                            </div>
                           </div>
-                          <button type="button" className="copy-btn key-copy-btn" onClick={e => { e.stopPropagation(); copyKey(item.key); }} title="Скопировать ключ"><i className="fas fa-copy" /></button>
+                          <button
+                            type="button"
+                            className="nexus-copy-btn"
+                            onClick={e => { e.stopPropagation(); copyKey(item.key); }}
+                            title="Скопировать ключ"
+                          >
+                            <i className="fas fa-copy" />
+                          </button>
                         </div>
                       );
                     })}
@@ -350,6 +368,7 @@ export function KeysScreen() {
             )}
           </motion.div>
         )}
+
       </motion.div>
     </div>
   );
