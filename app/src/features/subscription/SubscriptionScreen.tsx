@@ -391,10 +391,17 @@ export function SubscriptionScreen() {
         {/* ── Top Bar — Clean & Minimal ── */}
         <motion.div className="nexus-topbar" variants={staggerItem}>
           <div className="nexus-topbar-left">
-            <span className="nexus-brand-name">
-              <i className="fas fa-dragon" style={{ color: 'var(--nx-cyan)', marginRight: 6 }} />
-              SkyDragon
-            </span>
+            <div className="nexus-logo">
+              <div className="nexus-logo-mark">
+                <svg viewBox="0 0 20 20" width="18" height="18" fill="none">
+                  <path d="M10 2L13.5 7H17L14 10.5L15.5 15L10 12L4.5 15L6 10.5L3 7H6.5L10 2Z" fill="white" />
+                  <circle cx="10" cy="10" r="2.5" fill="rgba(255,255,255,0.3)" />
+                </svg>
+              </div>
+              <div className="nexus-logo-text">
+                <span className="nexus-logo-sky">Sky</span><span className="nexus-logo-dragon">Dragon</span>
+              </div>
+            </div>
           </div>
           <div className="nexus-topbar-right">
             <StoriesButton />
@@ -511,51 +518,79 @@ export function SubscriptionScreen() {
           )}
         </motion.div>
 
-        {/* ── Quick Action Chips — horizontal scroll ── */}
+        {/* ── Quick Actions — 2×3 visible grid, no scroll ── */}
         <motion.div variants={staggerItem}>
-          <div className="nexus-chips-row">
-            <button type="button" className="nexus-chip" onClick={handleInstructions} data-action="instructions">
-              <i className="fas fa-book-open" /><span>Инструкции</span>
-            </button>
-            <button type="button" className="nexus-chip" onClick={handleSupport} data-action="support">
-              <i className="fas fa-comment-dots" /><span>Поддержка</span>
-            </button>
-            <button type="button" className="nexus-chip" onClick={handleBuy} data-action="buy">
-              <i className="fas fa-plus" /><span>Купить</span>
-            </button>
-            <button type="button" className="nexus-chip" onClick={handleGift} data-action="gift">
-              <i className="fas fa-gift" /><span>Подарить</span>
-            </button>
-            <button type="button" className="nexus-chip" onClick={handleActivateCode} data-action="activate-code">
-              <i className="fas fa-key" /><span>Активировать</span>
-            </button>
-            <button type="button" className="nexus-chip" onClick={handleNewsChannel} data-action="news-channel">
-              <i className="fas fa-newspaper" /><span>Канал</span>
-            </button>
-          </div>
-        </motion.div>
+          <div className="nexus-section-label">Быстрые действия</div>
+          <div className="nexus-actions-grid">
 
-        {/* ── Daily Bonus Card — only when can_claim ── */}
-        {canClaimBonus && (
-          <motion.div variants={staggerItem}>
-            <div
-              className="nexus-bonus-card"
+            {/* Bonus — always visible, glows when claimable */}
+            <button
+              type="button"
+              className={`nexus-action-card nexus-action-card--amber${canClaimBonus ? ' nexus-action-card--glow' : ''}`}
               onClick={() => { tg?.haptic.light(); openDailyBonus(); }}
-              role="button"
-              tabIndex={0}
               data-action="show-daily-bonus-modal"
             >
-              <div className="nexus-bonus-card-icon">
-                <TgsPlayer src={`${ASSETS_GIFS}/gift-animate.tgs`} fallbackIcon="fas fa-gift" width={36} height={36} />
+              <div className="nexus-action-card-icon">
+                <TgsPlayer src={`${ASSETS_GIFS}/gift-animate.tgs`} fallbackIcon="fas fa-gift" width={28} height={28} />
               </div>
-              <div className="nexus-bonus-card-text">
-                <div className="nexus-bonus-card-title">Ежедневный бонус</div>
-                <div className="nexus-bonus-card-sub">Доступен к получению!</div>
-              </div>
-              <i className="fas fa-chevron-right nexus-bonus-card-arrow" />
-            </div>
-          </motion.div>
-        )}
+              <span className="nexus-action-card-label">
+                {canClaimBonus ? 'Бонус 🔥' : 'Бонус'}
+              </span>
+              {canClaimBonus && <span className="nexus-action-card-badge">!</span>}
+            </button>
+
+            <button
+              type="button"
+              className="nexus-action-card nexus-action-card--blue"
+              onClick={handleInstructions}
+              data-action="instructions"
+            >
+              <div className="nexus-action-card-icon"><i className="fas fa-book-open" /></div>
+              <span className="nexus-action-card-label">Инструкции</span>
+            </button>
+
+            <button
+              type="button"
+              className="nexus-action-card nexus-action-card--violet"
+              onClick={handleSupport}
+              data-action="support"
+            >
+              <div className="nexus-action-card-icon"><i className="fas fa-comment-dots" /></div>
+              <span className="nexus-action-card-label">Поддержка</span>
+            </button>
+
+            <button
+              type="button"
+              className="nexus-action-card nexus-action-card--green"
+              onClick={handleBuy}
+              data-action="buy"
+            >
+              <div className="nexus-action-card-icon"><i className="fas fa-plus" /></div>
+              <span className="nexus-action-card-label">Купить</span>
+            </button>
+
+            <button
+              type="button"
+              className="nexus-action-card nexus-action-card--pink"
+              onClick={handleGift}
+              data-action="gift"
+            >
+              <div className="nexus-action-card-icon"><i className="fas fa-gift" /></div>
+              <span className="nexus-action-card-label">Подарить</span>
+            </button>
+
+            <button
+              type="button"
+              className="nexus-action-card nexus-action-card--cyan"
+              onClick={handleActivateCode}
+              data-action="activate-code"
+            >
+              <div className="nexus-action-card-icon"><i className="fas fa-key" /></div>
+              <span className="nexus-action-card-label">Активировать</span>
+            </button>
+
+          </div>
+        </motion.div>
 
         {/* ── Subscription Details — below fold ── */}
         {subscriptions.length === 1 && (() => {

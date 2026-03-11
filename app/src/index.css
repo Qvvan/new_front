@@ -1725,7 +1725,56 @@ button:active:not(:disabled),
    UX REDESIGN — New Components
    ================================================ */
 
-/* Brand name in topbar */
+/* === Logo mark === */
+.nexus-logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+}
+
+.nexus-logo-mark {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #00d4ff 0%, #a855f7 100%);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow:
+    0 2px 12px rgba(0, 212, 255, 0.4),
+    0 0 0 1px rgba(255,255,255,0.1) inset;
+  position: relative;
+  overflow: hidden;
+}
+.nexus-logo-mark::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+  border-radius: inherit;
+}
+
+.nexus-logo-text {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+.nexus-logo-sky {
+  color: var(--text-primary);
+  font-weight: 300;
+}
+.nexus-logo-dragon {
+  background: linear-gradient(135deg, #00d4ff 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+
+/* Keep old brand name class for compat */
 .nexus-brand-name {
   font-family: 'Rajdhani', sans-serif;
   font-size: 18px;
@@ -1797,7 +1846,7 @@ button:active:not(:disabled),
   margin-bottom: 16px;
 }
 
-/* Quick Action Chips — horizontal scroll row */
+/* Quick Action Chips — kept for backward compat but replaced by grid */
 .nexus-chips-row {
   display: flex;
   gap: 8px;
@@ -1833,6 +1882,155 @@ button:active:not(:disabled),
   color: var(--nx-cyan);
 }
 .nexus-chip .fas { font-size: 12px; }
+
+/* === Quick Actions Grid — 2×3, all visible ================== */
+.nexus-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.nexus-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 18px 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease, background 0.18s, border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.nexus-action-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(255,255,255,0.025) 0%, transparent 60%);
+  pointer-events: none;
+}
+.nexus-action-card:active {
+  transform: scale(0.95);
+}
+
+.nexus-action-card-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  transition: transform 0.2s ease;
+}
+.nexus-action-card:active .nexus-action-card-icon {
+  transform: scale(0.9);
+}
+
+.nexus-action-card-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+/* Badge (!) on card corner */
+.nexus-action-card-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  min-width: 18px;
+  height: 18px;
+  background: var(--nx-amber);
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 1px 6px rgba(245, 158, 11, 0.5);
+}
+
+/* Color variants — icon bg + card border tint on tap */
+.nexus-action-card--amber .nexus-action-card-icon {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--nx-amber);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.2) inset;
+}
+.nexus-action-card--amber:active {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.nexus-action-card--blue .nexus-action-card-icon {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2) inset;
+}
+.nexus-action-card--blue:active {
+  background: rgba(59, 130, 246, 0.06);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.nexus-action-card--violet .nexus-action-card-icon {
+  background: rgba(168, 85, 247, 0.15);
+  color: var(--nx-violet);
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.2) inset;
+}
+.nexus-action-card--violet:active {
+  background: rgba(168, 85, 247, 0.06);
+  border-color: rgba(168, 85, 247, 0.25);
+}
+
+.nexus-action-card--green .nexus-action-card-icon {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--nx-green);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2) inset;
+}
+.nexus-action-card--green:active {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.nexus-action-card--pink .nexus-action-card-icon {
+  background: rgba(236, 72, 153, 0.15);
+  color: #f472b6;
+  box-shadow: 0 0 0 1px rgba(236, 72, 153, 0.2) inset;
+}
+.nexus-action-card--pink:active {
+  background: rgba(236, 72, 153, 0.06);
+  border-color: rgba(236, 72, 153, 0.25);
+}
+
+.nexus-action-card--cyan .nexus-action-card-icon {
+  background: rgba(0, 212, 255, 0.15);
+  color: var(--nx-cyan);
+  box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.2) inset;
+}
+.nexus-action-card--cyan:active {
+  background: rgba(0, 212, 255, 0.06);
+  border-color: rgba(0, 212, 255, 0.25);
+}
+
+/* Pulsing glow when bonus is claimable */
+.nexus-action-card--glow {
+  border-color: rgba(245, 158, 11, 0.3);
+  animation: nexus-card-glow-pulse 2.2s ease-in-out infinite;
+}
+@keyframes nexus-card-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+  50% { box-shadow: 0 0 16px rgba(245, 158, 11, 0.22), 0 0 0 2px rgba(245,158,11,0.08); }
+}
 
 /* Daily Bonus Card — appears only when can_claim */
 .nexus-bonus-card {
