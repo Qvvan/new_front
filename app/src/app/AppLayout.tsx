@@ -60,7 +60,6 @@ export function AppLayout({ defaultScreen }: { defaultScreen?: ScreenName }) {
     currencyOpen,
     closeCurrency,
     historyOpen,
-    openHistory,
     closeHistory,
   } = useModalsStore();
 
