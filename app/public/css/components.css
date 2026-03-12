@@ -4867,7 +4867,7 @@ body.page-hidden .loadShine {
 /* Адаптивность */
 @media (max-width: 400px) {
     .notcoin-actions-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
         gap: var(--spacing-sm);
     }
 

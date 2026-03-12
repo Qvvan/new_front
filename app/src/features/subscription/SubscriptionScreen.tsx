@@ -517,10 +517,10 @@ export function SubscriptionScreen() {
 
         <motion.div className="subscription-bottom-actions" variants={staggerItem}>
           <button type="button" className="btn btn-primary btn-action-primary" onClick={handleBuy} data-action="buy">
-            <i className="fas fa-plus" /> Новая подписка
+            <i className="fas fa-plus" /> Купить
           </button>
           <button type="button" className="btn btn-secondary btn-action-secondary" onClick={handleGift} data-action="gift">
-            <i className="fas fa-gift" /> Подарить подписку
+            <i className="fas fa-gift" /> Подарить
           </button>
         </motion.div>
 
@@ -533,8 +533,7 @@ export function SubscriptionScreen() {
             <div className="notcoin-action-card" onClick={handleInstructions} role="button" tabIndex={0} data-action="instructions">
               <div className="notcoin-action-content">
                 <div className="notcoin-action-text">
-                  <div className="notcoin-action-title">Инструкции</div>
-                  <div className="notcoin-action-subtitle">Как настроить VPN</div>
+                  <div className="notcoin-action-title">Инструкция</div>
                 </div>
                 <div className="notcoin-decorative-icon"><i className="fas fa-book-open" /></div>
               </div>
@@ -543,7 +542,6 @@ export function SubscriptionScreen() {
               <div className="notcoin-action-content">
                 <div className="notcoin-action-text">
                   <div className="notcoin-action-title">Поддержка</div>
-                  <div className="notcoin-action-subtitle">Помощь 24/7</div>
                 </div>
                 <div className="notcoin-decorative-icon"><i className="fas fa-comment-dots" /></div>
               </div>
@@ -551,8 +549,7 @@ export function SubscriptionScreen() {
             <div className="notcoin-action-card" onClick={handleActivateCode} role="button" tabIndex={0} data-action="activate-code">
               <div className="notcoin-action-content">
                 <div className="notcoin-action-text">
-                  <div className="notcoin-action-title">Активировать код</div>
-                  <div className="notcoin-action-subtitle">Введите код подарка</div>
+                  <div className="notcoin-action-title">Код</div>
                 </div>
                 <div className="notcoin-decorative-icon"><i className="fas fa-key" /></div>
               </div>
@@ -561,7 +558,6 @@ export function SubscriptionScreen() {
               <div className="notcoin-action-content">
                 <div className="notcoin-action-text">
                   <div className="notcoin-action-title">Новости</div>
-                  <div className="notcoin-action-subtitle">Актуальные обновления</div>
                 </div>
                 <div className="notcoin-decorative-icon"><i className="fas fa-newspaper" /></div>
               </div>

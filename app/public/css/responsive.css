@@ -693,7 +693,8 @@
     .app-container {
         /* Учитываем safe area инсеты */
         padding-top: max(0px, env(safe-area-inset-top));
-        padding-bottom: max(var(--nav-height), env(safe-area-inset-bottom));
+        /* Вниз добавляем только системный вырез, без дополнительной черной полосы над навигацией */
+        padding-bottom: env(safe-area-inset-bottom);
         padding-left: env(safe-area-inset-left);
         padding-right: env(safe-area-inset-right);
     }
