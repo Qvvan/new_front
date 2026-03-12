@@ -13,20 +13,24 @@
     padding: 0;
     margin: 0;
     border: none;
-    border-top: none;
     outline: none;
-    box-shadow: none;
-    /* Убираем любые возможные зазоры */
     box-sizing: border-box;
+    /* Subtle top separator — prevents any black-gap rendering artifact */
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    /* Extend background upward to close any subpixel gap */
+    box-shadow: 0 -1px 0 var(--nav-bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .nav-grid {
     width: 100%;
+    height: 100%;
     display: flex;
     justify-content: space-around;
     align-items: center;
-    /* Ровная навигация: равные отступы сверху и снизу, safe-area уже учтён в app-container */
-    padding: 4px var(--spacing-md);
+    padding: 0 var(--spacing-md);
     gap: var(--spacing-sm);
 }
 
@@ -35,14 +39,15 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: 999px;
+    gap: 3px;
+    padding: 6px var(--spacing-sm);
+    border-radius: var(--border-radius-lg);
     cursor: pointer;
     position: relative;
     flex: 1;
-    max-width: 84px;
+    max-width: 90px;
     min-width: 56px;
+    height: 56px;
     transition: all var(--transition-normal);
     background: transparent;
 }
@@ -69,28 +74,41 @@
 }
 
 .nav-icon {
-    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
     color: var(--text-muted);
     transition: all var(--transition-normal);
     position: relative;
     z-index: 1;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.nav-icon svg {
+    width: 22px;
+    height: 22px;
+    transition: all var(--transition-normal);
 }
 
 .nav-item.active .nav-icon {
     color: var(--accent-white);
-    transform: scale(1.15);
-    filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.2));
+    filter: drop-shadow(0 1px 6px rgba(255, 255, 255, 0.25));
+}
+
+.nav-item.active .nav-icon svg {
+    transform: scale(1.1);
 }
 
 .nav-label {
-    font-size: var(--font-size-xs);
+    font-size: 10px;
     color: var(--text-muted);
     font-weight: var(--font-weight-semibold);
     transition: all var(--transition-normal);
     position: relative;
     z-index: 1;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.3px;
+    line-height: 1;
 }
 
 .nav-item.active .nav-label {
@@ -686,15 +704,15 @@ body.page-hidden [class*="infinite"] {
 .subscriptions-compact {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-xl);
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
 }
 
 .subscription-compact {
     background: var(--bg-secondary);
     border: 1px solid var(--border-dark);
     border-radius: var(--border-radius-lg);
-    padding: var(--spacing-lg);
+    padding: 10px var(--spacing-md);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -718,24 +736,24 @@ body.page-hidden [class*="infinite"] {
 }
 
 .subscription-compact-icon {
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     background: var(--gradient-card);
     border-radius: var(--border-radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-base);
 }
 
 .subscription-compact-details h4 {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: 2px;
 }
 
 .subscription-compact-details p {
-    font-size: var(--font-size-sm);
+    font-size: 12px;
     color: var(--text-secondary);
 }
 
@@ -744,14 +762,15 @@ body.page-hidden [class*="infinite"] {
 }
 
 .subscription-compact-days {
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-base);
     font-weight: var(--font-weight-bold);
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: 2px;
 }
 
 .subscription-compact-label {
-    font-size: var(--font-size-xs);
+    font-size: 10px;
     color: var(--text-secondary);
+    white-space: nowrap;
 }
 
 @media (min-width: 768px) {
