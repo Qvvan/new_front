@@ -107,7 +107,7 @@
 
 /* Subscription Card Components */
 .subscription-card {
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
     position: relative;
     overflow: hidden;
     border-radius: var(--border-radius-xl);
@@ -117,7 +117,7 @@
         rgba(255, 255, 255, 0.03) 45%,
         rgba(0, 0, 0, 0.02) 100%
     );
-    box-shadow: var(--shadow-card);
+    box-shadow: var(--shadow-sm);
 }
 
 .subscription-card::before {
@@ -4715,7 +4715,7 @@ body.page-hidden .loadShine {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-md);
-    margin-bottom: var(--spacing-2xl);
+    margin-bottom: var(--spacing-xl);
 }
 
 .notcoin-action-card {
@@ -4724,13 +4724,13 @@ body.page-hidden .loadShine {
         rgba(255, 255, 255, 0.03) 100%
     );
     border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 20px;
-    padding: var(--spacing-lg) var(--spacing-xl);
+    border-radius: 16px;
+    padding: var(--spacing-md) var(--spacing-md);
     cursor: pointer;
     transition: all var(--transition-normal);
     position: relative;
     overflow: hidden;
-    min-height: 84px;
+    min-height: 64px;
     box-shadow: 
         0 4px 15px rgba(0, 0, 0, 0.2),
         inset 0 0 1px rgba(255, 255, 255, 0.1);
@@ -4938,8 +4938,8 @@ body.page-hidden .loadShine {
 .subscription-bottom-actions {
     display: flex;
     gap: var(--spacing-md);
-    margin-top: var(--spacing-xl);
-    padding: var(--spacing-lg) 0;
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md) 0 var(--spacing-lg);
 }
 
 .btn-action-primary,
@@ -5642,9 +5642,9 @@ button:disabled:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-md) var(--spacing-lg);
-    margin-bottom: var(--spacing-md);
-    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    gap: var(--spacing-sm);
 }
 
 .subscription-top-bar-right {

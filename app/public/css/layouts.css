@@ -25,8 +25,9 @@
     display: flex;
     justify-content: space-around;
     align-items: center;
-    padding: var(--spacing-xs) var(--spacing-sm) env(safe-area-inset-bottom, var(--spacing-md)); /* ← Учитываем safe area */
-    gap: var(--spacing-xs);
+    /* Ровная навигация: равные отступы сверху и снизу, safe-area уже учтён в app-container */
+    padding: 4px var(--spacing-md);
+    gap: var(--spacing-sm);
 }
 
 .nav-item {
@@ -34,14 +35,14 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-radius: var(--border-radius-lg);
+    gap: 2px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: 999px;
     cursor: pointer;
     position: relative;
     flex: 1;
-    max-width: 80px;
-    min-width: 60px;
+    max-width: 84px;
+    min-width: 56px;
     transition: all var(--transition-normal);
     background: transparent;
 }
