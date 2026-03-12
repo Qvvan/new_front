@@ -1,55 +1,65 @@
-/* CSS Custom Properties (Variables) */
-:root {
-    /* === NEXUS Color System — SkyDragon VPN === */
-    --bg-primary: #060b14;
-    --bg-secondary: #0d1524;
-    --bg-tertiary: #132035;
-    --bg-accent: #1a2d45;
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #475569;
-    --accent-white: #e2e8f0;
-    --accent-red: #ef4444;
-    --accent-green: #10b981;
-    --accent-blue: #00d4ff;
-    --accent-orange: #f59e0b;
+/* ================================================
+   DRAGON'S SANCTUM — SkyDragon VPN Design System
+   Eastern mystical aesthetic: obsidian + imperial gold
+   + dragon crimson + jade green
+   ================================================ */
 
-    /* Nexus accent palette */
-    --nx-cyan: #00d4ff;
-    --nx-cyan-dim: rgba(0, 212, 255, 0.12);
-    --nx-cyan-glow: rgba(0, 212, 255, 0.3);
-    --nx-violet: #a855f7;
-    --nx-violet-dim: rgba(168, 85, 247, 0.12);
-    --nx-violet-glow: rgba(168, 85, 247, 0.3);
-    --nx-green: #10b981;
-    --nx-green-glow: rgba(16, 185, 129, 0.25);
-    --nx-amber: #f59e0b;
-    --nx-red: #ef4444;
+:root {
+    /* === Dragon Color System === */
+    --bg-primary: #08080e;
+    --bg-secondary: #0f0f18;
+    --bg-tertiary: #161622;
+    --bg-accent: #1e1e2e;
+    --bg-warm: #12100e;
+
+    --text-primary: #ede6da;
+    --text-secondary: #9a8e7c;
+    --text-muted: #5c5347;
+
+    --accent-white: #ede6da;
+    --accent-red: #c4342d;
+    --accent-green: #2d8b5f;
+    --accent-blue: #c9a84c;
+    --accent-orange: #d4874d;
+
+    /* Dragon accent palette */
+    --nx-cyan: #c9a84c;         /* Imperial gold (was cyan) */
+    --nx-cyan-dim: rgba(201, 168, 76, 0.10);
+    --nx-cyan-glow: rgba(201, 168, 76, 0.25);
+    --nx-violet: #8b3a3a;       /* Dragon crimson (was violet) */
+    --nx-violet-dim: rgba(139, 58, 58, 0.10);
+    --nx-violet-glow: rgba(139, 58, 58, 0.25);
+    --nx-green: #2d8b5f;        /* Jade green */
+    --nx-green-glow: rgba(45, 139, 95, 0.20);
+    --nx-amber: #d4874d;        /* Warm amber */
+    --nx-red: #c4342d;          /* Dragon red */
 
     /* Borders */
-    --border-dark: rgba(0, 212, 255, 0.08);
-    --border-light: rgba(0, 212, 255, 0.2);
-    --border-accent: rgba(0, 212, 255, 0.4);
+    --border-dark: rgba(201, 168, 76, 0.06);
+    --border-light: rgba(201, 168, 76, 0.16);
+    --border-accent: rgba(201, 168, 76, 0.30);
 
     /* Glass Effects */
-    --glass-bg: rgba(0, 212, 255, 0.03);
-    --glass-border: rgba(0, 212, 255, 0.1);
-    --glass-bg-strong: rgba(0, 212, 255, 0.06);
+    --glass-bg: rgba(201, 168, 76, 0.02);
+    --glass-border: rgba(201, 168, 76, 0.08);
+    --glass-bg-strong: rgba(201, 168, 76, 0.04);
 
     /* Shadows */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-    --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.6);
-    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.25);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.7);
+    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
+    --shadow-gold: 0 0 20px rgba(201, 168, 76, 0.1);
 
     /* Gradients */
-    --gradient-card: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    --gradient-card-alt: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.08));
-    --gradient-success: linear-gradient(135deg, #4CAF50, #45a049);
-    --gradient-danger: linear-gradient(135deg, #ff4757, #ff3742);
-    --gradient-warning: linear-gradient(135deg, #ff9f43, #ff8c29);
-    --gradient-info: linear-gradient(135deg, #3742fa, #2f3542);
+    --gradient-card: linear-gradient(135deg, rgba(201, 168, 76, 0.05), rgba(139, 58, 58, 0.03));
+    --gradient-card-alt: linear-gradient(90deg, rgba(201, 168, 76, 0.04), rgba(255, 255, 255, 0.01), rgba(201, 168, 76, 0.04));
+    --gradient-success: linear-gradient(135deg, #2d8b5f, #1e6b45);
+    --gradient-danger: linear-gradient(135deg, #c4342d, #8b1a1a);
+    --gradient-warning: linear-gradient(135deg, #d4874d, #b86e3a);
+    --gradient-info: linear-gradient(135deg, #c9a84c, #a88a3a);
+    --gradient-dragon: linear-gradient(135deg, #c9a84c, #8b3a3a);
 
     /* Sizes */
     --border-radius-sm: 8px;
@@ -82,22 +92,21 @@
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
 
-    /* Layout - Полуполноэкранный режим */
-    --max-width-mobile: 500px;    /* Увеличиваем для лучшего использования экрана */
+    /* Layout */
+    --max-width-mobile: 500px;
     --max-width-desktop: 100%;
     --header-height: 56px;
-    --nav-height: 80px;
-    --payment-banner-height: 70px;
-    --nav-bg: rgba(6, 11, 20, 0.98);
+    --nav-height: 72px;
+    --payment-banner-height: 64px;
+    --nav-bg: rgba(8, 8, 14, 0.97);
 
-    /* 🔥 Новые переменные для полуполноэкранного режима */
-    --telegram-header-height: 0px;  /* Минимизируем отступ от заголовка Telegram */
+    --telegram-header-height: 0px;
     --safe-area-top: env(safe-area-inset-top, 0px);
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
     --safe-area-left: env(safe-area-inset-left, 0px);
     --safe-area-right: env(safe-area-inset-right, 0px);
-    --vh: 1vh; /* Fallback для динамической высоты viewport */
-    --tg-viewport-height: 100vh; /* Telegram viewport высота */
+    --vh: 1vh;
+    --tg-viewport-height: 100vh;
 
     /* Transitions */
     --transition-fast: 0.15s ease;
@@ -105,19 +114,19 @@
     --transition-slow: 0.5s ease;
 
     /* Currency / balance (Dragon Coins) */
-    --currency-icon-start: #FFD700;
-    --currency-icon-end: #FFA500;
+    --currency-icon-start: #c9a84c;
+    --currency-icon-end: #d4874d;
     --gradient-currency: linear-gradient(135deg, var(--currency-icon-start), var(--currency-icon-end));
 
     /* Aliases for components.css */
-    --color-surface: #0d1524;
-    --color-surface-hover: #132035;
-    --color-border: rgba(0, 212, 255, 0.08);
-    --color-text: #e2e8f0;
-    --color-text-secondary: #94a3b8;
-    --color-success: #10b981;
-    --color-primary: #a855f7;
-    --font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --color-surface: #0f0f18;
+    --color-surface-hover: #161622;
+    --color-border: rgba(201, 168, 76, 0.06);
+    --color-text: #ede6da;
+    --color-text-secondary: #9a8e7c;
+    --color-success: #2d8b5f;
+    --color-primary: #c9a84c;
+    --font-family: 'Cinzel', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
     /* Z-index */
     --z-background: -1;
@@ -134,22 +143,18 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-
-    /* 🔥 Полное скрытие скроллбаров для чистого вида */
-    -ms-overflow-style: none;  /* IE и Edge */
-    scrollbar-width: none;     /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 *::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Edge */
+    display: none;
 }
 
 html {
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-
-    /* 🔥 Фиксируем html для полноэкранного режима */
     width: 100%;
     height: 100%;
     margin: 0;
@@ -158,15 +163,13 @@ html {
 }
 
 body {
-    font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.5;
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
-
-    /* 🔥 Полуполноэкранный режим */
     margin: 0;
     padding: 0;
     width: 100%;
@@ -174,15 +177,13 @@ body {
     min-height: 100vh;
     min-height: calc(var(--vh, 1vh) * 100);
     overflow-x: hidden;
-    overflow-y: hidden; /* Контролируем скролл через app-container */
-
-    /* Блокируем случайные скроллы за пределы */
+    overflow-y: hidden;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
 
-    --tg-theme-bg-color: #0d0d0d !important;
-    --tg-theme-secondary-bg-color: #0d0d0d !important;
-    --tg-theme-header-bg-color: #0d0d0d !important;
+    --tg-theme-bg-color: #08080e !important;
+    --tg-theme-secondary-bg-color: #08080e !important;
+    --tg-theme-header-bg-color: #08080e !important;
 }
 
 .tgme_widget_message_header,
@@ -203,9 +204,11 @@ body {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cinzel', 'Noto Sans', serif;
     font-weight: var(--font-weight-semibold);
     line-height: 1.2;
     margin: 0;
+    color: var(--text-primary);
 }
 
 h1 { font-size: var(--font-size-3xl); }
@@ -220,9 +223,8 @@ p {
     color: var(--text-secondary);
 }
 
-/* 🔥 Layout Base Classes - Полуполноэкранный режим */
+/* Layout Base Classes */
 .app-container {
-    /* Занимаем весь экран */
     position: fixed;
     top: 0;
     left: 0;
@@ -230,45 +232,32 @@ p {
     bottom: 0;
     width: 100%;
     height: 100vh;
+    height: 100dvh;
     height: calc(var(--vh, 1vh) * 100);
-
     background: var(--bg-primary);
     overflow: hidden;
-
-    /* 🔥 Учитываем safe area но НЕ заходим в системную панель */
     padding-top: var(--safe-area-top);
     padding-bottom: 0;
     padding-left: var(--safe-area-left);
     padding-right: var(--safe-area-right);
-
-    /* Блокируем случайный скролл за пределы */
     overscroll-behavior: contain;
-
-    /* Z-index для корректного отображения */
     z-index: var(--z-base);
 }
 
 .main-content {
-    /* 🔥 Занимаем всю доступную высоту за вычетом навигации */
     position: relative;
     width: 100%;
     height: calc(100vh - var(--nav-height) - var(--safe-area-top) - var(--safe-area-bottom));
+    height: calc(100dvh - var(--nav-height) - var(--safe-area-top) - var(--safe-area-bottom));
     height: calc(var(--tg-viewport-height, 100vh) - var(--nav-height) - var(--safe-area-top) - var(--safe-area-bottom));
-
-    /* Контролируемый скролл */
     overflow-y: auto;
     overflow-x: hidden;
-
-    /* Плавный скролл */
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
-
-    /* Убираем отступы - контент идет от края до края */
     padding: 0;
     margin: 0;
 }
 
-/* 🔥 Offset для payment banner (теперь баннер внизу над навигацией) */
 .main-content.with-payment-banner {
     padding-bottom: calc(var(--payment-banner-height) + var(--nav-height));
 }
@@ -278,24 +267,16 @@ p {
     position: relative;
     width: 100%;
     min-height: 100%;
-
-    /* Центрируем контент (перенесено из content-wrapper) */
     max-width: var(--max-width-mobile);
     margin: 0 auto;
-    padding: var(--spacing-lg) var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-md);
     padding-left: max(var(--spacing-md), var(--safe-area-left));
     padding-right: max(var(--spacing-md), var(--safe-area-right));
     z-index: var(--z-base);
-
-    /* Переходы */
     opacity: 0;
     transition: opacity 0.15s ease-out;
-
-    /* Контент может скроллиться */
     overflow-y: auto;
     overflow-x: hidden;
-
-    /* Улучшаем скролл на мобильных */
     -webkit-overflow-scrolling: touch;
 }
 
@@ -304,35 +285,46 @@ p {
     opacity: 1;
 }
 
-/* 🔥 Специальный режим без скролла для full-screen контента */
 .screen.screen-no-scroll {
     overflow: hidden;
     height: 100%;
 }
 
-/* content-wrapper удален — стили перенесены в .screen */
-
-/* Background Effects */
+/* Background Effects — Dragon Sanctum */
 .background-glow {
     position: fixed;
     top: -50%;
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
-                radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+    background:
+        radial-gradient(ellipse 50% 40% at 20% 20%, rgba(201, 168, 76, 0.035) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 50% at 80% 80%, rgba(139, 58, 58, 0.03) 0%, transparent 60%),
+        radial-gradient(ellipse 35% 30% at 50% 50%, rgba(45, 139, 95, 0.015) 0%, transparent 70%);
     z-index: var(--z-background);
-    /* ✅ ОПТИМИЗАЦИЯ: Убрана бесконечная анимация для снижения нагрузки на GPU/CPU */
+    pointer-events: none;
+}
+
+/* Dragon scale pattern overlay */
+.background-glow::before {
+    content: '';
+    position: absolute;
+    top: 25%;
+    left: 25%;
+    width: 50%;
+    height: 50%;
+    background:
+        repeating-conic-gradient(
+            rgba(201, 168, 76, 0.008) 0deg 30deg,
+            transparent 30deg 60deg
+        );
+    opacity: 0.6;
     pointer-events: none;
 }
 
 /* Utility Classes */
-.hidden {
-    display: none !important;
-}
+.hidden { display: none !important; }
 
-
-/* Text Utilities */
 .text-center { text-align: center; }
 .text-left { text-align: left; }
 .text-right { text-align: right; }
@@ -348,7 +340,6 @@ p {
 .font-semibold { font-weight: var(--font-weight-semibold); }
 .font-medium { font-weight: var(--font-weight-medium); }
 
-/* Flexbox Utilities */
 .flex { display: flex; }
 .flex-col { flex-direction: column; }
 .flex-row { flex-direction: row; }
@@ -364,7 +355,6 @@ p {
 .flex-grow { flex-grow: 1; }
 .flex-shrink-0 { flex-shrink: 0; }
 
-/* Spacing Utilities */
 .gap-xs { gap: var(--spacing-xs); }
 .gap-sm { gap: var(--spacing-sm); }
 .gap-md { gap: var(--spacing-md); }
@@ -388,46 +378,34 @@ p {
 .p-lg { padding: var(--spacing-lg); }
 .p-xl { padding: var(--spacing-xl); }
 
-/* Border Radius Utilities */
 .rounded-sm { border-radius: var(--border-radius-sm); }
 .rounded-md { border-radius: var(--border-radius-md); }
 .rounded-lg { border-radius: var(--border-radius-lg); }
 .rounded-xl { border-radius: var(--border-radius-xl); }
 .rounded-full { border-radius: var(--border-radius-full); }
 
-/* Scrolling */
-.scroll-smooth {
-    scroll-behavior: smooth;
-}
+.scroll-smooth { scroll-behavior: smooth; }
 
-/* Selection */
 ::selection {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(201, 168, 76, 0.25);
     color: var(--text-primary);
 }
 
-/* Focus */
-:focus {
-    outline: none;
-}
-
+:focus { outline: none; }
 :focus-visible {
-    outline: 2px solid var(--accent-white);
+    outline: 2px solid var(--nx-cyan);
     outline-offset: 2px;
 }
 
-/* 🔥 Responsive Design для полуполноэкранного режима */
-
-/* Экстра-маленькие экраны */
+/* Responsive */
 @media (max-width: 360px) {
     .screen {
-        padding: var(--spacing-md) var(--spacing-xs);
+        padding: var(--spacing-sm) var(--spacing-xs);
         padding-left: max(var(--spacing-xs), var(--safe-area-left));
         padding-right: max(var(--spacing-xs), var(--safe-area-right));
     }
 }
 
-/* Очень маленькие экраны */
 @media (max-width: 320px) {
     .screen {
         padding: var(--spacing-sm) 2px;
@@ -436,16 +414,14 @@ p {
     }
 }
 
-/* Средние экраны */
 @media (max-width: 480px) {
     .screen {
-        padding: var(--spacing-lg) var(--spacing-sm);
+        padding: var(--spacing-md) var(--spacing-sm);
         padding-left: max(var(--spacing-sm), var(--safe-area-left));
         padding-right: max(var(--spacing-sm), var(--safe-area-right));
     }
 }
 
-/* Планшеты и больше */
 @media (min-width: 768px) {
     .screen {
         max-width: 600px;
@@ -453,77 +429,54 @@ p {
     }
 }
 
-/* Десктопы */
 @media (min-width: 992px) {
     .app-container {
-        /* Полноэкранный режим на десктопах тоже */
         border: none;
         max-width: none;
         margin: 0;
     }
-
-    .screen {
-        max-width: 700px;
-    }
+    .screen { max-width: 700px; }
 }
 
-/* Большие десктопы */
 @media (min-width: 1200px) {
-    .screen {
-        max-width: 800px;
-    }
+    .screen { max-width: 800px; }
 }
 
-/* 🔥 Ландшафтная ориентация */
 @media (orientation: landscape) and (max-height: 500px) {
     .screen {
-        padding-top: var(--spacing-md);
-        padding-bottom: var(--spacing-md);
+        padding-top: var(--spacing-sm);
+        padding-bottom: var(--spacing-sm);
     }
-
-    /* Корректировка для низких экранов в ландшафте */
     .main-content {
         height: calc(100vh - var(--nav-height));
     }
-
     .main-content.with-payment-banner {
         padding-bottom: calc(var(--payment-banner-height) + var(--nav-height));
     }
 }
 
-/* 🔥 Устройства с вырезами (notch) */
 @supports (padding: max(0px)) {
     .app-container {
-        /* Используем max() для корректного отображения на устройствах с вырезами */
         padding-top: max(var(--safe-area-top), 0px);
         padding-bottom: max(var(--safe-area-bottom), 0px);
         padding-left: max(var(--safe-area-left), 0px);
         padding-right: max(var(--safe-area-right), 0px);
     }
-
     .screen {
-        /* Дополнительная защита от заезда под вырез */
         padding-left: max(var(--spacing-md), var(--safe-area-left));
         padding-right: max(var(--spacing-md), var(--safe-area-right));
     }
 }
 
-/* 🔥 Модальные окна тоже без скроллбаров */
 .modal {
     overflow-x: hidden;
     overflow-y: auto;
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+.modal::-webkit-scrollbar { display: none; }
 
-.modal::-webkit-scrollbar {
-    display: none;
-}
-
-
-/* 🔥 Производительность и анимации */
 .screen {
-    /* Аппаратное ускорение для плавных переходов */
     transform: translateZ(0);
     backface-visibility: hidden;
     perspective: 1000;
@@ -536,7 +489,7 @@ p {
 @keyframes screenEnter {
     from {
         opacity: 0;
-        transform: translateY(10px) translateZ(0);
+        transform: translateY(6px) translateZ(0);
     }
     to {
         opacity: 1;

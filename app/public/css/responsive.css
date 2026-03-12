@@ -1,32 +1,34 @@
-/* Mobile First Approach */
+/* ================================================
+   DRAGON'S SANCTUM — Responsive Design
+   Mobile-first, no-scroll approach
+   ================================================ */
 
 /* Small devices (landscape phones, 576px and up) */
 @media (max-width: 576px) {
     .screen {
-        padding: var(--spacing-lg) var(--spacing-md);
+        padding: var(--spacing-md) var(--spacing-sm);
     }
 
     .card {
-        padding: var(--spacing-xl);
-        margin: var(--spacing-md);
+        padding: var(--spacing-lg);
+        margin: var(--spacing-xs) var(--spacing-sm);
     }
 
-    /* Карточка подписки — компактнее на маленьких экранах */
     .subscription-card {
-        padding: var(--spacing-lg);
-        margin-bottom: var(--spacing-md);
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-sm);
     }
 
     .subscription-card .subscription-header {
-        margin-bottom: var(--spacing-lg);
+        margin-bottom: var(--spacing-md);
         gap: var(--spacing-sm);
     }
 
     .subscription-card .subscription-title-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
-        border-radius: 12px;
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+        border-radius: 10px;
     }
 
     .subscription-card .subscription-title {
@@ -34,41 +36,27 @@
     }
 
     .subscription-card .time-remaining {
-        margin-bottom: var(--spacing-lg);
-        padding: var(--spacing-md) var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
+        padding: var(--spacing-sm);
     }
 
     .subscription-card .days-left {
-        font-size: 2.25rem;
+        font-size: 2rem;
     }
 
     .subscription-card .auto-renewal {
-        margin-bottom: var(--spacing-lg);
+        margin-bottom: var(--spacing-md);
         padding: var(--spacing-xs) var(--spacing-sm);
     }
 
     .subscription-card .auto-renewal-icon {
-        width: 36px;
-        height: 36px;
-    }
-
-    .subscription-card .subscription-actions .btn-renew.btn-trial-activation {
-        min-height: 52px;
-        max-width: 100%;
-    }
-
-    .subscription-card .subscription-actions .btn-renew .trial-icon-wrapper {
-        width: 28px;
-        height: 28px;
-    }
-
-    .subscription-card .subscription-actions .btn-renew .trial-main {
-        font-size: var(--font-size-sm);
+        width: 32px;
+        height: 32px;
     }
 
     .subscription-main {
-        margin: var(--spacing-lg) var(--spacing-md);
-        padding: var(--spacing-xl);
+        margin: var(--spacing-md) var(--spacing-sm);
+        padding: var(--spacing-lg);
     }
 
     .modal {
@@ -92,7 +80,7 @@
     }
 
     .service-selector-header {
-        padding: var(--spacing-lg);
+        padding: var(--spacing-md);
     }
 
     .nav-item {
@@ -105,101 +93,27 @@
     }
 
     .payment-banner-content {
-        padding: var(--spacing-md) var(--spacing-lg);
-    }
-
-    .trial-activation-icon {
-        width: 100px;
-        height: 100px;
-        font-size: var(--font-size-3xl);
-    }
-
-    .trial-activation-title {
-        font-size: var(--font-size-2xl);
+        padding: var(--spacing-sm) var(--spacing-md);
     }
 }
 
-/* Очень маленькие экраны — карточка подписки ещё компактнее */
+/* Very small screens */
 @media (max-width: 420px) {
     .subscription-card {
-        padding: var(--spacing-md);
-        margin-bottom: var(--spacing-sm);
-    }
-
-    .subscription-card .subscription-header {
-        margin-bottom: var(--spacing-md);
-    }
-
-    .subscription-card .subscription-title-icon {
-        width: 36px;
-        height: 36px;
-        font-size: 0.9rem;
-        border-radius: 10px;
+        padding: var(--spacing-sm);
+        margin-bottom: var(--spacing-xs);
     }
 
     .subscription-card .subscription-title {
         font-size: var(--font-size-base);
     }
 
-    .subscription-card .subscription-type-label {
-        font-size: 11px;
-    }
-
-    .subscription-card .subscription-rename-btn {
-        width: 24px;
-        height: 24px;
-        font-size: 10px;
-    }
-
-    .subscription-card .time-remaining {
-        margin-bottom: var(--spacing-md);
-        padding: var(--spacing-sm);
-    }
-
     .subscription-card .days-left {
-        font-size: 2rem;
-    }
-
-    .subscription-card .days-label {
-        font-size: var(--font-size-xs);
-    }
-
-    .subscription-card .auto-renewal {
-        margin-bottom: var(--spacing-md);
-    }
-
-    .subscription-card .auto-renewal-icon {
-        width: 32px;
-        height: 32px;
-    }
-
-    .subscription-card .auto-renewal-text h4 {
-        font-size: var(--font-size-sm);
-    }
-
-    .subscription-card .auto-renewal-text p {
-        font-size: var(--font-size-xs);
-    }
-
-    .subscription-card .subscription-actions .btn-renew.btn-trial-activation {
-        min-height: 48px;
-    }
-
-    .subscription-card .subscription-actions .btn-renew .btn-trial-content {
-        padding: var(--spacing-sm) var(--spacing-md);
-    }
-
-    .subscription-card .subscription-actions .btn-renew .trial-icon-wrapper {
-        width: 24px;
-        height: 24px;
-    }
-
-    .subscription-card .subscription-actions .btn-renew .trial-main {
-        font-size: var(--font-size-sm);
+        font-size: 1.75rem;
     }
 }
 
-/* Extra small devices (portrait phones, less than 360px) */
+/* Extra small devices */
 @media (max-width: 360px) {
     :root {
         --spacing-xs: 3px;
@@ -212,55 +126,20 @@
     }
 
     .screen {
-        padding: var(--spacing-md) var(--spacing-sm);
+        padding: var(--spacing-md) 4px;
     }
 
-    .subscription-main {
-        margin: var(--spacing-md) var(--spacing-sm);
-        padding: var(--spacing-lg);
+    .modal {
+        width: 98%;
     }
 
-    .subscription-card {
-        padding: var(--spacing-sm);
+    .modal-header, .modal-body, .modal-actions {
+        padding: var(--spacing-md);
     }
 
-    .subscription-card .days-left {
-        font-size: 1.75rem;
-    }
-
-    .subscription-card .subscription-actions .btn-renew.btn-trial-activation {
-        min-height: 44px;
-    }
-
-    .action-card {
-        padding: var(--spacing-xl) var(--spacing-lg);
-        min-height: 100px;
-    }
-
-    .action-icon {
-        width: 40px;
-        height: 40px;
-        font-size: var(--font-size-lg);
-    }
-
-    .action-title {
-        font-size: var(--font-size-base);
-    }
-
-    .action-subtitle {
-        font-size: var(--font-size-xs);
-    }
-
-    .days-left {
-        font-size: var(--font-size-3xl);
-    }
-
-    .subscription-title {
-        font-size: var(--font-size-xl);
-    }
-
-    .plan-name {
-        font-size: var(--font-size-lg);
+    .btn {
+        padding: var(--spacing-md) var(--spacing-lg);
+        min-height: 42px;
     }
 
     .nav-item {
@@ -275,115 +154,52 @@
     .nav-label {
         font-size: 9px;
     }
+}
 
-    .modal {
-        width: 98%;
+@media (max-width: 320px) {
+    .screen {
+        padding: var(--spacing-sm) 2px;
     }
 
-    .modal-header, .modal-body, .modal-actions {
-        padding: var(--spacing-lg);
+    .subscription-actions {
+        flex-direction: column;
     }
 
-    .btn {
-        padding: var(--spacing-md) var(--spacing-lg);
-        min-height: 44px;
-    }
-
-    .btn-sm {
-        padding: var(--spacing-xs) var(--spacing-md);
-        min-height: 32px;
-    }
-
-    .form-input, .form-textarea, .form-select {
-        padding: var(--spacing-md);
-    }
-
-    .payment-timer {
+    .payment-banner-content {
+        padding: var(--spacing-sm) var(--spacing-md);
         gap: var(--spacing-sm);
     }
 
-    .timer-circle {
-        width: 28px;
-        height: 28px;
-    }
-
-    .payment-title {
-        font-size: var(--font-size-sm);
-    }
-
-    .payment-subtitle {
-        font-size: var(--font-size-xs);
-    }
-
-    .service-card {
-        padding: var(--spacing-lg);
-    }
-
-    .service-name {
-        font-size: var(--font-size-lg);
-    }
-
-    .service-price {
-        font-size: var(--font-size-xl);
+    .tabs-nav {
+        flex-direction: column;
+        gap: var(--spacing-xs);
     }
 }
 
-/* Large devices (desktops, 992px and up) */
+/* Large devices */
 @media (min-width: 992px) {
     .app-container {
         min-height: 100vh;
+        max-width: none;
+        margin: 0;
+        border: none;
     }
 
     .bottom-nav {
-        border-left: 1px solid var(--border-dark);
-        border-right: 1px solid var(--border-dark);
+        border-left: none;
+        border-right: none;
     }
 
     .payment-banner {
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
-        border-right: 1px solid rgba(255, 255, 255, 0.08);
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        border-bottom: none;
+        border-left: none;
+        border-right: none;
     }
 }
 
-/* Landscape orientation adjustments */
+/* Landscape orientation */
 @media (orientation: landscape) and (max-height: 500px) {
     .screen {
-        padding: var(--spacing-md) var(--spacing-lg);
-    }
-
-    .subscription-main {
-        margin: var(--spacing-md) var(--spacing-lg);
-    }
-
-    .time-remaining {
-        margin-bottom: var(--spacing-lg);
-    }
-
-    .auto-renewal {
-        margin-bottom: var(--spacing-lg);
-    }
-
-    .trial-activation-icon {
-        width: 80px;
-        height: 80px;
-        font-size: var(--font-size-2xl);
-        margin-bottom: var(--spacing-lg);
-    }
-
-    .trial-activation-title {
-        font-size: var(--font-size-xl);
-        margin-bottom: var(--spacing-sm);
-    }
-
-    .trial-activation-subtitle {
-        font-size: var(--font-size-base);
-        margin-bottom: var(--spacing-lg);
-    }
-
-    .trial-activation-features {
-        margin-bottom: var(--spacing-lg);
+        padding: var(--spacing-sm) var(--spacing-lg);
     }
 
     .modal {
@@ -404,14 +220,6 @@
     }
 }
 
-/* Dark mode specific adjustments (if needed) */
-@media (prefers-color-scheme: dark) {
-    /* Our app is already dark, but we can add specific adjustments if needed */
-    .skeleton {
-        background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%);
-    }
-}
-
 /* Touch device optimizations */
 @media (hover: none) {
     .hover-lift:hover,
@@ -423,14 +231,11 @@
 
     .action-card:hover {
         transform: none;
-        box-shadow: var(--shadow-md);
     }
 
-
-    /* Increase touch targets for better usability */
     .nav-item {
-        min-height: 48px;
-        min-width: 48px;
+        min-height: 44px;
+        min-width: 44px;
     }
 
     .toggle-switch {
@@ -443,13 +248,8 @@
     }
 
     .modal-close {
-        min-width: 44px;
-        min-height: 44px;
-    }
-
-    .back-button {
-        min-width: 44px;
-        min-height: 44px;
+        min-width: 42px;
+        min-height: 42px;
     }
 }
 
@@ -471,19 +271,9 @@
         opacity: 1;
         transform: none;
     }
-
-    .trial-activation-icon,
-    .trial-activation-title,
-    .trial-activation-subtitle,
-    .trial-activation-features li {
-        animation: none;
-        opacity: 1;
-        transform: none;
-    }
-
 }
 
-/* Print styles (if needed) */
+/* Print styles */
 @media print {
     .bottom-nav,
     .payment-banner,
@@ -498,122 +288,40 @@
         padding: 0;
     }
 
-    .main-content {
-        padding-bottom: 0;
-    }
-
     body {
         background: white;
         color: black;
     }
-
-    .card {
-        border: 1px solid #ccc;
-        background: white;
-    }
 }
 
-/* Safe area adjustments for devices with notches */
+/* Safe area adjustments */
 @supports (padding: max(0px)) {
     .app-container {
-        padding-left: max(var(--spacing-lg), env(safe-area-inset-left));
-        padding-right: max(var(--spacing-lg), env(safe-area-inset-right));
+        padding-top: max(0px, env(safe-area-inset-top));
+        padding-bottom: max(var(--nav-height), env(safe-area-inset-bottom));
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
     }
 
     .screen {
-        padding-top: max(var(--spacing-xl), env(safe-area-inset-top));
-    }
-
-    .payment-banner {
-        bottom: var(--nav-height);
+        padding-left: max(var(--spacing-sm), env(safe-area-inset-left));
+        padding-right: max(var(--spacing-sm), env(safe-area-inset-right));
     }
 }
 
-/* Specific adjustments for very small screens */
-@media (max-width: 320px) {
-    .subscription-actions {
-        flex-direction: column;
-    }
-
-    .service-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--spacing-sm);
-    }
-
-    .service-price {
-        align-self: flex-end;
-    }
-
-    .payment-banner-content {
-        padding: var(--spacing-sm) var(--spacing-md);
-        gap: var(--spacing-sm);
-    }
-
-    .payment-banner .payment-info {
-        min-width: 0;
-    }
-
-    .payment-banner .payment-title,
-    .payment-banner .payment-subtitle {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .tabs-nav {
-        flex-direction: column;
-        gap: var(--spacing-xs);
-    }
-
-    .tab-button {
-        text-align: center;
-    }
-}
-
-/* iOS specific adjustments */
-@supports (-webkit-appearance: none) {
-    .btn, .form-input, .form-textarea, .form-select {
-        -webkit-appearance: none;
-        -webkit-border-radius: var(--border-radius-md);
-    }
-
-    /* Fix for iOS zoom on focus */
-    .form-input, .form-textarea, .form-select {
-        font-size: 16px;
-    }
-
-    @media (max-width: 576px) {
-        .form-input, .form-textarea, .form-select {
-            font-size: 16px; /* Prevent zoom */
-        }
-    }
-}
-
+/* Tablet+ */
 @media (min-width: 768px) {
     .screen {
         padding: var(--spacing-xl) var(--spacing-lg);
         max-width: 500px;
         margin: 0 auto;
     }
-
-    .subscription-card,
-    .action-grid {
-        max-width: 800px;
-        margin-left: auto;
-        margin-right: auto;
-    }
 }
 
 @media (min-width: 1024px) {
     .screen {
         padding: var(--spacing-2xl) var(--spacing-3xl);
-    }
-
-    /* На больших экранах делаем контент в две колонки */
-    .action-grid {
-        grid-template-columns: repeat(4, 1fr);
-        max-width: 1000px;
+        max-width: 550px;
     }
 }
 
@@ -623,97 +331,47 @@
     }
 }
 
-@media (max-width: 576px) {
-    .screen {
-        padding: var(--spacing-lg) var(--spacing-sm);
-    }
-
-    .card {
-        margin: var(--spacing-xs) var(--spacing-sm);
-        padding: var(--spacing-lg);
-    }
-}
-
-@media (max-width: 360px) {
-    .screen {
-        padding: var(--spacing-md) 4px;
-    }
-}
-
-@media (max-width: 320px) {
-    .screen {
-        padding: var(--spacing-sm) 2px;
-    }
-}
-
+/* Action grid — ALWAYS 3 columns */
 .action-grid {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important; /* ← ВСЕГДА 2 колонки */
-    grid-template-rows: 1fr;                    /* ← Одна строка */
+    grid-template-columns: 1fr 1fr 1fr !important;
 }
 
 @media (max-width: 576px) {
     .action-grid {
-        grid-template-columns: 1fr 1fr !important; /* ← НЕ меняем на 1fr! */
+        grid-template-columns: 1fr 1fr 1fr !important;
     }
 }
 
 @media (max-width: 360px) {
     .action-grid {
-        grid-template-columns: 1fr 1fr !important; /* ← Все равно 2 колонки! */
+        grid-template-columns: 1fr 1fr 1fr !important;
     }
 }
 
-/* ✅ Даже на самых маленьких экранах - квадраты в ряд */
 @media (max-width: 320px) {
     .action-grid {
-        grid-template-columns: 1fr 1fr !important;
-        gap: 4px; /* ← Минимальный зазор, но 2 колонки */
+        grid-template-columns: 1fr 1fr 1fr !important;
+        gap: 3px;
     }
 }
 
-@media (min-width: 992px) {
-    .app-container {
-        /* НЕ ограничиваем ширину - используем весь экран */
-        max-width: none;
-        margin: 0;
-        border: none;
-    }
-
-    .bottom-nav,
-    .payment-banner {
-        /* Убираем боковые границы */
-        border-left: none;
-        border-right: none;
-    }
-}
-
-/* Адаптация для устройств с вырезами */
-@supports (padding: max(0px)) {
-    .app-container {
-        /* Учитываем safe area инсеты */
-        padding-top: max(0px, env(safe-area-inset-top));
-        padding-bottom: max(var(--nav-height), env(safe-area-inset-bottom));
-        padding-left: env(safe-area-inset-left);
-        padding-right: env(safe-area-inset-right);
-    }
-
-    .screen {
-        /* Убираем дополнительные отступы если safe area уже учтена */
-        padding-left: max(var(--spacing-md), env(safe-area-inset-left));
-        padding-right: max(var(--spacing-md), env(safe-area-inset-right));
-    }
-}
-
-/* Ландшафтная ориентация */
+/* Landscape */
 @media (orientation: landscape) and (max-height: 500px) {
     .screen {
-        /* Уменьшаем отступы в ландшафте */
-        padding-top: var(--spacing-md);
-        padding-bottom: var(--spacing-md);
+        padding-top: var(--spacing-xs);
+        padding-bottom: var(--spacing-xs);
+    }
+}
+
+/* iOS specific */
+@supports (-webkit-appearance: none) {
+    .btn, .form-input, .form-textarea, .form-select {
+        -webkit-appearance: none;
+        -webkit-border-radius: var(--border-radius-md);
     }
 
-    .subscription-main {
-        margin: var(--spacing-md) 0;
+    .form-input, .form-textarea, .form-select {
+        font-size: 16px;
     }
 }

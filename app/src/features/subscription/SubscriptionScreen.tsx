@@ -172,39 +172,39 @@ function StoriesButton() {
   );
 }
 
-/** Circular arc hero showing days remaining */
+/** Circular arc hero showing days remaining — compact for no-scroll */
 function SubHeroOrb({ days, isActive, isExpired }: { days: number; isActive: boolean; isExpired: boolean }) {
-  const R = 58;
+  const R = 48;
   const circumference = 2 * Math.PI * R;
   const arcProgress = isExpired ? 0 : Math.min(1, Math.max(0, days / 30));
   const strokeDashoffset = circumference * (1 - arcProgress);
   const orbClass = isExpired ? 'nexus-orb--expired' : isActive ? 'nexus-orb--active' : 'nexus-orb--inactive';
   const arcClass = isExpired ? 'nexus-orb-arc--expired' : isActive ? 'nexus-orb-arc--active' : 'nexus-orb-arc--inactive';
-  const strokeColor = isExpired ? '#ef4444' : isActive ? 'url(#nx-arc-grad)' : '#a855f7';
+  const strokeColor = isExpired ? '#c4342d' : isActive ? 'url(#nx-arc-grad)' : '#8b3a3a';
 
   return (
     <div className="nexus-orb-wrap">
-      <svg className="nexus-orb-svg" viewBox="0 0 144 144" width={144} height={144}>
+      <svg className="nexus-orb-svg" viewBox="0 0 120 120" width={120} height={120}>
         <defs>
           <linearGradient id="nx-arc-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#00d4ff" />
-            <stop offset="100%" stopColor="#a855f7" />
+            <stop offset="0%" stopColor="#c9a84c" />
+            <stop offset="100%" stopColor="#8b3a3a" />
           </linearGradient>
         </defs>
         {/* Background track */}
-        <circle cx="72" cy="72" r={R} className="nexus-orb-track" />
+        <circle cx="60" cy="60" r={R} className="nexus-orb-track" />
         {/* Progress arc */}
         <circle
-          cx="72" cy="72" r={R}
+          cx="60" cy="60" r={R}
           className={`nexus-orb-arc ${arcClass}`}
           stroke={strokeColor}
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
-          style={{ transformOrigin: '72px 72px', transform: 'rotate(-90deg)' }}
+          style={{ transformOrigin: '60px 60px', transform: 'rotate(-90deg)' }}
         />
       </svg>
       <div className={`nexus-orb ${orbClass}`}>
-        <i className="fas fa-shield-alt nexus-orb-icon" />
+        <i className="fas fa-dragon nexus-orb-icon" />
       </div>
     </div>
   );
@@ -388,14 +388,14 @@ export function SubscriptionScreen() {
     <div className="screen active" id="subscriptionScreen">
       <motion.div variants={staggerContainer} initial="initial" animate="animate">
 
-        {/* ── Top Bar — Clean & Minimal ── */}
+        {/* ── Top Bar — Dragon Sanctum ── */}
         <motion.div className="nexus-topbar" variants={staggerItem}>
           <div className="nexus-topbar-left">
             <div className="nexus-logo">
               <div className="nexus-logo-mark">
-                <svg viewBox="0 0 20 20" width="18" height="18" fill="none">
-                  <path d="M10 2L13.5 7H17L14 10.5L15.5 15L10 12L4.5 15L6 10.5L3 7H6.5L10 2Z" fill="white" />
-                  <circle cx="10" cy="10" r="2.5" fill="rgba(255,255,255,0.3)" />
+                <svg viewBox="0 0 20 20" width="16" height="16" fill="none">
+                  <path d="M10 1L13 5.5H17L14 9L16 14L10 11L4 14L6 9L3 5.5H7L10 1Z" fill="white" opacity="0.9" />
+                  <circle cx="10" cy="8" r="2" fill="rgba(255,255,255,0.25)" />
                 </svg>
               </div>
               <div className="nexus-logo-text">
@@ -404,6 +404,18 @@ export function SubscriptionScreen() {
             </div>
           </div>
           <div className="nexus-topbar-right">
+            {/* Daily Bonus — compact icon in topbar */}
+            <button
+              type="button"
+              className="nexus-icon-btn"
+              onClick={() => { tg?.haptic.light(); openDailyBonus(); }}
+              data-action="show-daily-bonus-modal"
+              aria-label="Ежедневный бонус"
+              style={canClaimBonus ? { borderColor: 'rgba(201,168,76,0.3)', background: 'rgba(201,168,76,0.08)' } : undefined}
+            >
+              <i className="fas fa-fire" style={canClaimBonus ? { color: '#c9a84c' } : undefined} />
+              {canClaimBonus && <span className="nexus-bonus-dot" />}
+            </button>
             <StoriesButton />
             {balance > 0 && (
               <button
@@ -415,7 +427,6 @@ export function SubscriptionScreen() {
               >
                 <i className="fas fa-coins" />
                 <span>{Number(balance).toFixed(0)}</span>
-                <span className="nexus-balance-chip-code">DRG</span>
               </button>
             )}
             <button
@@ -424,7 +435,7 @@ export function SubscriptionScreen() {
               onClick={() => { tg?.haptic.light(); openHistory(); }}
               aria-label="История операций"
             >
-              <i className="fas fa-bell" />
+              <i className="fas fa-scroll" />
             </button>
           </div>
         </motion.div>
@@ -518,46 +529,10 @@ export function SubscriptionScreen() {
           )}
         </motion.div>
 
-        {/* ── Quick Actions — 2×3 visible grid, no scroll ── */}
+        {/* ── Quick Actions — 3×2 compact grid, no scroll ── */}
         <motion.div variants={staggerItem}>
-          <div className="nexus-section-label">Быстрые действия</div>
+          <div className="nexus-section-label">Действия</div>
           <div className="nexus-actions-grid">
-
-            {/* Bonus — always visible, glows when claimable */}
-            <button
-              type="button"
-              className={`nexus-action-card nexus-action-card--amber${canClaimBonus ? ' nexus-action-card--glow' : ''}`}
-              onClick={() => { tg?.haptic.light(); openDailyBonus(); }}
-              data-action="show-daily-bonus-modal"
-            >
-              <div className="nexus-action-card-icon">
-                <TgsPlayer src={`${ASSETS_GIFS}/gift-animate.tgs`} fallbackIcon="fas fa-gift" width={28} height={28} />
-              </div>
-              <span className="nexus-action-card-label">
-                {canClaimBonus ? 'Бонус 🔥' : 'Бонус'}
-              </span>
-              {canClaimBonus && <span className="nexus-action-card-badge">!</span>}
-            </button>
-
-            <button
-              type="button"
-              className="nexus-action-card nexus-action-card--blue"
-              onClick={handleInstructions}
-              data-action="instructions"
-            >
-              <div className="nexus-action-card-icon"><i className="fas fa-book-open" /></div>
-              <span className="nexus-action-card-label">Инструкции</span>
-            </button>
-
-            <button
-              type="button"
-              className="nexus-action-card nexus-action-card--violet"
-              onClick={handleSupport}
-              data-action="support"
-            >
-              <div className="nexus-action-card-icon"><i className="fas fa-comment-dots" /></div>
-              <span className="nexus-action-card-label">Поддержка</span>
-            </button>
 
             <button
               type="button"
@@ -586,7 +561,37 @@ export function SubscriptionScreen() {
               data-action="activate-code"
             >
               <div className="nexus-action-card-icon"><i className="fas fa-key" /></div>
-              <span className="nexus-action-card-label">Активировать</span>
+              <span className="nexus-action-card-label">Код</span>
+            </button>
+
+            <button
+              type="button"
+              className="nexus-action-card nexus-action-card--blue"
+              onClick={handleInstructions}
+              data-action="instructions"
+            >
+              <div className="nexus-action-card-icon"><i className="fas fa-book-open" /></div>
+              <span className="nexus-action-card-label">Инструкции</span>
+            </button>
+
+            <button
+              type="button"
+              className="nexus-action-card nexus-action-card--violet"
+              onClick={handleSupport}
+              data-action="support"
+            >
+              <div className="nexus-action-card-icon"><i className="fas fa-comment-dots" /></div>
+              <span className="nexus-action-card-label">Поддержка</span>
+            </button>
+
+            <button
+              type="button"
+              className="nexus-action-card nexus-action-card--amber"
+              onClick={handleNewsChannel}
+              data-action="news"
+            >
+              <div className="nexus-action-card-icon"><i className="fab fa-telegram-plane" /></div>
+              <span className="nexus-action-card-label">Новости</span>
             </button>
 
           </div>

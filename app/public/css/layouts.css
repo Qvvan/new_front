@@ -144,7 +144,7 @@ body.page-hidden [class*="infinite"] {
     padding-left: max(var(--spacing-md), var(--safe-area-left));
     padding-right: max(var(--spacing-md), var(--safe-area-right));
     background: var(--nav-bg);
-    border-bottom: 1px solid var(--border-dark);
+    border-bottom: 1px solid rgba(201, 168, 76, 0.06);
     z-index: var(--z-nav);
     display: flex;
     align-items: center;

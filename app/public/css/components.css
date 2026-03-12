@@ -128,8 +128,8 @@
     width: 4px;
     bottom: 0;
     background: linear-gradient(180deg,
-        rgba(73, 170, 77, 0.6) 0%,
-        rgba(73, 170, 77, 0.2) 50%,
+        rgba(45, 139, 95, 0.6) 0%,
+        rgba(45, 139, 95, 0.2) 50%,
         transparent 100%
     );
     border-radius: var(--border-radius-xl) 0 0 var(--border-radius-xl);
@@ -232,12 +232,12 @@
 }
 
 .subscription-title-icon.vpn {
-    background: linear-gradient(145deg, rgba(73, 170, 77, 0.35), rgba(73, 170, 77, 0.15));
+    background: linear-gradient(145deg, rgba(45, 139, 95, 0.35), rgba(45, 139, 95, 0.15));
     border: none;
 }
 
 .subscription-title-icon.trial {
-    background: linear-gradient(145deg, rgba(255, 159, 67, 0.35), rgba(255, 159, 67, 0.15));
+    background: linear-gradient(145deg, rgba(201, 168, 76, 0.35), rgba(201, 168, 76, 0.15));
     border: none;
 }
 
@@ -346,7 +346,7 @@
 }
 
 .rename-input:focus {
-    border-color: rgba(73, 170, 77, 0.5);
+    border-color: rgba(201, 168, 76, 0.5);
     background: rgba(255, 255, 255, 0.08);
 }
 
@@ -420,10 +420,10 @@
 }
 
 .subscription-status.active {
-    background: rgba(73, 170, 77, 0.22);
-    color: #6ee7a0;
-    border: 1px solid rgba(73, 170, 77, 0.4);
-    box-shadow: 0 0 0 1px rgba(73, 170, 77, 0.1);
+    background: rgba(45, 139, 95, 0.22);
+    color: #5ec99a;
+    border: 1px solid rgba(45, 139, 95, 0.4);
+    box-shadow: 0 0 0 1px rgba(45, 139, 95, 0.1);
 }
 
 .subscription-status.expired {
@@ -994,9 +994,9 @@
 }
 
 .history-tab-button.active {
-    background: rgba(255, 159, 67, 0.15);
+    background: rgba(201, 168, 76, 0.15);
     color: var(--accent-orange);
-    border-color: rgba(255, 159, 67, 0.4);
+    border-color: rgba(201, 168, 76, 0.4);
     box-shadow: var(--shadow-sm);
 }
 
@@ -3447,7 +3447,7 @@ body.page-hidden .loadShine {
 
 .payment-item.pending {
     border-color: var(--accent-orange);
-    background: rgba(255, 159, 67, 0.05);
+    background: rgba(201, 168, 76, 0.05);
 }
 
 .payment-item.success {
@@ -3607,7 +3607,7 @@ body.page-hidden .loadShine {
 }
 
 .payment-status.pending {
-   background: rgba(255, 159, 67, 0.2);
+   background: rgba(201, 168, 76, 0.2);
    color: var(--accent-orange);
 }
 
@@ -3804,7 +3804,7 @@ body.page-hidden .loadShine {
 
 .keys-group-header i {
     font-size: var(--font-size-xs);
-    color: var(--primary, #6366f1);
+    color: var(--primary, #c9a84c);
     opacity: 0.8;
 }
 
@@ -4545,8 +4545,8 @@ body.page-hidden .loadShine {
     align-items: flex-start;
     gap: var(--spacing-sm);
     padding: var(--spacing-lg);
-    background: rgba(255, 159, 67, 0.1);
-    border: 1px solid rgba(255, 159, 67, 0.3);
+    background: rgba(201, 168, 76, 0.1);
+    border: 1px solid rgba(201, 168, 76, 0.3);
     border-radius: var(--border-radius-md);
     text-align: left;
 }
@@ -5670,8 +5670,8 @@ button:disabled:hover {
 
 .subscription-top-bar .top-bar-icon-btn.subscription-top-bar-bell:hover {
     color: var(--accent-orange);
-    background: rgba(255, 159, 67, 0.12);
-    border-color: rgba(255, 159, 67, 0.25);
+    background: rgba(201, 168, 76, 0.12);
+    border-color: rgba(201, 168, 76, 0.25);
 }
 
 .subscription-top-bar .top-bar-icon-btn.subscription-top-bar-bell i {
@@ -5712,16 +5712,16 @@ button:disabled:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, 
-        rgba(255, 159, 67, 0.9) 0%,
-        rgba(255, 107, 107, 0.85) 50%,
-        rgba(255, 71, 87, 0.9) 100%
+    background: linear-gradient(135deg,
+        rgba(201, 168, 76, 0.9) 0%,
+        rgba(180, 120, 60, 0.85) 50%,
+        rgba(139, 58, 58, 0.9) 100%
     );
     border-radius: 50%;
     color: white;
-    box-shadow: 
-        0 4px 12px rgba(255, 159, 67, 0.3),
-        0 2px 6px rgba(255, 71, 87, 0.2),
+    box-shadow:
+        0 4px 12px rgba(201, 168, 76, 0.3),
+        0 2px 6px rgba(139, 58, 58, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transition: all var(--transition-normal);
     overflow: visible;
@@ -5745,9 +5745,9 @@ button:disabled:hover {
 
 .daily-bonus-button:hover .daily-bonus-button-icon {
     transform: scale(1.05);
-    box-shadow: 
-        0 6px 16px rgba(255, 159, 67, 0.4),
-        0 3px 8px rgba(255, 71, 87, 0.3),
+    box-shadow:
+        0 6px 16px rgba(201, 168, 76, 0.4),
+        0 3px 8px rgba(139, 58, 58, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
@@ -6887,11 +6887,11 @@ button:disabled:hover {
 }
 
 .server-load-fill.low {
-    background: linear-gradient(90deg, #49aa4d, #5cb85c);
+    background: linear-gradient(90deg, #2d8b5f, #3da87a);
 }
 
 .server-load-fill.medium {
-    background: linear-gradient(90deg, #ff9f43, #ffb347);
+    background: linear-gradient(90deg, #c9a84c, #d4b85c);
 }
 
 .server-load-fill.high {
@@ -6981,7 +6981,7 @@ body.page-hidden [style*="animation"] {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 24px rgba(73, 170, 77, 0.3);
+    box-shadow: 0 8px 24px rgba(45, 139, 95, 0.3);
     position: relative;
 }
 
@@ -6990,7 +6990,7 @@ body.page-hidden [style*="animation"] {
     position: absolute;
     inset: -2px;
     border-radius: var(--border-radius-full);
-    background: linear-gradient(135deg, rgba(73, 170, 77, 0.4), rgba(69, 160, 73, 0.2));
+    background: linear-gradient(135deg, rgba(45, 139, 95, 0.4), rgba(40, 130, 85, 0.2));
     z-index: -1;
     opacity: 0.6;
 }
@@ -7088,8 +7088,8 @@ body.page-hidden [style*="animation"] {
 }
 
 .empty-state-icon--warning {
-    background: linear-gradient(135deg, rgba(255, 159, 67, 0.15), rgba(255, 71, 87, 0.08));
-    border-color: rgba(255, 159, 67, 0.25);
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.15), rgba(139, 58, 58, 0.08));
+    border-color: rgba(201, 168, 76, 0.25);
 }
 
 .empty-state-icon--warning i {
@@ -7097,8 +7097,8 @@ body.page-hidden [style*="animation"] {
 }
 
 .empty-state-icon--success {
-    background: linear-gradient(135deg, rgba(73, 170, 77, 0.15), rgba(73, 170, 77, 0.05));
-    border-color: rgba(73, 170, 77, 0.25);
+    background: linear-gradient(135deg, rgba(45, 139, 95, 0.15), rgba(45, 139, 95, 0.05));
+    border-color: rgba(45, 139, 95, 0.25);
 }
 
 .empty-state-icon--success i {
@@ -7182,7 +7182,7 @@ body.page-hidden [style*="animation"] {
 
 .subscription-option.subscription-active {
     border-color: var(--accent-green);
-    background: rgba(73, 170, 77, 0.1);
+    background: rgba(45, 139, 95, 0.1);
 }
 
 .subscription-option.subscription-expired {

@@ -6,9 +6,9 @@ import { currencyApi } from '../../core/api/endpoints';
 import type { ScreenName } from '../../app/routes';
 
 const TABS: { screen: ScreenName; icon: string; label: string }[] = [
-  { screen: 'subscription', icon: 'fas fa-shield-alt', label: 'Главная' },
+  { screen: 'subscription', icon: 'fas fa-dragon', label: 'Главная' },
   { screen: 'keys', icon: 'fas fa-key', label: 'Ключи' },
-  { screen: 'referrals', icon: 'fas fa-users', label: 'Рефералы' },
+  { screen: 'referrals', icon: 'fas fa-users', label: 'Друзья' },
 ];
 
 export function BottomNav({ currentScreen, onNavigate }: { currentScreen: ScreenName; onNavigate: (s: ScreenName) => void }) {
