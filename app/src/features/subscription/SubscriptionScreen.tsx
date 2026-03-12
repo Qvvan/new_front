@@ -308,6 +308,29 @@ export function SubscriptionScreen() {
     }
   }, [renameModal.subId, refetchSubs, toast, tg]);
 
+  const deleteSubscription = useMutation({
+    mutationFn: (subId: number) => subscriptionApi.delete(subId),
+    onSuccess: async () => {
+      clearApiCache('/subscription/subscriptions/user');
+      await refetchSubs();
+      toast.success('Подписка удалена');
+      tg?.haptic.success();
+    },
+    onError: (err: Error & { data?: { comment?: string } }) => {
+      toast.error(err.data?.comment ?? err.message ?? 'Ошибка удаления');
+    },
+  });
+
+  const handleDelete = useCallback(async (subId: number) => {
+    const ok = await modal.showConfirm(
+      'Удалить подписку?',
+      'Подписка будет удалена безвозвратно. Все связанные ключи и доступы перестанут работать.',
+      { confirmText: 'Удалить' }
+    );
+    if (!ok) return;
+    await deleteSubscription.mutateAsync(subId);
+  }, [modal, deleteSubscription]);
+
   const handleTrial = useCallback(async () => {
     const ok = await modal.showConfirm(
       'Активировать пробный период?',
@@ -360,30 +383,37 @@ export function SubscriptionScreen() {
         </motion.div>
 
         {subscriptions.length === 0 ? (
-          <motion.div className="empty-state-card" variants={staggerItem}>
-            <div className="empty-state-content">
-              <div className="empty-state-icon-gif">
-                <TgsPlayer src={`${ASSETS_GIFS}/empty-profiles.tgs`} fallbackIcon="fas fa-shield-alt" width={80} height={80} />
-              </div>
-              <h3 className="empty-state-title">Нет активных подписок</h3>
-              {!trialActivated ? (
-                <div className="empty-state-actions">
-                  <button type="button" className="btn-trial-activation" onClick={handleTrial} disabled={activateTrial.isPending} data-action="activate-trial">
-                    <div className="btn-trial-bg"><div className="btn-trial-shine" /><div className="btn-trial-glow" /></div>
-                    <div className="btn-trial-content">
-                      <div className="trial-icon-wrapper"><TgsPlayer src={`${ASSETS_GIFS}/gift-animate.tgs`} fallbackIcon="fas fa-gift" width={40} height={40} /></div>
-                      <div className="trial-text">
-                        <span className="trial-main">Пробный период</span>
-                        <span className="trial-sub">5 дней бесплатно</span>
-                      </div>
-                      <div className="trial-arrow"><i className="fas fa-arrow-right" /></div>
-                    </div>
-                  </button>
+          <motion.div className="card subscription-card subscription-card--ghost" variants={staggerItem}>
+            <div className="subscription-header">
+              <div className="subscription-title-row">
+                <span className="subscription-title-icon subscription-title-icon--ghost">
+                  <i className="fas fa-shield-alt" />
+                </span>
+                <div className="subscription-title-group">
+                  <div className="subscription-title-name">
+                    <h2 className="subscription-title subscription-title--ghost">Подписок нет</h2>
+                  </div>
+                  <span className="subscription-type-label">Нет активных подписок</span>
                 </div>
-              ) : (
-                <p className="empty-state-text">Приобретите подписку для доступа к VPN</p>
-              )}
+              </div>
             </div>
+            {!trialActivated ? (
+              <div className="subscription-actions">
+                <button type="button" className="btn-trial-activation" onClick={handleTrial} disabled={activateTrial.isPending} data-action="activate-trial">
+                  <div className="btn-trial-bg"><div className="btn-trial-shine" /><div className="btn-trial-glow" /></div>
+                  <div className="btn-trial-content">
+                    <div className="trial-icon-wrapper"><TgsPlayer src={`${ASSETS_GIFS}/gift-animate.tgs`} fallbackIcon="fas fa-gift" width={40} height={40} /></div>
+                    <div className="trial-text">
+                      <span className="trial-main">Пробный период</span>
+                      <span className="trial-sub">5 дней бесплатно</span>
+                    </div>
+                    <div className="trial-arrow"><i className="fas fa-arrow-right" /></div>
+                  </div>
+                </button>
+              </div>
+            ) : (
+              <p className="no-subs-hint-text">Приобретите подписку для доступа к VPN</p>
+            )}
           </motion.div>
         ) : (
           subscriptions.length === 1 && !isSmallScreen ? (() => {
@@ -445,7 +475,13 @@ export function SubscriptionScreen() {
                     </div>
                   )}
                   <div className="subscription-actions">
-                    <button type="button" className="btn-trial-activation btn-renew" onClick={() => handleRenew(subId)} data-action="renew" data-subscription-id={subId}>
+                    <button
+                      type="button"
+                      className="btn-trial-activation btn-renew"
+                      onClick={() => handleRenew(subId)}
+                      data-action="renew"
+                      data-subscription-id={subId}
+                    >
                       <div className="btn-trial-bg"><div className="btn-trial-shine" /><div className="btn-trial-glow" /></div>
                       <div className="btn-trial-content">
                         <div className="trial-icon-wrapper"><i className="fas fa-sync-alt" /></div>
@@ -454,6 +490,15 @@ export function SubscriptionScreen() {
                         </div>
                         <div className="trial-arrow"><i className="fas fa-arrow-right" /></div>
                       </div>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-delete-subscription"
+                      onClick={() => handleDelete(subId)}
+                      data-action="delete"
+                      data-subscription-id={subId}
+                    >
+                      <i className="fas fa-trash-alt" /> Удалить
                     </button>
                   </div>
                 </>
@@ -500,13 +545,34 @@ export function SubscriptionScreen() {
                         <div className={`toggle-switch-compact ${sub.auto_renewal ? 'active' : ''}`}><div className="toggle-slider-compact" /></div>
                       </div>
                     )}
-                    <button type="button" className="btn-trial-activation btn-renew-compact" onClick={() => handleRenew(subId)} data-action="renew" data-subscription-id={subId} title="Продлить подписку" aria-label="Продлить подписку">
-                      <div className="btn-trial-bg"><div className="btn-trial-shine" /><div className="btn-trial-glow" /></div>
-                      <div className="btn-trial-content">
-                        <div className="trial-icon-wrapper"><i className="fas fa-sync-alt" /></div>
-                        <div className="trial-text"><span className="trial-main">Продлить</span></div>
-                      </div>
-                    </button>
+                    <div className="subscription-compact-actions-right">
+                      <button
+                        type="button"
+                        className="subscription-delete-icon-btn"
+                        onClick={(e) => { e.stopPropagation(); handleDelete(subId); }}
+                        data-action="delete"
+                        data-subscription-id={subId}
+                        title="Удалить подписку"
+                        aria-label="Удалить подписку"
+                      >
+                        <i className="fas fa-trash-alt" />
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-trial-activation btn-renew-compact"
+                        onClick={() => handleRenew(subId)}
+                        data-action="renew"
+                        data-subscription-id={subId}
+                        title="Продлить подписку"
+                        aria-label="Продлить подписку"
+                      >
+                        <div className="btn-trial-bg"><div className="btn-trial-shine" /><div className="btn-trial-glow" /></div>
+                        <div className="btn-trial-content">
+                          <div className="trial-icon-wrapper"><i className="fas fa-sync-alt" /></div>
+                          <div className="trial-text"><span className="trial-main">Продлить</span></div>
+                        </div>
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

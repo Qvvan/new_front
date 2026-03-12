@@ -144,6 +144,35 @@
     );
 }
 
+.subscription-card.subscription-card--ghost {
+    opacity: 0.85;
+}
+
+.subscription-card.subscription-card--ghost::before {
+    background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.18) 0%,
+        rgba(255, 255, 255, 0.06) 50%,
+        transparent 100%
+    );
+}
+
+.subscription-title-icon--ghost {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    color: var(--text-muted);
+}
+
+.subscription-title--ghost {
+    color: var(--text-secondary);
+}
+
+.no-subs-hint-text {
+    text-align: center;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    padding: var(--spacing-xs) 0 var(--spacing-sm);
+}
+
 .subscription-card::after {
     content: '';
     position: absolute;
@@ -564,6 +593,7 @@
     justify-content: center;
     align-items: center;
     width: 100%;
+    flex-wrap: wrap;
 }
 
 /* Кнопка продлить в стиле пробного периода */
@@ -589,6 +619,35 @@
 
 .subscription-actions .btn-renew.btn-trial-activation .trial-sub {
     display: none;
+}
+
+.btn-delete-subscription {
+    min-height: 44px;
+    padding: 0 var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid rgba(255, 71, 87, 0.5);
+    background: rgba(255, 71, 87, 0.08);
+    color: var(--accent-red);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    white-space: nowrap;
+}
+
+.btn-delete-subscription i {
+    font-size: 0.9em;
+}
+
+.btn-delete-subscription:hover {
+    background: rgba(255, 71, 87, 0.16);
+    border-color: rgba(255, 71, 87, 0.8);
+}
+
+.btn-delete-subscription:active {
+    background: rgba(255, 71, 87, 0.24);
+    transform: translateY(1px);
 }
 
 .action-grid {
@@ -1509,6 +1568,42 @@ body.page-hidden .loadShine {
     padding: 0;
     border-radius: var(--border-radius-md);
     margin-left: auto;
+}
+
+.subscription-compact-actions-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-left: auto;
+}
+
+.subscription-delete-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--border-radius-md);
+    border: 1px solid rgba(255, 71, 87, 0.4);
+    background: rgba(255, 71, 87, 0.08);
+    color: var(--accent-red);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    flex-shrink: 0;
+}
+
+.subscription-delete-icon-btn i {
+    font-size: 0.9em;
+}
+
+.subscription-delete-icon-btn:hover {
+    background: rgba(255, 71, 87, 0.16);
+    border-color: rgba(255, 71, 87, 0.8);
+}
+
+.subscription-delete-icon-btn:active {
+    background: rgba(255, 71, 87, 0.24);
+    transform: translateY(1px);
 }
 
 /* Лейбл "Автопродление" рядом с переключателем */
@@ -4087,6 +4182,7 @@ body.page-hidden .loadShine {
     align-items: center;
     justify-content: center;
 }
+
 
 .empty-state-bg {
     position: absolute;

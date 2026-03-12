@@ -21,6 +21,8 @@ export const subscriptionApi = {
     api.get<ImportLinksMap>(`/subscription/subscriptions/${subscriptionId}/import-links`),
   rename: (subscriptionId: number, customName: string) =>
     api.patch(`/subscription/subscriptions/${subscriptionId}/rename`, { custom_name: customName }),
+  delete: (subscriptionId: number) =>
+    api.delete(`/subscription/subscriptions/${subscriptionId}`),
 };
 
 export const paymentApi = {
